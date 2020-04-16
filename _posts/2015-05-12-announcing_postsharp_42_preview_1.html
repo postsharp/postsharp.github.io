@@ -1,0 +1,41 @@
+---
+layout: post
+title: "Announcing PostSharp 4.2 Preview 1"
+date: 2015-05-12 16:18:00 +02:00
+categories: []
+permalink: /post/announcing-postsharp-42-preview-1.html
+---
+<p>It&rsquo;s a pleasure to announce the first preview release of PostSharp 4.2, available for download on <a href="https://www.postsharp.net/downloads/postsharp-4.2/v4.2.2/PostSharp-4.2.2-alpha.exe">our website</a> and on NuGet (make sure to enable pre-releases).</p>
+<p>PostSharp 4.2 Preview 1 brings the following improvements:</p>
+<ul>
+<li>Support for Visual Basic (ready)</li>
+<li>Runtime performance improvement in ready-made patterns (ready)</li>
+<li>Threading models improvements (ready)</li>
+<li>INotifyPropertyChanging and support for Xamarin Forms</li>
+<li>Code saving metrics</li>
+</ul>
+<p>In this post, I will just describe the improvements that are already integrated in PostSharp 4.2 Preview 1.</p>
+<h2>Visual Basic Support</h2>
+<p>Initially, PostSharp was equally available to C# and VB because they both compile to MSIL, the level at which PostSharp works. However, with time, we developed language-specific features, and made them available only for C#. Today, thanks to the Roslyn project, we are able to bring these features to VB as well:</p>
+<ul>
+<li>File/line/column positioning of error messages now works also for VB.</li>
+<li>PostSharp Tools for Visual Studio now supports VB, but only under Visual Studio 2015.</li>
+<li>The PostSharp compiler now contains more tests that are specific to VB.</li>
+</ul>
+<p><strong>VB is now equally supported as C#</strong>. Again, I would like to remind that this is thanks to the Roslyn project, which makes it much easier for everybody to support the VB language. No, VB is not dead, Roslyn gives it a second life.</p>
+<h2>Amazing performance improvement in ready-made patterns</h2>
+<p>Amazing means, <strong>really, a huge difference</strong>. In the case of INotifyPropertyChanged, we are now 10 times faster than PostSharp 4.1. This seems a bit embarrassing and requires a few words of explanation.</p>
+<p>As we at PostSharp are writing more and more complex aspects, we have been hitting the performance barrier of the current design of the PostSharp Aspect Framework. This design, dating from 2010, did not envision aspects that would include so many transformations. So, its runtime performance was good (even excellent) for the scenarios it was designed for, but with PostSharp 4.0 we seriously started to reach its limits. The root cause of performance limitations is that the PostSharp currently requires a context object (typically <em>OnMethodBoundaryArgs</em> or <em>LocationInterceptionArgs</em>) to be passed from the target code to the aspect code, and <em>this object is allocated on the heap</em>. This creates significant pressure on garbage collection if the aspect is applied to methods called very often, for instance on property getters. Although this technique is way faster than PostSharp&rsquo;s competition and by the scenarios targeted by this competition (like logging or transaction handling), this is too slow to serve our new ambitions of bringing a solution to thread safety or INotifyPropertyChanged.</p>
+<p>So, we are currently investing in PostSharp Aspect Framework so that aspect code receives its context on the stack (as parameters) and not on the heap. The performance gain is just amazing.</p>
+<p>Let me be very clear here: we are <em>not</em> advertising our work on PostSharp Aspect Framework as a feature of PostSharp 4.2. This is a huge work, and we will not finish it in PostSharp 4.2. We only developed and tested the features required by our own ready-made pattern implementations. The &ldquo;modern&rdquo; aspect framework will not be documented in PostSharp 4.2, and will justify its own major version, probably PostSharp 5.0. In the meantime, you can try the new undocumented APIes, but at your own risks, and without right to support or bug fixes.</p>
+<h2>Threading models improvements</h2>
+<p>In PostSharp 4.2, we would like to finish a few items that did not fit into the 4.0 releases. Threading models were a huge innovation and required a massive amount of work and testing. In the rush to close the 4.0 release (because releasing is a feature, too), we reserved a few work items for later, and now it&rsquo;s time to go back to them.</p>
+<p>The most significant improvement is that <strong>we no longer block on async methods</strong>. So, if you have an async method in a [Synchronized] or [ReaderWriterSynchronized] class, we will now <em>await</em> for the lock. Previously, we would wait for it synchronously, and you would partially lose the benefit of having an async method. This was a very complex work, relying both on some improvements of PostSharp Aspect Framework that will be made public in PostSharp 5.0, and on awaitable threading primitives. The good thing is that we did the hard work so that you can focus on business code.</p>
+<p>Note that there is still a case when we wait synchronously instead of asynchronously, but this is a minor one: after executing a [Yielder] method in a [ReaderWriterSynchronized] class.</p>
+<p>The second improvement is that we now have an <strong>AdvisableHashSet</strong> class in addition to AdvisableCollection, AdvisableKeyedCollection and AdvisableDictionary.</p>
+<p>Finally, <strong>runtime performance of threading models is now dramatically better </strong>as described in the previous section.</p>
+<h2>Summary</h2>
+<p>Besides support for Visual Basic and code metrics (yet to be released), PostSharp 4.2 is an incremental improvement release. Yet, its runtime performance improvements are so huge that you will want to give it a try.</p>
+<p>More at the end of next iteration.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

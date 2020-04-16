@@ -1,0 +1,145 @@
+---
+layout: post
+title: "PostSharp Principles: Day 12 – Aspect Providers, Part 1"
+date: 2011-07-12 15:02:00 +02:00
+categories: [Tutorial]
+permalink: /post/postsharp-principals-day-12-e28093-aspect-providers-e28093-part-1.html
+---
+<p>When it comes to building aspects, using the provided base classes such as OnMethodBoundaryAspect and LocationInterceptionAspect are quick and easy ways to implement a simple aspect. But they have their limitations: each aspect can only implement one transformation. But what if you need to encapsulate a design pattern made of several transformations? We’re going to look at two ways of building complex aspects: aspect providers today and advices tomorrow.<a name="_GoBack"></a></p>  <h3>Base Aspect Classes</h3>  <p>There are different base classes in which an aspect can derive from. For example, OnMethodBoundaryAspect is derived from MethodLevelAspect class because it deals with methods. These base classes are pre-configured for MulticastAttributeUsage and pre-implemented interfaces. These classes are just containers for behaviors, they do not implement any behavior themselves, but it’s important to choose the correct class when developing aspects.</p>  <p>· AssemblyLevelAspect – Base class for all aspects applied on assemblies</p>  <p>· TypeLevelAspect – Base class for all aspects applied on types</p>  <p>· MethodLevelAspect – Base class for all aspects applied on methods</p>  <p>· LocationLevelAspect – Base class for all aspects applied on fields, properties or parameters</p>  <p>· EventLevelAspect – Base class for all aspects applied on events</p>  <p>PostSharp does not rely on these classes, but on the interfaces they implement. You can create your own aspect classes by implementing the right interface – for instance IOnMethodBoundaryAspect.</p>  <h3>IAspectProvider</h3>  <p>When an aspect implements the IAspectProvider interface, it can provide additional aspects dynamically. Simply put, an aspect can tell PostSharp to apply other aspects to a target at compile time. Let’s take a look at an example</p>  <pre>[Serializable]
+public class Aspect1 : IOnMethodBoundaryAspect
+{
+    public void OnEntry(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;Aspect1: OnEntry for &quot; + args.Method.Name);
+    }
+
+    public void OnException(MethodExecutionArgs args) { }
+    public void OnExit(MethodExecutionArgs args) { }
+    public void OnSuccess(MethodExecutionArgs args) { }
+    public void RuntimeInitialize(MethodBase method) { }
+}
+
+[Serializable]
+public class Aspect2 : IMethodInterceptionAspect
+{
+    public void OnInvoke(MethodInterceptionArgs args)
+    {
+        Console.WriteLine(&quot;Aspect2: OnInvoke for &quot; + args.Method.Name);
+        args.Proceed();
+    }
+
+    public void RuntimeInitialize(MethodBase method) { }
+}
+
+[Serializable]
+public class ComplexAspect : MethodLevelAspect, IAspectProvider
+{
+    private readonly Aspect1 _aspect1 = new Aspect1();
+    private readonly Aspect2 _aspect2 = new Aspect2();
+
+    #region IAspectProvider Members
+
+    public IEnumerable<aspectinstance> ProvideAspects(object targetElement)
+    {
+        MemberInfo nfo = (MemberInfo)targetElement;
+
+        yield return new AspectInstance(targetElement, _aspect1);
+            
+        if (nfo.ReflectedType.IsPublic &amp;&amp; !nfo.Name.Equals(&quot;.ctor&quot;))
+        {
+            yield return new AspectInstance(targetElement, _aspect2);
+        }
+    }
+
+    #endregion
+}</pre>
+
+<p>We have three aspects here. Aspect1 and Aspect2 are just simple aspects that write their status to the console. The ComplexAspect however has some work happening. ComplexAspect derives from MethodLevelAspect because we’re going to be dealing with methods and it implements the IAspectProvider interface because we want to dynamically determine which aspects to apply to each target method. </p>
+
+<p>We start by defining two instances one for Aspect1 and another for Aspect2. We’ll use these inside of ProvideAspects method when telling PostSharp to apply them to a target.</p>
+
+<p>Inside the ProvideAspect method we cast targetElement as a MemberInfo structure. If we were using a LocationLevelAspect class instead of MethodLevelAspect class, we would cast it as a LocationInfo instead of MemberInfo because we’re working on a different level.</p>
+
+<p>Since the return type of ProvideAspects method is an IEnumerable, we can use a yield return to provide aspects for PostSharp to apply. We return the instance of Aspect1 for all targets and then we check to see if the target method is public and is not a constructor. If it meets the criteria then we return the instance of Aspect2. </p>
+
+<pre>public class Program
+{
+    static void Main(string[] args)
+    {
+        ExampleClass ec = new ExampleClass();
+        ec.DoSomething();
+
+        Console.ReadKey();
+    }
+}
+
+[ComplexAspect]
+public class ExampleClass
+{
+    public void DoSomething()
+    {
+        Console.WriteLine(&quot;Did something&quot;);
+    }
+}</pre>
+
+<p>Our test code is a simple class with the ComplexAspect applied to it and we’re just making a call to DoSomething. The output is</p>
+
+<pre>Aspect1: OnEntry for .ctor
+Aspect1: OnEntry for DoSomething
+Aspect2: OnInvoke for DoSomething
+Did something</pre>
+
+<p>Aspect1 was applied to both the constructor and the DoSomething method while Aspect2 was only applied to the DoSomething method.</p>
+
+<h3>CustomAttributeIntroductionAspect</h3>
+
+<p>PostSharp provides us with a very nice aspect that we can use to apply custom attributes to targets. For example, we can apply attributes to a DTO for XmlSerialization. Let’s look at an example of that</p>
+
+<pre>[AddXmlIgnoreAttribute]
+public class ExampleClass
+{
+    [XmlElement]
+    public int ID { get; set; }
+    public string First { get; set; }
+    public string Last { get; set; }
+}
+
+[MulticastAttributeUsage(MulticastTargets.Field | MulticastTargets.Property,<br /> TargetMemberAttributes = MulticastAttributes.Public | MulticastAttributes.Instance)]
+public sealed class AddXmlIgnoreAttribute : LocationLevelAspect, IAspectProvider
+{
+    private static readonly CustomAttributeIntroductionAspect <br />       customAttributeIntroductionAspect =
+        new CustomAttributeIntroductionAspect(
+            new ObjectConstruction(typeof(XmlIgnoreAttribute)<br />                    .GetConstructor(Type.EmptyTypes)));
+
+    public IEnumerable<aspectinstance> ProvideAspects(object targetElement)
+    {
+        LocationInfo memberInfo = (LocationInfo)targetElement;
+
+        if (memberInfo.PropertyInfo.IsDefined(typeof(XmlElementAttribute), false) ||
+            memberInfo.PropertyInfo.IsDefined(typeof(XmlAttributeAttribute), false))
+            yield break;
+
+        yield return new AspectInstance(memberInfo.PropertyInfo, <br />                                                    customAttributeIntroductionAspect);
+    }
+}</pre>
+
+<p>We define a simple DTO class with four public properties. The DTO class is decorated with the AddXmlIgnoreAttribute.</p>
+
+<p>Our aspect is going to apply the [XmlIgnore] attribute to all members of the DTO. If a member is already marked for inclusion using the [XmlElement] or [XmlAttribute] attributes then it will not receive the [XmlIgnore] attribute.</p>
+
+<p>We start by defining the multicast options for our aspect. We tell PostSharp to only apply the aspect to fields or properties that are public and not static. Our aspect derives from LocationLevelAspect so we receive information structures specific to fields, properties and parameters.</p>
+
+<p>We declare a new instance of CustomAttributeIntroductionAspect and passing in the ObjectConstruction data for XmlIgnoreAttribute type using the default empty constructor for it. We’ll cover how CustomAttributeIntroductionAspect works internally at another time.</p>
+
+<p>In the ProvideAspects method, we cast targetElement as LocationInfo so we can work with the reflection info for the target. We use the LocationInfo to check if the property has either of the xml attributes defined on it and if it does we don’t yield any results for that target. Otherwise, we pass back to PostSharp the instance of CustomAttributeIntroductionAspect for application on the target.</p>
+
+<p>Using ILSpy to see the end result</p>
+
+<p><a href="/assets/2011-07-12-postsharp_principals_day_12_e28093_aspect_provider/image_18.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-12-postsharp_principals_day_12_e28093_aspect_provider/image_thumb_18.png" width="628" height="292" /></a></p>
+
+<p>Except for ID, all of the properties now have XmlIgnore attributes.</p>
+
+<h3>Conclusion</h3>
+IAspectProvider is a great way to dynamically determine which aspects to apply to a target at compile time but because aspects are still independent of each other, it has its limitations. Tomorrow we’re going to look at another way to build complex aspects. 
+
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-12-postsharp_principals_day_12_e28093_aspect_provider/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="/assets/2011-07-12-postsharp_principals_day_12_e28093_aspect_provider/self573_thumb[1]_thumb_3.jpg" width="66" height="66" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

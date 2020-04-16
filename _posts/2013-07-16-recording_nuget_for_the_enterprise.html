@@ -1,0 +1,30 @@
+---
+layout: post
+title: "[Recording] NuGet for the Enterprise + Q&A"
+date: 2013-07-16 13:02:00 +02:00
+categories: [Webinars]
+permalink: /post/recording-nuget-for-the-enterprise.html
+---
+<p>Last week, <a href="http://www.linkedin.com/in/alexpapadimoulis" target="_blank">Alex Papadimoulis</a> joined Gael Fraiteur on the PostSharp Live Webinar to talk about NuGet, the popular open-source library package manager for .NET, and show how it helps developers escape from "dependency hell" while discovering new third-party libraries.</p>
+<p>Attendees learned:</p>
+<ul>
+<li>how developers are successfully using NuGet;</li>
+<li>why PostSharp chose NuGet for deployment management;</li>
+<li>what deployment management pitfalls to watch out for; and</li>
+<li>when to consider solutions like private repositories.</li>
+</ul>
+<p>Watch the recording and learn how to leverage NuGet and private repositories to improve your enterprise architecture.</p>
+<p><iframe src="https://player.vimeo.com/video/70196145?title=0&amp;byline=0&amp;portrait=0&amp;loop=1" frameborder="0" width="640" height="460"></iframe></p>
+<h2>Q&amp;A</h2>
+<p><strong>Q: How do you specify dependency on a version range?</strong></p>
+<p><strong>A:</strong> NuGet documentation shows how to do that: <a title="NuGet Docs" href="Q:%20Is%20it%20possible%20to%20configure%20NuGet%20for%20projects%20independently%20of%20Visual%20Studio%20solutions;%20what%20if%20projects%20appear%20in%20multiple%20solutions?%20%20A:">http://docs.nuget.org/docs/Reference/Versioning</a></p>
+<p><strong>Q: When you install the NuGet plugin by default it is configured to pull from the public repository. How do you prevent users from pulling packages from this public NuGet repository? Is this a specific configuration change?</strong></p>
+<p><strong>A: </strong>What you have to do from a training standpoint is instruct developers to add a package source. Go to package management settings, uninclude the official package source, and add in your own corporate library. There is no good way to prevent developers from doing it themselves, so it's important to monitor your packages.config file for changes to it to ensure a bad package isn't added.</p>
+<p><strong>Q: How do you deal with scenarios where two packages depend on the same third package, but they depend on different versions of that third package? Visual Studio will only include one of the versions, and you will get a runtime failure.</strong></p>
+<p><strong>A:</strong>This becomes tricky. NuGet attempts to add a binding redirect to mitigate the problem, but it can cause more problems than benefits. My advice is to monitor the versions that are added and that you're redirecting appropriately.</p>
+<p><strong>Q: Is it possible to configure NuGet for projects independently of Visual Studio solutions? What if projects appear in multiple solutions?</strong></p>
+<p><strong>A:</strong> NuGet works fine if you keep your configs simple but can complex things can get a little hairy depending on your configuration. has a packages.config file, and some of the default locations for the packages file</p>
+<p><strong>Q: Can standard MS packages (e.g. MVC 4 bits) required by the new project dialog be routed via a private NuGet repository to make the selection / deselection of the public NuGet repository in the developer machine?</strong></p>
+<p><strong>A:</strong> Yes. Select the Package Manager option in Visual Studio, where the available Package Sources are displayed, and select the source you want to use. NuGet will use whatever package source you select rather than the public source.</p>
+<p><strong>Q: What's the best way to enable package restore on a bulid server?</strong></p>
+<p><strong>A:</strong> Package restore adds a folder to your Visual Studio solution and does all sorts of weird things with it. We recommend users not use NuGet package restore and instead have a NuGet install as part of your build server plan. We recommend this to our customers since <a title="PostSharp Docs" href="http://doc.postsharp.net/postsharp-3.0/Default.aspx#PostSharp-3.0.chm/html/ecd5f7a0-fd50-4fa0-9412-327df253873b.htm">NuGet package restore doesn't work with PostSharp</a>. Create a build step that includes calling NuGet install before calling MS build for every file package.config you find in your source tree. It's much more reliable.</p>

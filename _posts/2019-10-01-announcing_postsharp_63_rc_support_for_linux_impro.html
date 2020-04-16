@@ -1,0 +1,37 @@
+---
+layout: post
+title: "Announcing PostSharp 6.3 RC: Support for Linux, Improved VSX Performance, and More "
+date: 2019-10-01 08:02:00 +02:00
+categories: []
+permalink: /post/announcing-postsharp-63-rc-support-for-linux-improved-vsx-performance-and-more.html
+---
+<p>We're excited to announce the release of PostSharp 6.3 RC, available for download on <a href="https://www.postsharp.net/downloads/postsharp-6.3">our website</a> and from <a href="https://www.nuget.org/profiles/PostSharp">nuget.org</a> (make sure to enable the pre-release option). The most anticipated feature of this release is the support for Linux and macOS build agents. Additionally, we significantly improved the responsiveness of PostSharp Tools for Visual Studio thanks to a full async redesign.</p>
+<h2>Support for Linux and macOS</h2>
+<p>The wait is over! PostSharp has supported .NET Standard and .NET Core for a long time, but it still could only run on Windows-based build agents. Starting from PostSharp 6.3, we now support Linux and macOS build agents.</p>
+<p>Note that development is still only officially supported on Visual Studio for Windows. Although you can probably live without the code editor extensions and additional tool windows provided by PostSharp Tools for Visual Studio, you would be missing the debugger integration. Without our Visual Studio plug-in, debugging a PostSharp-enhanced application can be confusing. If you don't mind, feel free to develop on Linux or macOS too.</p>
+<p><img src="/assets/2019-10-01-announcing_postsharp_63_rc_support_for_linux_impro/image (4).png" alt="" /></p>
+<h2>Improved responsiveness of PostSharp Tools for Visual Studio</h2>
+<p>PostSharp is now a well-behaved asynchronous extension, so you should no longer experience UI freezes because of PostSharp. That was especially laborious because even a thing like getting a dependency from a service locator now needs to be asynchronous. We now stick to the letter of the new async orthodoxy and we must concede, it's for the best.</p>
+<h2>Support for shared and multi-targeted projects</h2>
+<p>PostSharp Tools for Visual Studio now works properly with files that are shared between several projects, and with multi-targeted projects. When editing a source file shared by several projects or targets, and if different aspects are used (e.g. using conditional compilation), the code adornments and tooltips now accurately reflect the aspects applied for the current project and/or target. The Aspect Explorer has been updated as well. Previously, PostSharp Tools for Visual Studio did not differentiate assemblies of the same name.</p>
+<p><img src="/assets/2019-10-01-announcing_postsharp_63_rc_support_for_linux_impro/image (5).png" alt="" width="900px" /></p>
+<h2>Support for per-monitor awareness of DPI</h2>
+<p>Several users were affected by a new option of Visual Studio 2019: support for per-monitor awareness of DPI. This option became enabled by default in VS 2019.3 and the number of affected users grew.</p>
+<p>We're now happy to say that this issue is solved. We had to rewrite most of our old WinForms code to WPF and we took this opportunity to better respect color themes and icon sets. The result: a much smoother experience.</p>
+<h2>Solved aspect ordering issue on async methods</h2>
+<p>With PostSharp 6.3, we've done one more step to simplify the application of aspects to async methods. In the past, OnMethodBoundaryAspect had to be applied after MethodInterceptionAspect on all async methods. Starting from PostSharp 6.3, these aspects can be ordered freely... as long as OnMethodBoundaryAspect does not implement the OnYield and OnResume advices.</p>
+<p>For instance, it is now possible to add a code contract to the return value of a cached async method:</p>
+<pre>[Cache]
+[return: Required]
+public async Task&lt;string&gt; GetCountryName( [Required] string countryCode )
+{
+    // ...
+}
+</pre>
+<p>&nbsp;</p>
+<p>You may think it should have always been working this way and your intuition is correct &ndash; but we've had to put hundreds of hours of hard work to make this work intuitively.</p>
+<h2>Contracts: ability to customize the type of thrown exceptions</h2>
+<p>In previous versions, it was possible to customize the exception messages, but not the exception types itself. We now use a factory pattern to instantiate exceptions, so you can now completely customize the exceptions thrown by standard contracts. See <a href="https://doc.postsharp.net/6.3/contract-custom-exceptions">Customizing Contract Exceptions</a> for details.</p>
+<h2>Summary</h2>
+<p>PostSharp 6.3 is an exciting release with several major improvements: build on Linux and macOS, smoother UX with PostSharp Tools for Visual Studio, and intuitive use of aspects on async methods.</p>
+<p>As always at PostSharp, <a href="https://www.postsharp.net/support/policies#quality">we take the RC quality tag very seriously</a> and consider this release as good as, if not better, than the current RTM, with the only reserve that it has not been largely used in the wild. Before we push the release to the stable channel of nuget.org, it's a good time to update your VS extension and NuGet packages, and <a href="https://www.postsharp.net/support/policies">report any problem</a> via our support forum.</p>

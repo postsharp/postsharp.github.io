@@ -1,0 +1,219 @@
+---
+layout: post
+title: "New in PostSharp 3.1: Support for async and iterator methods"
+date: 2013-11-11 20:40:00 +01:00
+categories: []
+permalink: /post/new-in-postsharp-31-support-for-async-and-iterator-methods.html
+---
+<p>PostSharp 3.1 catches up with two advanced features of the C# compiler: automatic iterators and async methods.&nbsp; Iterators have been around since NET 3.5. This was the first compiler feature that did not trivially map to MSIL, the level of abstraction at which PostSharp operates. Under the hood, when it meets a iterator, the compiler would generate a class. The parameters and local variables of the method would be transformed into fields, and the body of the method would be generated into the <em>MoveNext</em> method, with multiple exit and entry points.</p>
+<p>Before version 3.1, PostSharp did not understand the state machine transformation operated by the compiler. Adding an aspect to an iterator would produce surprising results, because the aspect would actually be applied only to the code that instantiates the state machine class. For instance, an <em>OnException</em> advise would never get invoked because instantiating the state machine is unlikely to throw any exception. Conversely, any exception thrown by the iterator would never be captured because the exception was technically (at MSIL level) thrown by the <em>MoveNext</em> method of the state machine class. The workaround was easy: add an aspect to this <em>MoveNext</em> method. The availability of this workaround was perhaps the reason why users did not complain that PostSharp lacks this ability.</p>
+<p>Things became more problematic with async methods. The compiler does the same kind of magic as with iterators, but a more advanced one. With async methods, exceptions thrown by user code would get &ldquo;transparently&rdquo; intercepted from within the <em>MoveNext</em> method and assigned to the <em>Task</em> object &ndash; before they get any chance to get intercepted by our aspect. Thus, the need for proper support from PostSharp became more urgent. No wonder if this became our number-one feature request on <a href="http://postsharp.uservoice.com" target="_blank">User Voice</a>. We were not able to ship the feature in PostSharp 3.0 for a lot of embarrassing reasons, but now it&rsquo;s out!</p>
+<h2>The old, backward-compatible way</h2>
+<p>PostSharp has been around for 9 years. One of our major concerns has always been to never break backward compatibility. The problem is actually not to ensure that your old code still <em>builds</em> after you upgrade to PostSharp. The real challenge is to guarantee that your code will <em>behave</em> identically.</p>
+<p>To ensure behavioral backward compatibility, we had to take this design decision: if you apply an <em>OnMethodBoundaryAspect</em> to an iterator or async method, by default, it won&rsquo;t be applied to the state machine.</p>
+<p>However, we still think that the backward-compatible behavior is odd and that new users would really expect the aspect to be applied to the state machine. Therefore, a warning will be emitted whenever an <em>OnMethodBoundaryAspect</em> is applied to an async or iterator method. To turn off the warning, you have to set the aspect property <em>ApplyToStateMachine</em> to <em>false</em> if you want to maintain the backward-compatible behavior. You can set the property in the constructor if you don&rsquo;t want to set it explicitly every time the aspect is used.</p>
+<p>The following aspect exhibits the backward-compatible behavior of the <em>OnMethodBoundary</em> aspect:</p>
+<pre>[PSerializable]
+class MyAspect : OnMethodBoundaryAspect
+{
+    public override void OnEntry(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnEntry");
+    }
+
+    public override void OnSuccess(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnSuccess({0})", args.ReturnValue);
+    }
+
+    public override void OnExit(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnExit");
+    }
+
+    public override void OnException(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnException({0})", args.Exception.Message);
+    }
+}
+</pre>
+<p>Let&rsquo;s apply this aspect to an iterator:</p>
+<pre>static void PrintFruits(bool throwException)
+{
+    try
+    {
+        foreach (string fruit in GetFruits(throwException))
+        {
+            Console.WriteLine("Received: " + fruit);
+        }
+    }
+    catch (Exception e)
+    {
+        Console.WriteLine("Exception: " + e.Message);
+    }
+}
+
+[MyAspect(ApplyToStateMachine = false)]
+static IEnumerable GetFruits(bool throwException)
+{
+    yield return "blackcurrant";
+    yield return "pomegranate";
+    if ( throwException ) throw new Exception("Rotten fruit.");
+    yield return "pineapple";
+}
+</pre>
+<p>Here is the output of this code with the success flow:</p>
+<pre>OnEntry
+OnSuccess(Program+&lt;GetFruits&gt;d__0)
+OnExit
+Received: blackcurrant
+Received: pomegranate
+Received: pineapple
+</pre>
+<p>You can see that the <em>OnSuccess</em> advice is called before the enumerator has produced the first result, and that the return value printed by the <em>OnSuccess</em> advice does not make sense.</p>
+<p>And here is the output with the exception flow:</p>
+<pre>OnEntry
+OnSuccess(Program+&lt;GetFruits&gt;d__0)
+OnExit
+Received: blackcurrant
+Received: pomegranate
+Exception: Rotten fruit.
+</pre>
+<p>As you can see, the <em>OnException</em> handler is never hit.</p>
+<h2>Applying the aspect to the state machine</h2>
+<p>Things get very different when you set the <em>ApplyToStateMachine</em> property to <em>true</em>. Just modify the property and the code above will produce the following output:</p>
+<pre>OnEntry
+Received: blackcurrant
+Received: pomegranate
+Received: pineapple
+OnSuccess()
+OnExit</pre>
+<p>The exception flow is the following:</p>
+<pre>OnEntry
+Received: blackcurrant
+Received: pomegranate
+OnException(Rotten fruit.)
+Exception: Rotten fruit.</pre>
+<p>As you can see, the behavior is now &ldquo;as expected&rdquo;, i.e. it is consistent with the level of abstraction of the source code. The previous behavior was consistent with the level of abstraction of MSIL, and this is why it was less useful.</p>
+<h2>New advices: OnYield and OnResume</h2>
+<p>Additionally to applying the aspect to the state machine instead of the method that merely instantiates it, PostSharp 3.1 brings two new advices: <em>OnYield</em> and <em>OnResume</em>. These advices are defined on the new interface <em>IOnStateMachineBoundaryAspect</em>. If you want to use them, you need to have your aspect class implement this interface.</p>
+<p>Note that implementing the <em>IOnStateMachineBoundaryAspect</em> has the side effect of settings the default value of the <em>ApplyToStateMachine</em> property to <em>true </em>and to quiet the warning that is otherwise displayed then this property is not set. This is because, if your code implements <em>IOnStateMachineBoundaryAspect</em>, we trust we can put usability prior to backward compatibility.</p>
+<p>But let&rsquo;s go back to the advices themselves. Interestingly, they apply identically &ndash; with exactly the same semantics &ndash; to both iterator and async methods. In short, <em>OnYield</em> is invoked when the state machine yields the control flow, i.e. when the control flow temporary leaves the state machine to the caller. <em>OnResume</em> is invoked when the state machine gains back the control flow.</p>
+<h3>With iterators</h3>
+<p>Let&rsquo;s see this more concretely, first on iterators. <em>OnYield</em> is invoked after the <em>yield return</em> statement, before the control flow gets back to the consumer of the iterator. <em>OnResume</em> is then invoked when the consumer calls <em>MoveNext</em>. Note that the first time the consumer calls <em>MoveNext</em>, the <em>OnEntry</em> advice is invoked. Also, when the iterators terminates using <em>yield break</em> or simply by letting the control flow fall back, the <em>OnSuccess</em> advice is invoked after <em>OnYield</em>.</p>
+<p>What if you want to know which value has just been yielded? Simply read the <em>MethodExecutionArgs.YieldValue</em> property. You can also write this property if you want to change the returned value.</p>
+<p>Let&rsquo;s update our aspect to add tracing of <em>OnYield</em> and <em>OnResume</em> events:</p>
+<pre>[PSerializable]
+class MyAspect : OnMethodBoundaryAspect, IOnStateMachineBoundaryAspect
+{
+    public override void OnEntry(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnEntry");
+    }
+
+    public override void OnSuccess(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnSuccess({0})", args.ReturnValue);
+    }
+
+    public override void OnExit(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnExit");
+    }
+
+    public override void OnException(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnException({0})", args.Exception.Message);
+    }
+
+    public void OnResume(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnResume");
+    }
+
+    public void OnYield(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnYield({0})", args.YieldValue);
+    }
+}
+</pre>
+<p>The program output is now the following:</p>
+<pre>OnEntry
+OnYield(blackcurrant)
+Received: blackcurrant
+OnResume
+OnYield(pomegranate)
+Received: pomegranate
+OnResume
+OnYield(pineapple)
+Received: pineapple
+OnResume
+OnSuccess()
+OnExit
+-------------
+OnEntry
+OnYield(blackcurrant)
+Received: blackcurrant
+OnResume
+OnYield(pomegranate)
+Received: pomegranate
+OnResume
+OnException(Rotten fruit.)
+Exception: Rotten fruit.
+</pre>
+<h3>With async methods</h3>
+<p>The behavior of <em>OnYield</em> and <em>OnResume</em> is similar for async methods than for iterators. <em>OnYield</em> and <em>OnResume</em> are invoked upon execution of the <em>await</em> keyword: <em>OnYield</em> gets called when a wait begins, <em>OnResume</em> when a wait ends.</p>
+<p>Note there are cases where the <em>await</em> keyword does <em>not</em> result into an execution of the <em>OnYield/OnResume</em> sequence: when the awaited-for task completes synchronously, the execution of the method continues without going through <em>OnYield</em> and <em>OnResume</em>. This is logical if you count that in this case the state machine really does not yield the control flow.</p>
+<p>The <em>YieldValue</em> property is not available for async methods.</p>
+<p>Let&rsquo;s test our aspect on the following code:</p>
+<pre>[MyAspect]
+static async Task&lt;string&gt; TimerMethod()
+{
+    for (int i = 3; i &gt;= 0; i--)
+    {
+        Console.WriteLine(i + " green bottles");
+        await Task.Delay(100);
+    }
+
+    return "Done";
+}
+</pre>
+<p>The output of this program is the following:</p>
+<pre>OnEntry
+3 green bottles
+OnYield()
+OnResume
+2 green bottles
+OnYield()
+OnResume
+1 green bottles
+OnYield()
+OnResume
+0 green bottles
+OnYield()
+OnResume
+OnSuccess()
+OnExit
+</pre>
+<h2>Limitations</h2>
+<p>Note that the following limitations apply when an aspect is applied to a state machine (whether the additional advices <em>OnYield</em> and <em>OnResume</em> are applied or not):</p>
+<ul>
+<li>The control flow cannot be changed (the <em>MethodExecutionArgs.FlowBehavior</em> property is ignored).</li>
+<li>The return value cannot be read or changed (the <em>MethodExecutionArgs.ReturnValue</em> is ignored).</li>
+</ul>
+<h2>Aspect Composition</h2>
+<p>Perhaps it goes without saying, but this is never trivial to implement: you can apply many aspects to state machines, apply state-machine-aware and -unaware aspects to a method, and do strange combinations of aspects. This is all supposed to work &ndash; and tested.</p>
+<h2>Use Cases</h2>
+<p>I believe the new features are very useful in the following use cases:</p>
+<ul>
+<li>Call stack reconstruction: remember the stack call on entry so that it can be meaningfully displayed if an exception occurs after resume of the async method. Otherwise, you would just see that the call stack of the exception comes from the thread pool.</li>
+<li>Iterator logging: you can now log the values returned by the iterator.</li>
+<li>Profiling: you can now accurately compute the time taken by an iterator or async method to complete.</li>
+<li>Context switching: ensure that the value of some thread-static fields are preserved and meaningful in all parts of a state machine.</li>
+</ul>
+<h2>Summary</h2>
+<p>The <em>OnMethodBoundaryAspect</em> can now be applied to state machines like async and iterator methods, and your aspect will not be applied to the state machine itself instead of just to instructions that instantiate the state machine. There is a new interface <em>IOnStateMachineBoundaryAspect</em> with two new advices: <em>OnYield</em> and <em>OnResume</em>. The new feature is designed to be backward compatible with the old (and odd) behavior. You will need to manually set the <em>ApplyToStateMachine</em> property if you want to get rid of the attention-to-odd-but-backward-compatible-behavior warning.</p>
+<p>I think this is an exciting feature, and it required a lot of engineering work just to make it work and integrate well with other features of PostSharp.</p>
+<p>A last word: PostSharp 3.1 is still beta and there&rsquo;s still room to improve the API. I&rsquo;m anxious to hear your feedback so we can take into account before sealing the new feature.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

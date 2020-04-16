@@ -1,0 +1,80 @@
+---
+layout: post
+title: "New in PostSharp 4.0: Immutable and Freezable Done Well"
+date: 2014-04-01 05:46:35 +02:00
+categories: []
+permalink: /post/new-in-postsharp-32-immutable-and-freezable-done-well.html
+---
+<p>Immutable are popular for a good reasons: they are totally thread-safe. Immutablity accounts for the bigger half of functional-language hype, to a point that some Robert Martin raised his voice to <a href="https://skillsmatter.com/skillscasts/2323-bobs-last-language">obliterate assignments from the programming landscape</a>. At PostSharp, we don’t share this unconditional passion for the all-functional movement, and we think that object-oriented programming is still the most relevant paradigm for most applications. We don’t think .NET people should mass migrate to F# or Clojure, but we do think we can do C# better. Improving C#: that seems a good mission for us, and it’s what we did with the Immutable Object pattern and his milder brother, the Freezable Object pattern.</p><p><em>NOTE: This blog post is about an available pre-release of PostSharp. You can install <strong>PostSharp 4.0</strong> only using NuGet by enabling the “Include pre-release” option.</em></p><h2>Why the readonly keyword is not the solution</h2><p>Let’s face it, the Immutable pattern is quite impractical to implement in C#. Many believe that making a class immutable means to make all fields read-only; this is both unnecessary, insufficient and impractical:</p><ol><li>Read-only fields are <strong>not necessary</strong> for a class to be immutable. In C#, the read-only modifier prevents a field from being changed from another method than a constructor. This is a well-known frustration for C# developers that you cannot set a read-only field from a method, even if this method is invoked only from constructors.</li><li>Read-only fields are <strong>insufficient</strong> to make a class immutable if fields themselves are not of an immutable type. For instance, an <em>Invoice</em> class is not immutable if it has a <em>lines</em> field whose type is <em>List&lt;InvoiceLine&gt;</em>, even if the field itself is read-only. However, an invoice can be immutable even if it has a <em>customer</em> field of type <em>Customer</em> and the <em>Customer</em> class is mutable. So, why is it a problem for the <em>List</em> class to be mutable but not for the <em>Customer</em> class? Because of the type of relationship materialized by the fields: the <em>customer</em> field implements a <strong>reference</strong>, but the <em>lines</em> field implements a <strong>child</strong>  relationship. Only children of immutable objects must be immutable.</li><li>The vanilla Immutable pattern is <strong>impractical</strong> in many scenarios of object-oriented programming because it often happens that an object needs to be initialized in several steps, not just using a constructor. For instance, data transfer objects (DTO) should typically be immutable but should also be serializable, two apparently conflicting requirements.</li></ol><p>Immutability is an important pattern, but implementing it in pure C# is cumbersome.&nbsp; So we decided to do something about it.</p><h2>Designing a Better Immutable Pattern</h2><p>In my opinion, conventional object-oriented literature makes a fundamental mistake when talking of immutability: it refers to immutable <em>objects</em>, but instead it should refer to immutable <em>aggregates</em>. According to the UML terminology, aggregates are sets of objects that are in a parent-child or whole-part relationship. Typically, immutability applies to whole object trees (or parts of the tree), not just to one object. This remark may seem academic but it means a programming language cannot tackle the notion of immutability without a notion of parent-child relationship (unless all types are immutable, but then you get a functional language). Children of immutable objects should also be immutable, otherwise we loose all guarantees of immutability.</p><p>So, if we want to do immutable well in a object-oriented language, <strong>we first need to add a notion of parent-child relationship</strong>. This is exactly what we did in PostSharp 4.0 with the <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-Aggregation-and-Composition-Patterns">Aggregation Pattern</a>. Now you can see why we spent so much energy into this pattern. This was not just for <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">undo/redo</a>. We could not do multithreading well without a good aggregation pattern.</p><p><strong>Freezability</strong> is immutability’s milder brother. Instead of forbidding changes in the object after the constructor has completed, we define a <em>Freeze</em> method and allow changes until this method has been called. The <em>Freeze</em> method can be invoked automatically, for instance after deserialization, or manually. Note how freezability is related to the Aggregation pattern: when you freeze a parent, you expect all children to get frozen as well.</p><p>Now, let’s put immutability, freezability and immutability together. I said above that classes of immutable entities must have fields of an immutable type. This was imprecise: actually, it is acceptable for an immutable class to have fields of a freezable type, as long as freezable children get frozen when the parent constructor completes. So, it is enough for just the aggregate root to be immutable; children can comply to the milder requirement of being freezable. </p><h2>Immutability and Freezability in PostSharp</h2><p>I though a bit of theory would be beneficial even beyond the audience of PostSharp users.&nbsp; Now, let’s see how this works in practice.</p><p>PostSharp 4.0 (specifically, the <em>PostSharp.Patterns.Threading</em> package) provides two aspects: <em>[Immutable]</em> and <em>[Freezable]</em>. These aspects implicitly require and add the <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-Aggregation-and-Composition-Patterns">previously described</a>&nbsp;<em>[Aggregatable]</em> aspect, which adds a notion a parent-child relationship to your code through the custom attributes <em>[Child]</em>, <em>[Reference]</em> and <em>[Parent]</em>.</p><p>The following code example shows several classes in a parent-child relationship. We want the <em>Invoice</em> entity (including its children lines and discounts) to be freezable, but the <em>InvoiceDocument</em> class, which represents a stored invoice, must be immutable.</p>
+
+<pre>[Freezable]
+public class Invoice
+{
+    [Child]
+    public readonly AdvisableCollection&lt;InvoiceLine&gt; Lines = new AdvisableCollection&lt;InvoiceLine&gt;();
+
+    [Child]
+    public readonly AdvisableCollection&lt;InvoiceDiscount&gt; Discounts = new AdvisableCollection&lt;InvoiceDiscount&gt;();
+
+    [Reference]
+    public Customer Customer;
+
+    public static Invoice Deserialize(Stream stream)
+    {
+        // Details skipped.
+    }
+}
+
+[Freezable]
+public class InvoiceLine
+{
+    [Reference]
+    public Product Product;
+
+    [Parent]
+    public Invoice ParentInvoice { get; private set; }
+}<br><br>[Freezable]
+public class InvoiceDiscount
+{
+    public decimal Percent;
+    public string Reason;
+
+    [Parent]
+    public Invoice ParentInvoice { get; private set; }
+}<br><br>[Immutable]
+public class InvoiceDocument
+{
+    string fileName;
+
+    [Child]
+    public Invoice Invoice;
+
+    public TextBuffer( string fileName )
+    {
+        this.fileName = fileName;
+        using ( Stream stream = File.OpenRead(fileName))
+        {
+            this.Invoice = Invoice.Deserialize( stream );
+        }
+    }
+
+}
+</pre>
+
+<p>To freeze an object, you should first cast it to the IFreezable interface using the <em>QueryInterface&lt;IFreezable&gt;()</em> extension method, for instance:</p><pre>((IFreezable)invoice).Freeze();</pre><h2>Model Validation</h2><p>That said, you may argue that the C# language and the OOP practice has good reasons to identify immutability to the use of read-only fields. This reason, indeed, is that the compiler is able, in a very straightforward way, to give a 100% guarantee, at build time, that the object is immutable. I’ve already expressed that I don’t think this guarantee is very useful, but let’s at least acknowledge that the compiler gives you this guarantee. Being optimized for usefulness, PostSharp has a different approach. It is impossible to perform a 100% build-time validation of the relaxed immutability model that it implements, at least not within acceptable build time. Instead, PostSharp relies on runtime model validation: if you try to modify an object after it has been made read-only, you will get an <em>ObjectReadOnlyException</em>. Of course, these runtime validations come at some performance cost, and this is why they are only enabled in debug build by default. Note that the current version of PostSharp does not perform <em>any</em> build-time validation of the model; even if we could do a say 80% build-time validation at reasonable cost, this analysis is not currently implemented.</p><p>The following code shows how the <em>InvoiceDocument</em> and <em>Invoice</em> classes may be used, and how modifying the objects would throw a <em>ReadOnlyObjectException</em>:</p>
+
+<pre>InvoiceDocument invoiceDocument = new InvoiceDocument("invoice.xml");
+// The following line throws an exception because InvoiceDocument is immutable.
+invoiceDocument.invoice.Discounts.Add(new InvoiceDiscount { Percent = 5, Reason = "Early bird" });
+
+Customer customer = new Customer { Name = "Michael Jordan" };
+Product product = new Product { Name = "Cello" };
+Invoice invoice = new Invoice { Customer = customer };
+invoice.Lines.Add(new InvoiceLine { Product = product });
+
+((IFreezable)invoice).Freeze();
+
+// The following line throws an exception because Invoice has been frozen.
+invoice.Discounts.Add(new InvoiceDiscount { Percent = 5, Reason = "Early bird" });</pre>
+
+<h2>Summary</h2><p>The orthodox Immutable Object pattern is not fully appropriate to object-oriented programming because the rules it relies on (all fields must be read-only) are insufficient, unnecessary, and impractical. Instead, I proposed a relaxed version of the Immutable Object, which teams with the Freezable Object Pattern and the Aggregation Pattern to provide a more useful construct. The caveat of the relaxed Immutable Object pattern is that it cannot be validated with 100% certainty at build time, but it is fairly easy to enforce it at runtime.</p><p>PostSharp implements these concepts through the <em>[Immutable]</em> and <em>[Freezable]</em> aspects, which implicitly rely on <em>[Aggregatable]</em> and require you to annotate your fields with the <em>[Child], [Reference]</em> or <em>[Parent]</em> custom attributes.</p><p>This is one more example that adding a concept of parent-child relationship to the language helps solving many problems.</p><p>But we just scratched the surface of how PostSharp 4.0 improves multithreading in .NET. More later.</p><p>Happy PostSharping!</p><p>-gael</p><p><em>UPDATE: Change product version from PostSharp 3.2 to PostSharp 4.0.</em></p>

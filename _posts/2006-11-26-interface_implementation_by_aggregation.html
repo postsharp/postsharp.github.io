@@ -1,0 +1,30 @@
+---
+layout: post
+title: "Interface Implementation by Aggregation"
+date: 2006-11-26 12:55:00 +01:00
+categories: [General]
+permalink: /post/interface-implementation-by-aggregation.html
+---
+I have written that the newly redesigned Code Weaver now support type-level advices (well, to be precise, type-level join points). The first implementation is the new <span style="font-weight: bold;">AggregationAspect</span>
+in PostSharp Laos.
+<p>So what's aggregation?
+</p>Say you want to implement a collection (<span style="font-weight: bold;">ICollection</span>) based on an <span style="font-weight: bold;">ArrayList</span>, but you want to hide ArrayList and don't want to implement each method manually. PostSharp can do it for you.
+<p>Look at the following code sample:</p><pre>[SimpleAggregate(
+  ImplementationType=<span style="color: rgb(16, 0, 160);">typeof</span>(ArrayList),
+  InterfaceType=<span style="color: rgb(16, 0, 160);">typeof</span>(ICollection))]
+<span style="color: rgb(16, 0, 160);">internal</span> <span style="color: rgb(16, 0, 160);">class</span> <span style="font-family:mon;"><span>Aggregated</span></span>Collection
+{
+}</pre>After processing by PostSharp, the <b>AggregatedCollection </b>class will implement the <b>ICollection</b><b> </b>collection using <b>the ArrayList </b>implementation.
+
+Looks magic? If you inspect the generated code (the Roeder's Reflector is always useful for this), you will see a new field <span style="font-weight: bold;">~aggregated~0 </span>of type <span style="font-weight: bold;">ICollection </span>and all methods of this interface, for instance:
+<pre>IEnumerator IEnumerable.<b>GetEnumerator</b>()
+{
+<span style="color: rgb(16, 0, 160);">  return</span> <span style="color: rgb(16, 0, 160);">this</span>.~aggregated~0.GetEnumerator();
+}
+</pre>The aggregated object is constructed inside the constructor of AggregatedCollection:
+<pre><span style="color: rgb(16, 0, 160);">public</span> <b>AggregatedCollection</b>()
+{
+<span style="color: rgb(16, 0, 160);">  this</span>.~aggregated~0 = (ICollection)
+ ~PostSharp~Laos~Implementation.customAttribute0.
+           CreateAggregatedObject(<span style="color: rgb(16, 0, 160);">this</span>);
+}</pre>Still looks magic?

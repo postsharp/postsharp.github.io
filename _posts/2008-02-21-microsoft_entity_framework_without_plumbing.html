@@ -1,0 +1,30 @@
+---
+layout: post
+title: "Microsoft Entity Framework without Plumbing"
+date: 2008-02-21 11:12:00 +01:00
+categories: [General]
+permalink: /post/microsoft-entity-framework-without-plumbing.html
+---
+<p><a href="http://www.sitechno.com/Blog/">Ruurd Boeke</a> has recently released 
+PostSharp4ET, a PostSharp plug-in allowing to use Microsoft Entity Framework 
+without plumbing code -- PostSharp generates it for you at build-time. 
+PostSharp4ET is released as a part of
+<a href="http://www.codeplex.com/efcontrib">Entity Framework Contrib</a> hosted 
+on <a href="http://www.codeplex.com/efcontrib">CodePlex.com</a>.</p>
+<p>With PostSharp4ET, enabling persistency on a class should be as easy as 
+decorating it with a custom attribute:</p>
+<pre>[Poco(&quot;ConnectionName&quot;)]
+public class Person
+{
+   public int PersonID { get; set; }
+   public string Firstname { get; set; }
+   public string Lastname { get; set; }
+}</pre>
+<p>Under the hood, EF-specific interfaces are implemented automatically at build 
+time.</p>
+    <p>Ruurd
+    <a href="http://www.sitechno.com/Blog/IntroducingEntityFrameworkContribEasyIPocoImplementationV01.aspx">
+    explains everything extensively</a> on his blog. And even if you are not 
+interested in Microsoft Entity Framework, Ruurd&#39;s blog is a great introduction 
+to how to write more complex aspect libraries with PostSharp. </p>
+<p>Thank you Ruurd for this excellent work!</p>

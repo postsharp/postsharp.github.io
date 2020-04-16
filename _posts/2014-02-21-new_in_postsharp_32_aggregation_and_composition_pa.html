@@ -1,0 +1,121 @@
+---
+layout: post
+title: "New in PostSharp 4.0: Aggregation and Composition Patterns"
+date: 2014-02-21 14:56:00 +01:00
+categories: []
+permalink: /post/new-in-postsharp-32-aggregation-and-composition-patterns.html
+---
+<p><em>NOTE: This blog post is about an available pre-release of PostSharp. You can install <strong>PostSharp 4.0</strong> only using NuGet by enabling the “Include pre-release” option.</em></p>
+<p>At PostSharp Technologies, we see our role as making it easier to build good software. We believe that source code, and not UML diagrams or documentation, should be the reference artifact. If the goal is to make it easier to build good software, then we should necessarily focus on making source code simpler. Ideally, the source code should be at the same level of abstraction as our thinking. So if we are thinking in terms of design patterns, we should be able to code in terms of design patterns. Unfortunately, conventional compilers have no concept of design patterns. This is why we built PostSharp: to empower developers to tell their compiler <em>what</em> needs to be done, not <em>how</em> to do it.</p>
+<p>In <strong>PostSharp 4.0</strong>, we decided to implement more design patterns and to do it better. After some reflection, it became clear that many design patterns rely on a fundamental concept: the parent-child relationship. This is so common that we easily forget about it. Yet how many times did you find yourself implementing a parent-child relationship manually?</p>
+<p>To move forward with other design patterns, we had to provide a good implementation of the parent-child relationship. We decided to stick to the UML terminology, where this kind of relationship is named an <strong>Aggregation</strong>. Objects in an aggregation relationship form a tree (acyclic graph). UML also defines a kind of relationship named a <strong>Composition</strong>. A composition relationship is a parent-child (or whole-part) relationship where the lifetime of the children is controlled by the parent; when the parent is destroyed, all children must be destroyed in cascade. Aggregation and composition are often considered equivalent in garbage-collected platforms because there is no explicit lifetime control. In .NET, the Composition pattern makes sense in combination with the Disposable pattern, i.e. children are disposed when the parent is disposed.</p>
+<p>How did we do it in <strong>PostSharp 4.0</strong>?</p>
+<h2>Aggregatable Aspect</h2>
+<p>The core of our implementation of the Aggregation pattern is the <em>Aggregatable</em> aspect. Any class whose instances may need to be a part of an aggregation must be annotated with the <em>[Aggregatable]</em> custom attribute. You will find this aspect in the <em>PostSharp.Patterns.Common</em> library and the NuGet package.</p>
+<p>Let’s examine this aspect in action on a simple example where an invoice entity is composed of one instance of the Invoice class and several instances of the InvoiceLine class:</p>
+<pre>[Aggregatable]
+public class Invoice
+{
+    [Child]
+    public readonly AdvisableCollection&lt;InvoiceLine&gt; Lines = new AdvisableCollection&lt;InvoiceLine&gt;();
+
+    [Child]
+    public readonly AdvisableCollection&lt;InvoiceDiscount&gt; Discounts = new AdvisableCollection&lt;InvoiceDiscount&gt;();
+
+    [Reference]
+    public Customer Customer;
+}
+
+[Aggregatable]
+public class InvoiceLine
+{
+    [Reference]
+    public Product Product;
+
+    [Parent]
+    public Invoice ParentInvoice { get; private set; }
+}
+
+[Aggregatable]
+public class InvoiceDiscount
+{
+    public decimal Percent;
+    public string Reason;
+
+    [Parent]
+    public Invoice ParentInvoice { get; private set; }
+}
+</pre>
+<p>As shown, fields and automatic properties are annotated with the following custom attributes:</p>
+<ul>
+<li>[Child] means that the field/property value is a child of the current instance.</li>
+<li>[Parent] means that the field/property must be automatically set to the parent whenever the current instance is assigned to a [Child] field/property of another object.</li>
+<li>[Reference] means that the value is neither a [Child] neither a [Parent].</li>
+</ul>
+<p>Value-type or primitive-type fields and properties don’t need to be annotated. Note that it is allowed to assign a non-aggregatable object to a child field; the child object will be visible to the parent anyway.</p>
+<h2>IAggregatable interface</h2>
+<p>At this point, you may wonder 1) why we need an aspect to maintain the child-parent relationship, and 2) what is the aspect’s benefit over plain C# code.</p>
+<p>The real motivation of the Aggregatable aspect is to expose the parent-child relationship as an abstraction that can be consumed by other components that don’t have knowledge of the shape of the domain objects.</p>
+<p>The aspect makes this possible by automatically implementing the IAggregatable interface as below:</p>
+<pre>public interface IAggregatable 
+{
+    bool VisitChildren(ChildVisitor visitor, ChildVisitorOptions options);
+    object Parent { get; }
+    Relationship ParentRelationship { get; }
+    event EventHandler ParentChanged;
+    event EventHandler AncestorChanged;
+
+    // Implementation details omitted.
+}
+
+</pre>
+<p>The <em>VisitChildren</em> method allows any consumer to execute a delegate for each child of the object without knowing where these children are stored. In our <em>Invoice</em> example, children are stored both in the <em>Lines</em> and <em>Discounts</em> collection. It may seem weird to present children using a visitor rather than an enumerable, and we chose this design intentionally for performance reasons because the pattern can then be implemented without resorting to additional data structures.</p>
+<h2>AdvisableCollection and AdvisableDictionary</h2>
+<p>In the above example, you can see that the type of the <em>Lines</em> and <em>Discounts</em> fields of the Invoice class is special: <em>AdvisableCollection</em>. We clearly needed a special collection that would implement the Aggregatable pattern: minimally, we need a collection to set the Parent field of all children objects.</p>
+<p>We could create an AggregatableCollection for the Aggegatable pattern, then a FreezableCollection for the Freezable pattern, then a ReaderWriterSynchronizedCollection, and so on. Every time you want to add a behavior to an object model, there is a need for a specialized collection type. This situation would quickly become unmanageable.</p>
+<p>Instead, we decided to create a general collection to which behaviors can be added dynamically at runtime. An AdvisableCollection or an AdvisableCollection automatically implements the Aggregatable pattern as soon as it is assigned to a [Child] field of an Aggregatable object. This may sound a bit strange but this is plain old object-oriented programming, and no MSIL transformation is involved in this feature.</p>
+<p>Since part of the Aggregatable pattern is to implement the IAggregatable interface, we needed a way to dynamically add interfaces to an object. This is clearly impossible in .NET, so instead we chose not to reinvent the wheel and borrow from COM’s QueryInterface method.</p>
+<p>So, when you need to cast an AdvisableCollection to IAggregatable, you can use:</p>
+<pre>IAggregatable aggregatable = collection.QueryInterface&lt;IAggregatable&gt;();</pre>
+<h2>Disposable Aspect</h2>
+<p>A composition relationship is, by definition, an aggregation relationship where the parent controls the lifetime of children. In .NET terms, it means that the <em>Dispose</em> method of a parent should invoke the <em>Dispose</em> method of children.</p>
+<p>This is exactly what we did with the Disposable aspect. Based on the Aggregatable pattern, the Disposable pattern automatically implements the IDisposable interface, calling the Dispose method of all children in a depth-first traversal.</p>
+<p>The Disposable aspect automatically adds the Aggregatable aspect if it is not yet applied to the type. Note that the leaves of the object tree don’t need to have the Disposable aspect if they already implement the IDisposable interface.</p>
+<p>The following example demonstrates a composition of three classes: Multiplexer, Sink and TextWriter.</p>
+<pre>[Disposable]
+class Multiplexer
+{
+    [Child]
+    AdvisableCollection&lt;Sink&gt; sinks = new AdvisableCollection&lt;Sink&gt;();
+
+    public void WriteLine(string text)
+    {
+        foreach (Sink sink in sinks)
+        {
+            sink.WriteLine(text);
+        }
+    }
+    
+}
+
+[Disposable]
+class Sink
+{
+    [Child]
+    private TextWriter textWriter;
+    
+    public Sink(TextWriter textWriter)
+    {
+        this.textWriter = textWriter;
+    }
+
+    public void WriteLine(string text)
+    {
+        this.textWriter.WriteLine(text);
+    }
+}
+
+</pre>
+<p>In the example above, all TextWriter instances will be disposed when the parent Multiplexer instance will be disposed.</p>
+<h2>Advantage</h2>
+<p>PostSharp 4.0 now provides a ready-made implementation of two fundamental object relationship patterns: Aggregation and Composition. This lays the ground for other pattern implementations such as freezable, immutable, recordable and synchronized. The curious reader will find some of these patterns. <br> We’ll blog about these other patterns in the next days.</p><p><em>UPDATE: Change product version from PostSharp 3.2 to PostSharp 4.0.</em></p>

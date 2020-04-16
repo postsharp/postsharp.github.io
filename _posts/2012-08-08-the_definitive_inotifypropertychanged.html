@@ -1,0 +1,255 @@
+---
+layout: post
+title: "The Definitive Guide to Automating the Implemention of INotifyPropertyChanged"
+date: 2012-08-08 17:20:00 +02:00
+categories: [Toolkits]
+permalink: /post/the-definitive-inotifypropertychanged.html
+---
+<p><strong>Updated&nbsp;</strong><strong>by Gael Fraiteur on&nbsp;</strong><strong>February, 2020.</strong></p>
+<p>&nbsp;</p>
+<p>It's been a while ago since PostSharp has introduced the first tool to treat the implementation of <a href="https://www.postsharp.net/mvvm" target="_parent">INotifyPropertyChanged</a> seriously and finally end change notifications pain for WPF developers!</p>
+<p>Let's start from the beginning...</p>
+<h2>The Problem</h2>
+<p>When you work with WPF using patterns such as Model-View-ViewModel (<a href="https://www.postsharp.net/mvvm" target="_parent">MVVM</a>) or, in fact, any kind of data binding to your domain classes, in most cases you need to implement property values change notifications for your mutable objects. The .NET framework provides you with <em>INotifyPropertyChanged</em> interface but sadly leaves you the burden of implementing it.<strong> If you try to manually implement the interface</strong>, you'll end up with classes which look like this:</p>
+<pre>public class Customer : INotifyPropertyChanged
+{
+    private string firstName;
+    public string FirstName
+    {
+        get { return firstName; }
+        set
+        {
+            firstName = value;
+            OnPropertyChanged("FirstName");
+            OnPropertyChanged("FullName");
+        }
+    }
+ 
+    private string lastName;
+    public string LastName
+    {
+        get { return lastName; }
+        set
+        {
+            lastName = value;
+            OnPropertyChanged("LastName");
+            OnPropertyChanged("FullName");
+        }
+    }
+
+    public string FullName
+    {
+        get { return string.Concat(firstName, " ", lastName); }
+    }
+
+ 
+    public event PropertyChangedEventHandler PropertyChanged;
+ 
+    protected virtual void OnPropertyChanged(string propertyName)
+    {
+        PropertyChangedEventHandler handler = PropertyChanged;
+        if (handler != null)
+        {
+            handler(this, new PropertyChangedEventArgs(propertyName));
+        }
+    }
+}<br /><br /></pre>
+<p>&nbsp;</p>
+<p><strong>There are at least two problems here</strong>.</p>
+<p>First, notice the amount of boilerplate code in the solution. Instead of using simple automatic properties (one line of code), you need to create regular field-backed properties with OnPropertyChanged calls in each of them. Each property must also be aware of all other properties depending on its value (and we're still ignoring any inter-object dependencies).</p>
+<p>What's worse, the code is now riddled with string literals. Just a minor typo is enough for the notifications to silently fail (with no build-time error and no runtime exception). Refactoring also becomes much harder &ndash; whenever you change the name of the property, you need to change the literal as well. Some refactoring tools might help here, but once you have several classes with the same property name (and you <em>are</em> going to have <em>Name</em> and <em>Description</em> properties on multiple classes) you can't fully trust them anymore.</p>
+<p>If writing all this boilerplate code seems tiresome to you, think about tedium involved in debugging all the subtle problems that are so easily introduced by making a single typo or forgetting about a single dependency. Oh, the humanity!</p>
+<h2>Existing (Non-)Solutions</h2>
+<p>The problem is obviously not new and there are several libraries attempting to tackle it. Some of them would require you to create proxies or wrapper classes around your objects, introducing another layer of indirection and code complexity. Others simply make your boilerplate code less error-prone. In C# 5 (or using ActiveSharp in pre .NET 4.5 environment) writing basic properties can be simplified to repeating a pattern similar to this one:</p>
+<pre>private int foo;
+public int Foo
+{
+    get { return foo; }
+    set { SetValue(ref foo, value); }
+}</pre>
+<p>&nbsp;</p>
+<p>The more advanced solutions use IL weaving to automatically introduce property change notifications without actually requiring you to write any dedicated code. They can also handle basic properties dependencies supporting usage scenarios such as the one in this code snippet:</p>
+<p>&nbsp;</p>
+<pre>public class Person : INotifyPropertyChanged
+{
+    public string GivenNames { get; set; }
+    public string FamilyName { get; set; }
+
+    public string FullName
+    {
+        get
+        {
+            return string.Format("{0} {1}", GivenNames, FamilyName);
+        }
+    }   //...
+}</pre>
+<h2>Real Life</h2>
+<p>As usual, limitations and problems become obvious when you start using those solutions in real life. While they may handle the easy scenarios easily, it turns out that what you actually want to write in your code is not always that simple.</p>
+<p>First, you may have various reasons to set field values directly and not via property setters. You may not even have properties for some of the fields at all:</p>
+<pre>private string firstName;
+private string lastName;
+
+public string Name
+{
+    get { return string.Concat(firstName, " ", lastName); }
+}</pre>
+<p>&nbsp;</p>
+<p>The problem here is that none of the previously available solutions are able to automatically react to field values changes.</p>
+<p>Second, when creating MVVM applications you will often want to have properties depending on values of child objects&rsquo; properties:</p>
+<pre>private Customer customer;
+
+public string CustomerName
+{
+    get { return string.Concat(this.customer.FirstName,
+                               " ", this.customer.LastName); }
+}</pre>
+<p>&nbsp;</p>
+<p>How do you raise change notifications for the CustomerName property in this case?</p>
+<p>You could try listening to <em>NotifyPropertyChanged</em> events of the Customer object, but you would have to manually write code to properly add and remove the necessary event handlers. Imagine how complicated and error-prone it would get with multi-level dependencies:</p>
+<pre>public string CustomerCity
+{
+   get { return this.customer.Address.City; }
+}</pre>
+<p>&nbsp;</p>
+<p>Enter PostSharp' solution.</p>
+<h2>Tackling INotifyPropertyChanged with PostSharp&nbsp;</h2>
+<p>Having personally experienced all the above pain points, and having at our disposal all the power of PostSharp, we decided to finally tackle the problem of property change notifications for (nearly) all standard business cases.</p>
+<p>We made sure to concentrate on useful cases rather than just the easy ones.</p>
+<p>PostSharp properly supports all of the above cases while also providing API and customization points for even more sophisticated scenarios. It automatically handles the following:</p>
+<ul>
+<li>automatic and field-backed properties;</li>
+<li>complex properties directly or indirectly depending on fields and other properties of the same class;</li>
+<li>complex properties depending on methods within the same class (as long as they do not depend on methods in other classes);</li>
+<li>complex properties depending on properties of child objects providing change notifications (automatically in case of simple property chains, basing on explicit declaration of dependencies in case of arbitrarily complex code).</li>
+</ul>
+<p>To better understand the power of PostSharp simply have a look at the code below:</p>
+<pre>[NotifyPropertyChanged]
+class CustomerViewModel
+{
+    private Customer customer;
+ 
+    public CustomerViewModel(Customer customer)
+    {
+        this.customer = customer;
+    }
+ 
+    public string FirstName
+    {
+        get { return this.customer.FirstName; }
+        set { this.customer.FirstName = value; }
+    }
+ 
+    public string LastName
+    {
+        get { return this.customer.LastName; }
+        set { this.customer.LastName = value; }
+    }
+ 
+    public Address Address { get { return this.customer.Address; } }
+ 
+    public string FullName { get { return this.customer.FullName; } }
+ 
+    public string BusinessCard
+    {
+        get
+        {
+            StringBuilder stringBuilder = new StringBuilder();
+            stringBuilder.Append(this.FirstName);
+            stringBuilder.Append(" ");
+            stringBuilder.Append(this.LastName);
+            stringBuilder.AppendLine();
+            stringBuilder.AppendLine(this.customer.Address.Line1);
+            string line2 = this.customer.Address.Line2;
+            if (!string.IsNullOrWhiteSpace(line2))
+            {
+               stringBuilder.AppendLine(line2);
+            }
+            stringBuilder.Append(this.customer.Address.PostalCode);
+            stringBuilder.Append(' ');
+            stringBuilder.Append(this.customer.Address.Town);
+ 
+            return stringBuilder.ToString();
+        }
+    }
+}
+
+[NotifyPropertyChanged]
+class Customer
+{
+    private string lastName;
+    private Address address;
+ 
+    public string FirstName { get; set; }
+ 
+    public string LastName
+    {
+        get { return lastName; }
+        set { lastName = value; }
+    }
+ 
+    public Address Address
+    {
+        get { return address; }
+        set { address = value; }
+    }
+ 
+    public string FullName
+    {
+        get { return string.Join( " ", this.FirstName, this.LastName ); }
+    }
+ 
+    public void Reset()
+    {
+        this.FirstName = null;
+        this.lastName = null;
+        this.address = null;
+    }
+ 
+}</pre>
+<p>&nbsp;</p>
+<p>Yes, all the properties in the above classes are going to automatically raise change notifications, thanks to just the single NotifyPropertyChangedAttribute per class!</p>
+<p>And that&rsquo;s not all, our toolkit is the first framework that realizes you may not always want to raise change notification immediately after property value change. Consider this snippet:</p>
+<pre>public class Account
+{
+    public decimal Balance { get; private set; }
+    public DateTime LastOperationTime { get; private set; }
+    public int RemainingDailyOperationsLimit { get; private set; }
+ 
+    //...
+
+    public void Withdraw(decimal amount)
+    {
+        //... all kinds of checks ...
+
+        this.LastOperationTime = DateTime.UtcNow;
+        this.RemainingDailyOperationsLimit--;
+        this.Balance -= amount;
+    }
+ 
+    //...
+}<br /><br /></pre>
+<p>&nbsp;</p>
+<p>In all the solutions considered so far, this snippet would raise notification after each single property change, which means that at the time the first 2 of 3 events have been raised, the Account object would be in an inconsistent state, some property values would have already been modified and some not.</p>
+<p>In this case your change notification listener would see an object in which the last operation time is already updated, but the account balance is lagging behind. This may not be a serious issue if all you need the notifications for is a simple case of displaying the values on-screen. It does get serious, however, as soon as any kind of business (or even more advanced presentation) code starts to react to the events.</p>
+<p>The only consistent solution here is to raise all the events at the end of the method only. And that is exactly what our framework does. It intelligently identifies when execution flows back from an object to its caller, and only then, when the object state should again be consistent, raises all pending change notifications. All this, so there is nothing for you to worry about.</p>
+<h2>Summary</h2>
+<p>The automatic property change notifications mechanism in the PostSharp automatically handles all standard business cases and generates exactly the right notifications, at exactly the right time.</p>
+<p>PostSharp frees you from spending precious time on infrastructural issues and keeps you focused on business logic.</p>
+<p>As always, you can trust our solution not to misbehave or fail silently. If we encounter any code construct we can't properly handle automatically, we'll notify you about it by emitting an error at compile time. You'll then have a chance to use an additional attribute to help the Toolkit identify the property or method dependencies. Or, if you prefer, you can take even more control by using our public API to deal with your corner cases. But that's a topic for another blog post and honestly we don't expect you to need that possibility often (if ever).</p>
+<p>&nbsp;</p>
+<p>Happy PostSharping!</p>
+<p><em>Karol Walędzik is an enterprise software applications architect and developer at Internetium Sp. z o.o. (Warsaw, Poland), as well as a .NET Programming and Artificial Intelligence lecturer and AI researcher at Warsaw University of Technology.</em></p>
+<p>&nbsp;</p>
+<div>
+<h1>Get Started with <strong>Free Essentials PostSharp Edition</strong></h1>
+<ul class="two-column">
+<li>
+<h2><strong>Unlimited Features. Limited Scope.</strong></h2>
+<ul>
+<li>Unlimited logging on your development machine.</li>
+<li>Apply all other patterns to up to 10 classes per project.</li>
+<li>A great solution for prototypes and small personal projects.</li>
+</ul>
+<a class="bluebutton" href="/essentials">DOWNLOAD FREE EDITION</a></li>
+</ul>
+</div>

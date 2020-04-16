@@ -1,0 +1,85 @@
+---
+layout: post
+title: "Announcing PostSharp 4.2 RTM"
+date: 2015-12-09 10:30:00 +01:00
+categories: [Announcements]
+permalink: /post/announcing-postsharp-42-rtm.html
+---
+<p>Today we’re excited to announce the release of PostSharp 4.2, available for download on NuGet and <a href="https://visualstudiogallery.msdn.microsoft.com/a058d5d3-e654-43f8-a308-c3bdfdd0be4a"> Visual Studio Gallery </a> .</p>
+<p>This release comes more than 10 months after PostSharp 4.1, and during most of this time the team was focused on a single objective: to improve the quality, performance and usability of existing features. The result: thread-safe design patterns, NotifyPropertyChanged and VB support are now way better than before. PostSharp 4.2 also includes brand new features like code metrics and experimental support for ASP.NET v5.</p>
+<h2>Threading Models Made Usable</h2>
+<p>When we announced PostSharp 4.0 in October 2014, we were truly excited to bring a huge innovation to the .NET community and even to the OOP world. This innovation was the ability to write thread-safe code in a mainstream object-oriented language thanks to compiler-supported design patterns. It was not the first time that design patterns were used to achieve thread safety, but this time design patterns were not mere implementation guidelines that developers would benevolently follow: thanks to PostSharp 4.0, patterns are enforced and implemented by the compiler based on declarative indications given by the developer as custom attributes. PostSharp 4.0 gave design patterns a new dimension: the ability to be automatically implemented or verified by the machine, not only saving costly development time, but also avoiding defects.</p>
+<p>Proud of our 4.0 release, we decided to dogfood it in a real-world project of us: our PostSharp Tools for Visual Studio, a medium-sized but fairly complex multithreaded codebase. Well, to be perfectly honest, we learned a lot during this project, and found so many issues that we decided that next time we would dogfood <em> before </em> our RTM release.</p>
+<p>Today we’re proud to announce that our thread-safety design patterns have reached a new level of quality and usability, with the following improvements:</p>
+<ul>
+<li>
+<p>Huge run-time performance improvement. Much lower load on GC at runtime.</p>
+</li>
+<li>
+<p>New <a href="http://doc.postsharp.net/t_postsharp_patterns_threading_threadsafetypolicy"> ThreadSafetyPolicy </a> attribute to emit warning when a class is not assigned to any threading model or when a static field is not of a thread-safe type. See <a href="http://doc.postsharp.net/thread-safety-policy"> Making a Whole Project or Solution Thread Safe </a> for details.</p>
+</li>
+<li>
+<p>Better support for async methods: for lock-based models, locks are being awaited asynchronously instead of synchronously. </p>
+</li>
+<li>
+<p>In the actor model, methods with non-void return type are now allowed and their execution will be done in the actor context, but the calling thread will wait synchronously for the execution to complete. Void but non-async methods must now be annotated with [Dispatched] (until the next major version) to specify if execution must be synchronous or asynchronous.</p>
+</li>
+<li>
+<p>New advisable class <a href="http://doc.postsharp.net/t_postsharp_patterns_collections_advisablehashset_1"> AdvisableHashSet&lt;T&gt; </a>as a replacement for<a href="http://msdn2.microsoft.com/en-us/library/bb359438"> HashSet&lt;T&gt;</a>.</p>
+</li>
+<li>
+<p>New methods to the <a href="http://doc.postsharp.net/t_postsharp_patterns_collections_advisablecollection_1"> AdvisableCollection&lt;T&gt; </a> class: <a href="http://doc.postsharp.net/m_postsharp_patterns_collections_advisablecollection_1_addrange_aa629baf"> AddRange(IEnumerable&lt;T&gt;) </a> , <a href="http://doc.postsharp.net/m_postsharp_patterns_collections_advisablecollection_1_insertrange_10bce59c"> InsertRange(Int32, IEnumerable&lt;T&gt;) </a> , <a href="http://doc.postsharp.net/m_postsharp_patterns_collections_advisablecollection_1_removerange_3055e964"> RemoveRange(Int32, Int32)</a>.</p>
+</li>
+<li>
+<p>Support for immutable collections like <a href="http://msdn2.microsoft.com/en-us/library/dn638261"> ImmutableArray </a> or <a href="http://msdn2.microsoft.com/en-us/library/dn467177"> ImmutableDictionary</a>.</p>
+</li>
+<li>
+<p>Support for type adapters to allow third-party classes (at least read-only ones) to work with the Aggregatable pattern. See <a href="http://doc.postsharp.net/t_postsharp_patterns_model_typeadapters_typeadapter"> TypeAdapter </a> for details.</p>
+</li>
+<li>
+<p>Ability to programmatically and automatically mark a field as child or reference without having to use a custom attribute in source code. See <a href="http://doc.postsharp.net/t_postsharp_patterns_model_typeadapters_fieldrule"> FieldRule </a> for details.</p>
+</li>
+</ul>
+<p>Note that these improvements also apply to other consumers of the Aggregatable pattern, principally the undo/redo feature.</p>
+<h2>Visual Basic Supported, Now Seriously</h2>
+<p>Since PostSharp operates on MSIL code, VB has been supported from the first day. However, we had no specific test coverage for VB, some VB-specific language constructs were badly supported. Additionally, several features were not available in VB, including PostSharp Tools for Visual Studio and resolution of file/line location in error messages. We decided these were too many gaps and that we had to make a choice: either drop advertisement for VB support or do it properly. We chose the latter.</p>
+<p>Starting with PostSharp 4.2, Visual Basic is fully supported at the same level as C#. And, yes, we now have tests written in VB.</p>
+<p>Note that VB support in Visual Studio is available for VS 2015 only because it relies on the Roslyn infrastructure. There are periodically speculations in the community that “VB is dead”, but Roslyn gives it a second life. PostSharp 4.2 is the proof.</p>
+<h2>NotifyPropertyChanged Improvements</h2>
+<p>PostSharp 4.2 keeps up with C# 6.0 and specifically with the long-awaited, Elvis-nicknamed “?.” operator.</p>
+<p>Previously, PostSharp’s implementation of INotifyPropertyChanged was already able to cope with property chains like "<em>this.model.Address.City” </em> . It now also supports chains that use the “?.” operator instead of “.”, for instance "<em>this.model?.Address?.City”. </em></p>
+<p>As a bonus, we now also support properties that depend on properties of variables that are set in conditional blocks (because this is what the Elvis operator does under the hood). For more information regarding this feature, see the <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-RC"> PostSharp 4.2 RC announcement </a> .</p>
+<p>That’s not all. We also support <a href="http://doc.postsharp.net/inotifypropertychanging"> INotifyPropertyChanging</a>.</p>
+<p>Oh, and we also did amazing performance improvements in this release. I mean terrific: we’re now 10x faster at runtime than with PostSharp 4.1.</p>
+<h2>Aspect Framework Improvements</h2>
+<p>Although the aspect framework was not our main focus in this release, we added the following features to support the previous improvements:</p>
+<ul>
+<li>
+<p>New advice <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_onaspectsinitializedadvice"> OnAspectsInitializedAdvice </a> invoked after all aspects on the current object have been initialized.</p>
+</li>
+<li>
+<p>Ability to customize the description of aspects and advices in Visual Studio tooltips. See <a href="http://doc.postsharp.net/customizing-aspect-description"> Customizing Aspect Description in Tooltips </a> for details.</p>
+</li>
+<li>
+<p>In the <a href="http://doc.postsharp.net/t_postsharp_aspects_onmethodboundaryaspect"> OnMethodBoundaryAspect </a> and related aspects, ability to yield (await) a state machine upon on entry and resume.</p>
+</li>
+<li>
+<p>Module initializers. See <a href="http://doc.postsharp.net/module-initializer"> Executing Code Just After the Assembly is Loaded </a> and <a href="http://doc.postsharp.net/t_postsharp_aspects_moduleinitializerattribute"> ModuleInitializerAttribute </a> for details.</p>
+</li>
+</ul>
+<h2>Code Saving Metrics</h2>
+<p>First we believed it would be a non-feature for developers and we did it for, hum, sales and marketing purposes. But the feedback we got is overwhelmingly positive.</p>
+<p>Briefly said, PostSharp Tools for Visual Studio now tell you how many lines of hand-written code you have, and many lines of code you saved thanks to PostSharp. To see the metrics, build your project and go to the <em> PostSharp </em> / <em> PostSharp Metrics menu </em> item.</p>
+<p><img alt="" src="/assets/2015-12-09-announcing_postsharp_42_rtm/metrics.png"></p>
+<p>You can customize the amount of code considered save whenever one of your custom aspects is applied to a target declaration. For details, see <a href="http://doc.postsharp.net/estimating-code-saving"> Estimating Code Savings </a> .</p>
+<h2>Experimental Support for ASP.NET v5</h2>
+<p>Even if ASP.NET v5 is still preview, we are already providing some experimental support for it. Given the high fragility of ASP.NET v5 public APIs, we are shipping the ASP.NET v5 connector in a separate open-source project named <a href="https://github.com/postsharp/PostSharp.Dnx"> PostSharp.Dnx, </a> hosted on GitHub. Please look at the <a href="https://github.com/postsharp/PostSharp.Dnx"> project home page </a> for instructions.</p>
+<p>This experimental connector only supports the .NET Framework, i.e. neither CoreCLR nor Mono is supported.</p>
+<p>Note that our plan is to merge PostSharp.Dnx into our main PostSharp package when ASP.NET v5 and the PostSharp connector will be more stable.</p>
+<p>To make it possible to open-source the DNX connector, we had to publish a new NuGet package named <a href="https://www.nuget.org/packages/PostSharp.Compiler.Client/"> PostSharp.Compiler.Client </a> , which defines an API to invoke PostSharp. The MSBuild connector now also uses PostSharp.Compiler.Client.</p>
+<h2>Summary</h2>
+<p>PostSharp 4.2 significantly improves the performance and usability of the features introduced in PostSharp 4.0, namely the threading, aggregatable and undo/redo design patterns. It also brings first-class support for VB and makes our NotifyPropertyChanged aspect understand the new Elvis (?.) operator of C# 6.0.</p>
+<p>At PostSharp, we’re more than ever focused on making .NET development more productive, more enjoyable and more reliable. The way we’re achieving this is to put the compiler at work and make it write the boilerplate code for you. To give you an idea of how many lines of boilerplate code you avoided thanks to PostSharp, we added a nice tool window in Visual Studio.</p>
+<p>From now on, the team is working on PostSharp 4.3. Make sure you check our <a href="https://www.postsharp.net/support/roadmap"> roadmap </a> to see what’s coming next.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

@@ -1,0 +1,102 @@
+---
+layout: post
+title: "C# 5.0: async/await vs PostSharp"
+date: 2010-11-09 20:22:22 +01:00
+categories: []
+permalink: /post/c-50-asyncawait-vs-postsharp.html
+---
+<p>Greetings from TechEd in Berlin. I’ve just attended two sessions about the future and the design process of C# from Mads Togersen, the C# product manager.</p>  <p>As you all already know, the next version of C# will introduce two new keywords: <strong>async</strong> and <strong>await</strong>. The storyline of the demonstration of Anders Heljsber and Mads Togersen is strikingly similar to <a href="http://www.sharpcrafters.com/media/sc2010-preview" target="_blank">my typical demonstration scenario</a>: we start with long operation running in (and actually freezing) the GUI thread, then create a little mess trying to make this run in the background, then create a bigger mess by adding exception handling to this, and finally clean up that mess by the use of the new feature – PostSharp or C#. This is no coincidence we’re using the same sample. It’s because both the PostSharp team and the C# team are focused on solving important issues.</p>  <p>Beyond the similarity of the issue we try to solve in our demo, there are important differences in the way we address it. Let’s make a quick clarification.</p>  <p>Suppose we start with the following code:</p>  <pre>private void okButton_Click( object sender, RoutedEventHandler e ) 
+{ 
+  try 
+  { 
+     this.slowDatabase.Save(); 
+  } 
+  catch ( Exception e ) 
+  { 
+     MessageBox.Show(this, e.Message); 
+  } 
+}</pre>
+
+<h2>Asynchrony the PostSharp way</h2>
+
+<p>PostSharp makes it easy to run the method on the background thread. If you add an <strong>OnWorkerThread</strong> aspect to a method, PostSharp will marshal it to a background thread. We would add an exception handling aspect, which would now how to handle the exception properly and display the error message from the GUI thread.</p>
+
+<pre>[OnWorkerThread]<br />[ExceptionHandler]
+private void okButton_Click( object sender, RoutedEventHandler e ) 
+{ 
+   this.slowDatabase.Save(); 
+}</pre>
+
+<p>The implementation of OnWorkerThread is:</p>
+
+<pre>public sealed class OnWorkerThreadAttribute : MethodInterceptionAspect
+{
+    public override void OnInvoke( MethodInterceptionArgs eventArgs )
+    {
+        ThreadPool.QueueUserWorkItem( delegate { eventArgs.Proceed(); } );
+    }
+}</pre>
+
+<p>For details, please look at the&#160; <a href="http://www.sharpcrafters.com/media/sc2010-preview" target="_blank">recording</a> of my SC2010 presentation or, better, <a href="http://www.sharpcrafters.com/solutions/multithreading" target="_blank">this</a> documentation page related to multithreading aspects. </p>
+
+<p>Note that the PostSharp-based implementation releases the GUI thread (therefore the application remains responsive), but it still freezes a thread of the thread pool. You may or may not care. A thread costs 1MB of memory, so freezing a single thread is probably not a big issue. It certainly does not scale – but in this case, I doubt you really need to scale.</p>
+
+<p>Note that <em>PostSharp users have been able to write this kind of code for 4 years!</em></p>
+
+<h2>The Way of C# 5.0</h2>
+
+<p>The same code would look like this with C# 5.0:</p>
+
+<pre>async private void okButton_Click( object sender, RoutedEventHandler e ) 
+{ 
+  try 
+  { 
+     await this.slowDatabase.SaveAsync(); 
+  } 
+  catch ( Exception e ) 
+  { 
+     MessageBox.Show(this, e.Message); 
+  } 
+}</pre>
+
+<p>PostSharp beats C# 5.0 on the number of lines of code (because the exception handler is not implemented by an aspect), but here is not the point. </p>
+
+<p>Technically, the C# 5.0 solution is much better than what we could do with PostSharp. Indeed, this code does not require a background thread and does not freeze anything. The <strong>await</strong> keyword basically cuts the method in two parts. What’s above the <strong>await</strong> line gets executed immediately, and what’s below is executed after the asynchronous operation (<strong>SaveAsync</strong>) completes. Of course, this has a drawback: you have to rewrite your <strong>Save</strong> method in an asynchronous way. The benefits of the <strong>await</strong> keyword are yet more visible when the method is ‘split’ in more than two parts, or split in the middle of a&#160; loop. Anders’s example, where several images are downloaded and displayed asynchronously, is simply marvelous.</p>
+
+<h2>Background Execution vs. Asynchronous Execution</h2>
+
+<p>The major difference between the PostSharp-based approach and the C# 5.0-based approach is that the <strong>OnWorkerThread</strong> aspect would make a <em>synchronous</em> implementation of the <strong>Save</strong> operation work in a background thread (so the method is being <em>called</em> asynchrously, but the method is still synchronous), whereas C# 5.0 makes it easy to write real asynchronous code.</p>
+
+<p>There are two reasons why asynchronous operations are preferable to synchronous-but-background operations:</p>
+
+<ul>
+  <li>asynchronous operations do not block a thread – in server applications, threads should be considered as a rare resource; </li>
+
+  <li>asynchronous operations can run in parallel; and the new <strong>async</strong>/<strong>await</strong> syntax, combined with the <strong>Tasks</strong> API of .NET 4.0, make it pretty easy to coordinate parallel code. </li>
+
+  <li>[Update] every “segment” of an asynchronous method run in the calling context, for instance in the GUI thread, so you can update the GUI without the need of marshaling (PostSharp can help with marshaling, it’s still better if you don’t have to care). </li>
+</ul>
+
+<h1></h1>
+
+<h2>What does it mean for PostSharp?</h2>
+
+<h3></h3>
+
+<p>Does C# 5.0 make PostSharp obsolete? Not at all. </p>
+
+<p>First, we’re just talking about <em>one</em> use case of PostSharp, <em>one</em> aspect. PostSharp is an abstract aspect-oriented framework; it has not been designed to address a specific issue. It just means that, for this specific issue of asynchronous programming, there will be a better solution available… if you can wait several years.</p>
+
+<p>Second, there’re a lot of situations where running a long operation on a background thread is just fine, especially if the only interactions of the background operation with the GUI can be stereotyped into aspects (such as handing exceptions, changing the mouse pointer appearance, enabling/disabling some controls).</p>
+
+<p>Instead of decreasing the interest for PostSharp, I would actually expect the opposite: because asynchronous and multithreaded programming will gain popularity, more people will bump on the complexity of concurrency (locks, deadlocks, thread marshaling), and will be looking for tools to help them keep the source code clean and concise.</p>
+
+<p>That said, the new C# feature is very cool and I expect most users will want PostSharp to work fine with it. This is not going to be trivial. Suppose you add an exception handling aspect to an async method. You probably expect it to apply to the whole C# method and not only to the first segment of it running synchronously (which would happen if you used PostSharp 2.0 with C# 5.0 CTP). Or suppose you add a caching aspect to an async download method. How would you implement that? At first sight, aspects <strong>OnExceptionAspect</strong> and <strong>OnMethodBoundaryAspect</strong> must be updated to understand asynchronous semantics.</p>
+
+<p>So much for C# 5.0. In the next post, I will comment the vision of the C# team on aspect-oriented programming and compiler-as-a-service.</p>
+
+<p>Happy PostSharping!</p>
+
+<p>-gael</p>
+
+<p><em>See also: </em><a href="http://www.sharpcrafters.com/blog/post/Multithreaded-Apps-Made-Easy-Using-Aspects-Part-1.aspx" target="_blank"><em>Multithreaded Apps Made Easy Using Aspects</em></a></p>

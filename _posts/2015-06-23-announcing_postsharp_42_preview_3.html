@@ -1,0 +1,139 @@
+---
+layout: post
+title: "Announcing PostSharp 4.2 Preview 3"
+date: 2015-06-23 08:55:00 +02:00
+categories: []
+permalink: /post/announcing-postsharp-42-preview-3.html
+---
+<p>It has been a few weeks since the release of <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-1">PostSharp 4.2 Preview 1</a>. Today, I&rsquo;m happy to announce new features and improvements to PostSharp. If you want to discover them, you can download PostSharp from <a href="https://www.postsharp.net/downloads/postsharp-4.2">our website</a> or from NuGet (make sure to enable pre-releases).</p>
+<h2>What was new in PostSharp 4.2</h2>
+<p>In the <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-1">previous blog post</a>, I already announced the following improvements included in PostSharp 4.2 Preview 1:</p>
+<ul>
+<li>Support for Visual Basic</li>
+<li>Amazing performance improvements in ready-made patterns</li>
+<li>Other improvements in threading models</li>
+</ul>
+<p>Today, I&rsquo;m announcing the following new features:</p>
+<ul>
+<li>Thread-safety policy</li>
+<li>Ready-made patterns: support for System.Collections.Immutable</li>
+<li>Ready-made patterns: support for rules</li>
+<li>Module initializers</li>
+<li>Support for INotifyPropertyChanging</li>
+<li>OnAspectsInitialized advice</li>
+</ul>
+<h2>How we dogfooded our own threading models</h2>
+<p>Most of the improvements we are publishing in this release stem from dogfooding our threading models into PostSharp Tools for Visual Studio. I&rsquo;m proud to say that <strong>we now have a multithreaded VS extension without a single lock or event</strong>. Now that all threading assumptions have been made explicit and declarative, the code is much cleaner and easier to understand.</p>
+<p>Frankly, the experience was both exciting and awkward. Exciting because the result is amazing. Awkward because we filed more than 50 bugs, enhancements and user stories in the process &ndash; principally usability issues or improvements. Most of these tickets are addressed in PostSharp 4.2 Preview 3.</p>
+<h1>Thread-safety policy</h1>
+<p>Suppose that you have a large solution with hundreds of classes and you want to apply PostSharp thread safety to it. Typically, you would go through all classes and apply one of the PostSharp threading models. But how do you know you didn&rsquo;t forget anything?</p>
+<p>The short answer:</p>
+<pre>[assembly: ThreadSafetyPolicy]</pre>
+<p>When added to a project, the thread-safety policy shall emit a warning whenever it detects:</p>
+<ul>
+<li>A class without threading model</li>
+<li>A static field that is mutable or of a non thread-safe type.</li>
+</ul>
+<p>Having none of these warnings is not a 100% guarantee that your application is thread-safe. However, it catches the most common omissions. Once a class is assigned to a threading model, thread safety becomes the responsibility of the threading model itself, not of the thread-safety policy.</p>
+<p>The thread-safety policy is built using <a href="https://www.postsharp.net/architecture">PostSharp Architecture Framework</a>.</p>
+<h2>Ready-made patterns: support for System.Collections.Immutable</h2>
+<p>Let&rsquo;s face it: immutability is a great concept. It allows for excellent runtime performance and, most importantly, makes it easier to think about the semantics of your API. PostSharp provides the [<em>Immutable</em>] threading model to ensure your custom classes are immutable. Previously, you should have used an <em>AdvisableCollection</em> inside your immutable objects. However, the <em>AdvisableCollection</em> class is far from being as fast and convenient as immutable collections. That&rsquo;s why we added genuine support for System.Collections.Immutable in PostSharp ready-made patterns.</p>
+<p>So you can now mix PostSharp&rsquo;s threading models with Microsoft&rsquo;s immutable collections to build code that&rsquo;s thread-safe, highly readable, and still fast enough.</p>
+<p>Here is an example of class that has been ported to [<em>Immutable</em>]. Note that we did not completely refactor the solution to use immutable collections, that&rsquo;s why inputs and outputs of the class are still mutable arrays.</p>
+<pre>[Immutable]
+public class BasicWizardProcess : IWizardProcess
+{
+    [Child(ItemsRelationship = RelationshipKind.Reference)]
+    private ImmutableArray wizardParts;
+
+    public BasicWizardProcess( params IWizardPart[] wizardParts ) 
+    {
+        this.wizardParts = ImmutableArray.Create(wizardParts);
+    }
+        
+    public IWizardPart[] GetParts( IWizardController controller )
+    {
+        foreach ( IWizardPart part in this.wizardParts )
+        {
+            part.Controller = controller;
+        }
+        return this.wizardParts.ToArray();
+    }
+}
+</pre>
+<h2>Ready-made patterns: support for rules</h2>
+<p>Threading models and undo/redo require you to annotate your object model with a parent-child structure using the [<em>Child</em>] and [<em>Reference</em>] attributes. When you have a reference-type field, PostSharp needs to know whether it is a reference or a child (i.e. whether it is an association or an aggregation/composition). As a design decision, PostSharp does not assume that unannotated fields are automatically references.</p>
+<p>There are times when this design is unusable. For instance, there is no way to annotate fields generated by the WinForms or XAML designers.</p>
+<p>Starting from PostSharp 4.2, it becomes possible to assign the role of a field programmatically, by rule. A rule is simply a class derived from <em>FieldRule</em>. You need to register the rule using the [<em>RegisterFieldRule</em>] custom attribute.</p>
+<p>The following code shows our internal rules for WinForms. Note that this rule is automatically registered so there&rsquo;s no need for [<em>RegisterFieldRule</em>] in this specific case.</p>
+<pre>internal sealed class WinFormsFieldRule : FieldRule
+{
+    public override RelationshipKind? GetRelationshipKind(FieldInfo field)
+    {
+        if ( IsDerivedFrom(field.DeclaringType, "System.Windows.Forms.Control") &amp;&amp; ( field.Name == "components" <br />             || IsDerivedFrom( field.FieldType, "System.Windows.Forms.Control")  ))
+        {
+            return RelationshipKind.Reference;  
+        }
+        else
+        {
+            return null;
+        }
+    }
+}
+</pre>
+<p>The benefits of rules is that you don&rsquo;t have to explicitly use custom attributes everywhere. We will continue to require custom attributes if no rule is defined because we believe it&rsquo;s a good practice to force developers to think about the role of a field. However, you can now easily implement a rule that makes all fields references by default. Note that custom attributes always have priority over rules.</p>
+<p>Note also that rules are not yet integrated with the UI.</p>
+<h2>Module initializers</h2>
+<p>Ever wanted to execute code immediately when an assembly is loaded? Static constructors are not enough: you need a module initializer. VB has them, but C# does not. PostSharp 4.2 fixes this with the [<em>ModuleInitializer(int)</em>] custom attribute.</p>
+<p>Just add the custom attribute to a static public/internal void parameterless method. Here is an example. It also demonstrates how we test PostSharp internally:</p>
+<pre>public static class Program
+{
+    static StringBuilder trace = new StringBuilder();
+
+    public static int Main()
+    {
+        if (trace.ToString() != "0;1;2;")
+            return 1;
+
+        return 0;
+    }
+
+    [ModuleInitializer(0)]
+    public static void Method0()
+    {
+        trace.Append("0;");
+    }
+
+    [ModuleInitializer(1)]
+    public static void Method1()
+    {
+        trace.Append("1;");
+    }
+
+    [ModuleInitializer(2)]
+    public static void Method2()
+    {
+        trace.Append("2;");
+    }
+
+}
+</pre>
+<h2>Support for INotifyPropertyChanging</h2>
+<p>PostSharp has supported <em>INotifyPropertyChanged</em> for a long time now. It now also supports <em>INotifyPropertyChanging</em>.</p>
+<p>The feature is a bit tricky because <em>INotifyPropertyChanging</em> is not portable, but our [<em>NotifyPropertyChanged</em>] aspect is. Here is how to proceed:</p>
+<ol>
+<li>Your target class needs to implement <em>INotifyPropertyChanging</em> manually and it has to define a void <em>OnPropertyChanging(string)</em> method (typically protected). PostSharp will emit the event through the <em>OnPropertyChanging</em> method.</li>
+<li>If you want to support dependencies of objects that implement <em>INotifyPropertyChanging</em> but do not have the [<em>NotifyPropertyChanged</em>] aspect, you need to implement an <em>INotifyPropertyChangingAdapter</em> and register it using <em>NotifyPropertyChangedServices.PropertyChangingAdapter</em>.</li>
+</ol>
+<p>The procedure is a bit cumbersome so we (or you) could create a non-portable [NotifyPropertyChanging] aspect that would encapsulate this for a specific platform.</p>
+<h2>OnAspectsInitialized advise</h2>
+<p>How can you execute code after all aspects on a class have been initialized? Previously, you could not do that in a simple and reliable way. We decided to fix that, simply, because we needed it to fix a few bugs :) The solution is now to use [<em>OnAspectsInitializedAdvice</em>]:</p>
+<pre>[OnAspectsInitializedAdvice]
+public void OnAspectsInitialized(AspectInitializationReason reason)
+{
+}
+</pre>
+<h2>Summary</h2>
+<p>PostSharp 4.2 makes threading models usable in complex, real-world applications. We ate our own dogfood. We were scared by the number of small usability issues we encountered, but so relieved that our initial design was correct and robust.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

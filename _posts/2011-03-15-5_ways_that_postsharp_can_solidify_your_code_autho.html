@@ -1,0 +1,131 @@
+---
+layout: post
+title: "5 Ways That Postsharp Can SOLIDify Your Code: Authorization"
+date: 2011-03-15 13:30:00 +01:00
+categories: [Tutorial]
+permalink: /post/5-ways-that-postsharp-can-solidify-your-code-authorization.html
+---
+<p><em>Source code used in these blog posts is <a href="https://github.com/mgroves/PostSharp5">available on GitHub</a></em></p>
+<p>One of the best uses of AOP is to take cross-cutting concerns that repeat themselves over and over in your system, and move them into their own class.  This is a version of the Single Responsibility Principle (SRP).  Authentication and authorization are important parts of many applications, but too often the code to check if a user is authorized is spread all over the app, making logic changes difficult and regression common.  A class should have one and only one reason to change, so let's get the "auth" stuff into its own class.</p>
+<p>The main functionality of authentication isn't something that's normally spread out through an entire application.  In a web app, for instance, login and authentication is typically done on one login page (if it's done at the web application level at all--it could be done at the server level), and login information is stored in some sort of token with an expiration on it so that the user is automatically logged out after a certain period of time.  The only cross-cutting concern then, is that each web page that requires authentication needs to verify that the user is still logged in.  You could certainly use PostSharp to do this, but it really isn't (in my opinion) a particularly strong use-case for PostSharp.</p>
+<p>Authorization, on the other hand, is a great place to use PostSharp.  Too often the logic about which user role is allowed to perform which activity is messily scattered all over the application, and PostSharp can be used to organize it, as well as provide reusable object-oriented components.  Additionally, sometimes role-based security is too broad.  A more finegrained control is sometimes needed, for instance to restrict editing data unless you are the user who first created it.  Let's look at a sample application that's very similar to one I worked on as a consultant, and see how PostSharp can help.</p>
+<p>An application is needed for users to fill out government forms.  This would probably be a website, but I'll be using a WinForms app just to keep things simple for now.  Each user can submit government forms (just a single textbox in my example).  Administrators can delete the forms, but normal users can only submit (add) new forms and look at their existing forms.</p>
+<p>I won't list all the code here, but here's a service class that provides basic functionality for the above requirements.  This class is using a static collection as persistence, but of course a database, webservice, etc, would be used in a real app:</p>
+<pre>public class GovtFormService : IGovtFormService
+{
+	private static readonly IList _govtFormsDatabase = new List();
+
+	public GovtFormService()
+	{
+		// build up some initial entries of the static list
+	}
+
+	public void SubmitForm(GovtForm form)
+	{
+		_govtFormsDatabase.Add(form);
+	}
+
+	public IEnumerable GetAllForms()
+	{
+		return _govtFormsDatabase;
+	}
+
+	public GovtForm GetFormById(Guid guid)
+	{
+		return _govtFormsDatabase.FirstOrDefault(form =&gt; form.FormId == guid);
+	}
+}
+</pre>
+<p>Just wire up that service to the Windows form, and wire up the buttons on the form to each of those methods, and you have a basic application.  However, the requirement was that users should only be able to view the details of their own forms.  GetFormById currently doesn't do any checking at all.  We could put some if-statements in there, but let's instead create an aspect that we can use anywhere:</p>
+<pre>[Serializable]
+public class AuthorizeReturnValueAttribute : OnMethodBoundaryAspect
+{
+	[NonSerialized] private IAuth Auth;
+
+	public override void RuntimeInitialize(System.Reflection.MethodBase method)
+	{
+		Auth = new AuthService();
+	}
+
+	public override void OnSuccess(MethodExecutionArgs args)
+	{
+		var singleForm = args.ReturnValue as GovtForm;
+		if (singleForm != null)
+		{
+			if(Auth.CurrentUserHasPermission(singleForm, Permission.Read))
+			{
+				MessageBox.Show(
+				 "You are not authorized to view the details of that form",
+				 "Authorization Denied!");
+				args.ReturnValue = null;
+			}
+			return;
+		}
+	}
+}
+</pre>
+<p>This is one way to approach it.  Check to see if the method that is being intercepted is returning a GovtForm.  If it is, make sure it's a form that belongs to the current user.  Note that the IAuth field is marked as NonSerialized, and that it's initialized in the RuntimeInitialize override.  Instead of hardcoding the dependency, you could use a IoC container as a service locator instead (see <a href="http://www.sharpcrafters.com/blog/post/5-Ways-That-Postsharp-Can-SOLIDify-Your-Code-Lazy-Loading-of-Dependencies.aspx">previous post about dependency inversion</a>).</p>
+<p>Add a bit more code to the aspect, and we can handle methods that return a whole collection of GovtForms by "filtering" out the ones that the current user doesn't have access to.</p>
+<pre>var formCollection = args.ReturnValue as IEnumerable;
+if (formCollection != null)
+{
+	args.ReturnValue = formCollection
+			.Where(f =&gt; Auth.CurrentUserHasPermission(f, Permission.Read));
+	return;
+}
+</pre>
+<p>Of course, there's nothing special about GovtForm, other than the fact that it has a UserName property.  You could add an "ISecurable" interface to each business object class that you'd want to secure in this way, and then CurrentUserHasPermission would take an "ISecurable" argument rather than a GovtForm argument specifically.  Finally, put the "AuthorizedRecordsOnly" attribute on any service/repository method that returns a single business object or collection of business objects, and away you go: only the records the user is allowed to see will be returned, and you didn't need to make any major coding changes to the UI or to the services.</p>
+<p>Now that you have a couple of handy aspects under your belt, it's time to look at something a little more complex in the overall scheme of things.  Suppose you have a Caching aspect AND an Authorization aspect on a method.  Caching should probably come after authorization, otherwise unauthorized cached data might be returned.  So how do you enforce that Authorization is applied first, followed by the Caching aspect?  Here's how you do it:</p>
+<p>1. Apply a ProvideAspectRoleAttribute to one or more of your aspects.  This can be a custom string, or you can use the StandardRoles enumeration that comes with PostSharp</p>
+<p>2. Apply an AspectRoleDependencyAttribute to one or more of your aspects to specify the type of dependency, and the role that it is dependent upon.</p>
+<p>To fulfill the requirement that Authorization is applied first, then Caching, apply attributes to your aspects like so:</p>
+<pre>[Serializable]
+[AspectRoleDependency(AspectDependencyAction.Order,
+	AspectDependencyPosition.Before, StandardRoles.Caching)]
+public class AuthorizeReturnValueAttribute : OnMethodBoundaryAspect
+{
+}
+
+[Serializable]
+[ProvideAspectRole(StandardRoles.Caching)]
+public class CachingAttribute : OnMethodBoundaryAspect
+{
+	public override void OnEntry(MethodExecutionArgs args)
+	{
+		// do caching stuff
+	}
+
+	public override void OnSuccess(MethodExecutionArgs args)
+	{
+		// do caching stuff
+	}
+}
+</pre>
+<p>We're telling PostSharp that the Caching aspect belongs to the "Caching" role, and we're also telling PostSharp that the Authorization aspect should be applied "before" the Caching role.  Here's what the result looks like in Reflector when I apply both aspects to the "GetAllForms" method:</p>
+<pre>public IEnumerable GetAllForms()
+{
+	MethodExecutionArgs CS$0$2__aspectArgs = new MethodExecutionArgs(null, null);
+	&lt;&gt;z__Aspects.a1.OnEntry(CS$0$2__aspectArgs);
+	IEnumerable CS$1$1__returnValue = _govtFormsDatabase;
+	&lt;&gt;z__Aspects.a1.OnSuccess(CS$0$2__aspectArgs);
+	CS$0$2__aspectArgs.ReturnValue = CS$1$1__returnValue;
+	&lt;&gt;z__Aspects.a0.OnSuccess(CS$0$2__aspectArgs);
+	return (IEnumerable) CS$0$2__aspectArgs.ReturnValue;
+}
+</pre>
+<p>Just for demonstration, if I change Caching's AspectDependencyPosition to "Before" instead, here's what it looks like Reflector:</p>
+<pre>public IEnumerable GetAllForms()
+{
+	&lt;&gt;z__Aspects.a1.OnEntry(null);
+	MethodExecutionArgs CS$0$2__aspectArgs = new MethodExecutionArgs(null, null);
+	IEnumerable CS$1$1__returnValue = _govtFormsDatabase;
+	CS$0$2__aspectArgs.ReturnValue = CS$1$1__returnValue;
+	&lt;&gt;z__Aspects.a0.OnSuccess(CS$0$2__aspectArgs);
+	CS$1$1__returnValue = (IEnumerable) CS$0$2__aspectArgs.ReturnValue;
+	&lt;&gt;z__Aspects.a1.OnSuccess(null);
+	return CS$1$1__returnValue;
+}
+</pre>
+<p>Notice that a1 (caching) and a0 (authorization) usages are changed around.</p>
+<p>You have a lot of flexibility here to define dependencies if you need to: there are five dependency actions you can use (Commute, Conflict, Order, Require, and None), and besides StandardRoles, you can create an unlimited number of roles named by strings.  Hopefully, you won't need to use this feature too much, but it's good to know that it's there if you do.  The great thing is that this type of aspect composition allows you to relax knowing that even the newest member of team won't accidentally expose unauthorized data, no matter what order he lists the aspect attributes in the code.</p>
+<p><img src="/assets/2011-03-15-5_ways_that_postsharp_can_solidify_your_code_autho/mgroves.jpg" alt="" /><em>Matthew D. Groves is a software development engineer at&nbsp;<a href="http://telligent.com">Telligent</a>, and blogs at&nbsp;<a href="http://mgroves.com">mgroves.com</a>.</em></p>

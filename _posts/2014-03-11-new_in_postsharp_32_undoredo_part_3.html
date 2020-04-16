@@ -1,0 +1,237 @@
+---
+layout: post
+title: "New in PostSharp 4.0: Undo/Redo, Part 3"
+date: 2014-03-11 14:41:21 +01:00
+categories: []
+permalink: /post/new-in-postsharp-32-undoredo-part-3.html
+---
+<p>In the <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">previous</a> <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-2">posts</a>, I described the new undo/redo feature of PostSharp 4.0 and looked at most common use cases. In this post, I will show how you can
+        customize its default behavior.</p><p><em>This article is part of a series of 5 about undo/redo:</em></p><ol><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">Announcement and introduction</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-2">Getting started – tutorial</a></em></li><li><em><strong>Logical operations, scopes, naming</strong></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-4">Recorders, recorder providers, callbacks</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/VisualDesigner-or-how-to-build-your-own-domain-specific-PowerPoint">Case study: Visual Designer</a></em></li></ol><p><em>        NOTE: This blog post is about an available pre-release of PostSharp. You can install PostSharp 4.0 only using NuGet by enabling the “Include        pre-release” option. Undo/Redo is implemented in the package PostSharp.Patterns.Model. </em></p><p>This blog post covers the following topics:
+    </p>
+    <ul>
+        <li>
+            <p>
+                A conceptual introduction to logical operations
+            </p>
+        </li>
+        <li>
+            <p>
+                Defining the operation name declaratively
+            </p>
+        </li>
+        <li>
+            <p>
+                Avoiding automatic scopes
+            </p>
+        </li>
+        <li>
+            <p>
+                Defining atomic scopes declaratively
+            </p>
+        </li>
+        <li>
+            <p>
+                Defining scopes imperatively
+            </p>
+        </li>
+        <li>
+            <p>
+                Customizing scope names
+            </p>
+        </li>
+    </ul>
+    <h1>
+        Logical Operations
+    </h1>
+    <p>
+        The Recordable patterns record primitive changes to an object model into a <em>Recorder</em> object. Primitive changes are typically field value changes or
+        primitive collections operations such as <em>Add</em> or <em>Remove</em>. The Recorder itself is basically a list (i.e. a linear collection) of atomic changes. This simple
+        and beautiful structure is sufficient to implement the undo changes and revert the object model to any point in the past.
+    </p>
+    <p>
+        In practice however, you don’t want to undo to <em>any random</em> point in the past, but only to <em>safe</em> points. Typically, work on an object model
+        is separated into logical operations, which must be undone or redone as a whole. Users always want to undo an <em>operation</em>, not a primitive change.
+        Logical operations are implemented using the concept of <em>recording</em> <em>scope</em>. All changes done within a scope are grouped into a single
+        operation.
+    </p>
+    <p>
+        By default, any public method of a Recordable object automatically executes inside a scope. That is, all changes done by a single method call will always
+        be undone as a whole.
+    </p>
+    <p>
+        Note that scopes don’t necessarily define new operations. Because scopes can be nested but operations cannot, only the outermost will open an operation.
+        Nested scope will be ignored unless they are atomic scopes (see below).
+    </p>
+    <h1>
+        Defining the operation name declaratively
+    </h1>
+    <p>
+        Because they are apparent to users, operations must have a name that is meaningful to the user. One way to do that is to use the <em>[RecordingScope]</em> custom
+        attribute. Let’s see this on an example:
+    </p>
+    <pre>[Recordable]
+class TableBooking
+{
+    public string CustomerName { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }<br>
+    [RecordingScope("Postpone booking")]
+    public void Postpone(TimeSpan time)
+    {
+        this.StartTime += time;
+        this.EndTime += time;
+    }
+}
+</pre>
+    <h1>
+        Avoiding automatic scopes
+    </h1>
+    <p>
+        There are situations where you want to prevent the default behavior that executes each public method in a scope. To opt-out, you can use the<em>
+        [RecordingScope]</em> custom attribute and define the <em>RecordingScopeOption.Skip</em> flag.
+    </p>
+    <pre>[Recordable]
+class TableBooking
+{
+    public string CustomerName { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
+
+    [RecordingScope(RecordingScopeOption.Skip)]
+    public void Postpone(TimeSpan time)
+    {
+        this.StartTime += time;
+        this.EndTime += time;
+    }
+}
+</pre>
+    <h1>
+        Defining atomic scopes declaratively
+    </h1>
+    <p>
+        An atomic scope is a scope whose changes get rolled back if the code running inside the scope is not successful. Atomic scopes give the feeling that the
+        code runs in a “transaction”. However, unlike real transactional systems, atomic recording scopes don’t provide transaction isolation. Changes are visible
+        from other threads as soon as they are performed; there is no Commit semantic.
+    </p>
+    <p>
+        In the following code snippet, the <em>[RecordingScope]</em> attribute ensures that any change performed by the <em>LoadFile</em> method to the object will
+        be rolled back to its initial state in case the input file contains a line that cannot be parsed into an integer.
+    </p>
+<pre>[Recordable]
+class IntList
+{
+    [Child] 
+    private readonly AdvisableCollection&lt;int&gt; list = new AdvisableCollection&lt;int&gt;();<br>
+    [RecordingScope(RecordingScopeOption.Atomic)]
+    public void LoadFile(string file)
+    {
+        foreach (string line in File.ReadAllLines(file))
+        {
+            this.list.Add(int.Parse(line));
+        }
+    }
+}
+</pre>
+    <h1>
+        Defining scopes imperatively
+    </h1>
+    <p>
+        So far, we’ve seen how to define scopes declaratively using the <em>[RecordingScope]</em> custom attribute. Declarative programming is convenient, but sometimes
+        more flexibility is needed. For these situations, the <em>Recorder.OpenScope</em> method must be used. It allows you to open a scope, set its name, and
+        determine whether it should be atomic. The <em>OpenScope</em> method returns a <em>RecordingScope</em> object, which must be disposed at the end of the
+        scope. For atomic scopes, you must invoke the <em>Complete</em> method before disposing the object, otherwise the changes performed in this scope will be
+        rolled back.
+    </p>
+    <p>
+        The code snippet below uses the <em>[RecordingScope]</em> attribute to opt-out from the default scope, then uses <em>OpenScope</em> to open a new scope with a custom name.
+    </p>
+    <pre>[Recordable]
+class IntList
+{
+    [Child] 
+    readonly AdvisableCollection&lt;int&gt; list = new AdvisableCollection&lt;int&gt;();<br>
+    [RecordingScope(RecordingScopeOption.Skip)]
+    public void LoadFile(string file)
+    {
+        string scopeName = string.Format("Loading from {0}", file);<br>
+        using ( RecordingScope scope = 
+                      RecordingServices.DefaultRecorder.OpenScope(scopeName, RecordingScopeOption.Atomic))
+        {
+            foreach (string line in File.ReadAllLines(file))
+            {
+                this.list.Add(int.Parse(line));
+            }
+            scope.Complete();
+        }
+    }
+}
+
+</pre>   
+    <h1>
+        Customizing scope names
+    </h1>
+    <p>
+        In the example above, I’ve shown how to specify a custom scope name when the scope is opened. This approach requires to mix UI code (generation of
+        human-readable names) into domain code. It also demands more boilerplate code and can be cumbersome if you need have a large number of operations to
+        customize. For instance, what if you need to have a proper name for the operation of setting every property in your classes?
+    </p>
+    <p>
+        This use case is covered by the <em>OperationFormatter</em> class. PostSharp comes with a default formatter, which can be overridden thanks to the    <em>RecordingServices.OperationFormatter</em> property. Formatters form a chain of responsibility; if one formatter is not able to provide a name for an
+        operation, it should return <em>null</em>, which causes the next formatter to be invoked.
+    </p>
+    <p>
+        Formatters have access to the <em>operation descriptor</em>, which is an object describing the operation. The <em>IOperationDescriptor</em> interface has a
+        single property named <em>OperationKind</em>, which informs you to which class the descriptor must be cast.
+    </p>
+    <p>
+        In the following code snippet, we will show how to create a custom formatter that generates the same name as in the previous example.
+    </p>
+<pre>class CustomFormatter : OperationFormatter
+{
+    public CustomFormatter(OperationFormatter next)
+        : base(next)
+    {
+    }<br>
+    protected override string FormatImpl(IOperationDescriptor operation)
+    {
+        if (operation.OperationKind != OperationKind.Method)
+            return null;<br>
+        MethodExecutionOperationDescriptor descriptor = (MethodExecutionOperationDescriptor) operation;
+        if (descriptor.Method.DeclaringType == typeof (IntList) &amp;&amp; descriptor.Method.Name == "LoadFile")
+        {
+            string file = (string) descriptor.Arguments[0];
+            return string.Format("Loading from {0}", file);
+        }
+        return null;
+    }
+}
+</pre>
+    <p>
+        The following code inserts our custom formatter in the chain of responsibility:
+    </p>
+    <pre>RecordingServices.OperationFormatter = new CustomFormatter(RecordingServices.OperationFormatter);    </pre>
+    <p>
+        Of course, the example above is rather naïve because there is too much coupling between the formatter and the domain code. A more serious implementation
+        would probably rely on other custom attributes such as <em>[DisplayName]</em> of the <em>System.ComponentModel</em> namespace. PostSharp is agnostic about the implementation
+        of custom formatters and I just wanted to keep this example simple.
+    </p>
+    <h1>
+        Summary
+    </h1>
+    <p>
+        Scopes are the mechanism through which logical operations are defined. Logical operations are the “things” that are exposed to the user and that can be
+        undone or redone. Therefore, they must be named. PostSharp provides three ways to define scope: implicitly, declaratively, and imperatively. It also
+        provides, orthogonally, two ways to name operations: by setting the name when the scope is created, or lazily, based on the concept of <em>operation formatter</em>, which allows to better separate UI concerns from business logic. Finally, PostSharp defines the notion of    <em>atomic scope</em>, which causes all changes to be rolled back in case of exception.
+    </p>
+    <p>
+        These few concepts allow to customize how your code maps to undoable operations.
+    </p>
+    <p>
+        But there is more. In the next post, I will talk about multiple recorders and custom operations.
+    </p>
+    <p>
+        Happy PostSharping!
+    </p>
+    <p>
+        -gael
+    </p><p><em>UPDATE: Change product version from PostSharp 3.2 to PostSharp 4.0.</em></p>

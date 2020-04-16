@@ -1,0 +1,27 @@
+---
+layout: post
+title: "PostSharp Without The Installer"
+date: 2008-03-05 20:20:00 +01:00
+categories: [General]
+permalink: /post/postsharp-without-the-installer.html
+---
+<p>If you belong to those who don&#39;t like global installations, the
+ <a href="http://www.postsharp.org/blog/2008/02/announcing-postsharp-10-rc-2.html">
+ latest release candidate</a> should make you happy: there is now a binary 
+ distribution without installer.</p>
+ <p>This distribution should remove much of the mystery about how PostSharp 
+ integrates in the build process. Actually, since the installer does not 
+ modify the MSBuild target files for you, you have to do it yourself. The 
+ interesting thing is that you can do it in a per-project basis: instead of 
+ modifying global MSBuild target files, you can just import PostSharp in the 
+ projects that actually need it.</p>
+ <p>If you think this kind of installation is for you, <a href="/download">
+ download</a> the <strong>&#39;Binary - No Installer&#39;</strong> package, and read 
+ carefully the installation instructions in the file <strong>
+ doc/Build-Instructions.html</strong>.</p>
+ <p>Since this kind of distribution is quite new, I am looking forward for 
+ your comments.<br />
+ <br />
+ Happy PostSharping!<br />
+ <br />
+ Gael</p>

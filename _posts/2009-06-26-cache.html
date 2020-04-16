@@ -1,0 +1,8 @@
+---
+layout: post
+title: "Cache"
+date: 2009-06-26 08:02:50 +02:00
+categories: [General]
+permalink: /post/cache.html
+---
+<div style="height: 300px; overflow: auto"><h6>Custom Attribute That Caches</h6><span style="font-family: Consolas; color: blue; font-size: 10pt">public</span><span style="font-family: Consolas; font-size: 10pt"> <span style="color: blue">class</span> <span style="color: #2b91af">CacheAttribute</span> : <span style="color: #2b91af">OnMethodInvocationAspect<br /></span>{<br />    <span style="color: blue">public</span> <span style="color: blue">override</span> <span style="color: blue">void</span> OnInvocation(<span style="color: #2b91af">MethodInvocationEventArgs</span> eventArgs)<br />    {<br />        <span style="color: blue">object</span> value; <br />        <span style="color: blue">string</span> key = <span style="color: green">// Compute the cache key (details omitted).<br /></span><br />        <span style="color: blue">if</span> (!cache.TryGetValue(key, <span style="color: blue">out</span> value))<br />        { <br />            <span style="color: blue">lock</span> ( <span style="color: blue">this</span> )<br />            { <br />                <span style="color: blue">if</span> (!cache.TryGetValue(key, <span style="color: blue">out</span> value))<br />                {   <br />                    eventArgs.Proceed();<br />                    value = eventArgs.ReturnValue;<br />                    cache.Add(key, value);<br />                    <span style="color: blue">return</span>;<br />                } <br />            } <br />        }<br />        eventArgs.ReturnValue = value;<br />    }<br /></span><span style="line-height: 115%; font-family: Consolas; font-size: 10pt">}</span> </div>

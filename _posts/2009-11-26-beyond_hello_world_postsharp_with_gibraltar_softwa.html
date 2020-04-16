@@ -1,0 +1,99 @@
+---
+layout: post
+title: "Beyond Hello World: PostSharp with Gibraltar Software and SmartInspect"
+date: 2009-11-26 10:45:50 +01:00
+categories: [General]
+permalink: /post/beyond-hello-world-postsharp-with-gibraltar-software-and-smartinspect.html
+---
+
+<p>Tracing has long been the "Hello, world" sample of Aspect-Oriented 
+Programming. PostSharp does not make exception: tracing is still the first 
+aspect visible on the home page, and most of early PostSharp bloggers did 
+demonstrate AOP on a tracing aspect.</p>
+<p>Yet, as tracing is a fundamental part of any non-trivial application, some 
+advanced tools are available to .NET developers. Two of them deserve a special 
+attention since their vendor provides aspects that can be directly used with 
+PostSharp: <a href="http://www.gibraltarsoftware.com/see/PostSharp.aspx">
+Gibraltar</a> and
+<a href="http://blog.gurock.com/postings/aspect-oriented-logging-for-net-with-postsharp-and-smartinspect/848/">
+SmartInspect</a>.</p>
+<p>Don&#39;t ask me to compare these toolkits: they are actually sharp competitors. 
+Both have good web sites and a free trial, so I can only recommend you give them 
+both a try! And both have identified PostSharp as a natural complement to their 
+product (Gibraltar being the first).</p>
+<h2>Gibraltar</h2>
+<p>I have a special moral debt to Jay Cincotta, one of the guys behind 
+Gibraltar, since he recorded an amazing webcast of using PostSharp and Gibraltar 
+together. Jay, thank you very much for this video, I know how hard it is to 
+produce!</p>
+<object width="580" height="360"><param name="movie" value="http://www.youtube.com/v/UEEO9x1XczU&hl=cs_CZ&fs=1&border=1"></param><param name="allowFullScreen" value="true"></param><param name="allowscriptaccess" value="always"></param><embed src="http://www.youtube.com/v/UEEO9x1XczU&hl=cs_CZ&fs=1&border=1" type="application/x-shockwave-flash" allowscriptaccess="always" allowfullscreen="true" width="580" height="360"></embed></object>
+<p>With these aspects you can declaratively add Gibraltar logging to your 
+programs by simply tagging whatever methods, classes or namespaces you wish. 
+This lets you add powerful logging to your applications without the effort, 
+complexity or clutter of writing procedural logging code.</p>
+<ul>
+<li><b>[GTrace]</b> logs entry and exit from tagged methods including 
+appropriate message indentation.</li>
+<li><b>[GTraceField]</b> logs every change in value of a tagged field.</li>
+<li><b>[GException]</b> logs exceptions at the point they are raised. This 
+is a handy safe guard to ensure that both handled and unhandled exceptions 
+are logged by Gibraltar.</li>
+<li><b>[GTimer]</b> lets you graph method execution time in Gibraltar 
+providing invaluable information to identify bottlenecks and optimize 
+performance.</li>
+</ul>
+<p>These aspects (not the toolkit itself) are open-source and are hosted on 
+Google Code at <a href="http://code.google.com/p/postsharp-user-plugins/">
+http://code.google.com/p/postsharp-user-plugins/</a>.</p>
+<p>For more information, see
+<a href="http://www.gibraltarsoftware.com/See/PostSharp.aspx">Using PostSharp 
+with Gibraltar</a> on their web site.</p>
+<h2>SmartInspect</h2>
+<p>Following Gibraltar, SmartInspect provides similar aspects:</p>
+<ul>
+<li><strong>[SiTrace]</strong> automatically generates two log messages for 
+each method call: one for entering a method and one when a method exits. You 
+can also log the passed method arguments (when entering a method) and the 
+method result (when exiting a method), respectively.</li>
+<li><strong>[SiException] </strong>records all exceptions occurring in 
+methods enhanced by the aspect.</li>
+<li><strong>[SiField]</strong> lets you automatically record any changes to 
+values of object or class fields.</li>
+</ul>
+<p>The aspects can be downloaded from 
+<a href="http://www.gurock.com/smartinspect/resources/">SmartInspect Resources &amp; Extras</a> 
+(look for <em>SmartInspect PostSharp Adapter</em>).</p>
+<p>For more information, see 
+<a href="http://blog.gurock.com/postings/aspect-oriented-logging-for-net-with-postsharp-and-smartinspect/848/">Aspect-oriented logging for .NET with PostSharp and SmartInspect</a> 
+on their web site.</p>
+<h2>Support for Other Logging Frameworks</h2>
+<p>If you&#39;re interested in using PostSharp with Log4Net, remember to check out
+<a href="http://www.postsharp.org/contributions/instrumentation/log4postsharp">
+Log4PostSharp</a>, a project of Michal Dabrowski and Mark Kharitonov. Note that, 
+contrarily to what&#39;s now offered by Gibraltar and SmartInspect, Log4PostSharp 
+directly emits optimal instructions, resulting in much better runtime 
+performance. This is not a feature of the logging framework but of the aspect 
+implementation.</p>
+<p>Interestingly, there is also some aging project from Eclipse,
+<a href="http://www.eclipse.org/tptp/monitoring/resources/download/btm/index_4_4.html">
+Build to Manage for .NET</a>, providing PostSharp aspects for the IBM Tivoli 
+platform.</p>
+<h2>PostSharp Emerged as the De-Facto Standard</h2>
+<p>What&#39;s happening there is that PostSharp is emerging as the de-facto standard 
+for aspect-oriented programming on Microsoft .NET, just like AspectJ is for 
+Java.</p>
+<p>PostSharp 2.0 has been designed for the multi-vendor scenario, so that 
+multiple aspects shall merge robustly when applied on the same element of code, 
+even if these aspects come from different vendors who don&#39;t know about each 
+other.</p>
+<p>This means that ISVs can confidently rely on PostSharp to deliver aspects to 
+their own customers. Good to know: the upcoming price structure shall make it 
+very affordable for small ISVs to redistribute PostSharp free of royalties -- 
+while enabling their own customers to use all professional features of PostSharp 
+2.0, including the IDE extension, in conjunction with their software.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+<p>&nbsp;</p>
+
+
+

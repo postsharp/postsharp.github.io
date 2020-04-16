@@ -1,0 +1,98 @@
+---
+layout: post
+title: "Partial Trust, Windows Azure & Pluggable Serializers"
+date: 2008-11-03 22:53:47 +01:00
+categories: [General]
+permalink: /post/partial-trust-windows-azure-pluggable-serializers.html
+---
+<p>Would I be a perfect .NET developer if I did not blog about Windows Azure? I let the response to your own judgment, but even if you don't agree on that statement read on.</p>  <p>If you try to deploy a PostSharp-enabled assembly into the Development Fabric, you will probably get the following exception:</p>  <pre class="csharpcode"><span class="rem">[SecurityException: Request for the permission of type 'System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089' failed.]</span>
+<span class="rem">   System.Runtime.Serialization.Formatters.Binary.ObjectReader.CheckSecurity(ParseRecord pr) +10107255</span>
+<span class="rem">   System.Runtime.Serialization.Formatters.Binary.ObjectReader.ParseArray(ParseRecord pr) +155</span>
+<span class="rem">   System.Runtime.Serialization.Formatters.Binary.ObjectReader.ParseObject(ParseRecord pr) +151</span>
+<span class="rem">   System.Runtime.Serialization.Formatters.Binary.__BinaryParser.ReadArray(BinaryHeaderEnum binaryHeaderEnum) +581</span>
+<span class="rem">   System.Runtime.Serialization.Formatters.Binary.__BinaryParser.Run() +283</span>
+<span class="rem">   System.Runtime.Serialization.Formatters.Binary.ObjectReader.Deserialize(HeaderHandler handler, __BinaryParser serParser, Boolean fCheck, Boolean isCrossAppDomain, IMethodCallMessage methodCallMessage) +559</span>
+<span class="rem">   System.Runtime.Serialization.Formatters.Binary.BinaryFormatter.Deserialize(Stream serializationStream, HeaderHandler handler, Boolean fCheck, Boolean isCrossAppDomain, IMethodCallMessage methodCallMessage) +326</span>
+<span class="rem">   System.Runtime.Serialization.Formatters.Binary.BinaryFormatter.Deserialize(Stream serializationStream) +33</span>
+<span class="rem">   PostSharp.Laos.Serializers.BinaryLaosSerializer.Deserialize(Stream stream) in BinaryLaosSerializer.cs:46</span>
+<span class="rem">   PostSharp.Laos.LaosSerializer.Deserialize(Assembly assembly, String resourceName) in LaosSerializer.cs:68</span>
+<span class="rem">   ~PostSharp~Laos~Implementation..cctor() +365</span></pre>
+
+<p>Don't panic, it is not the end of the story.</p>
+
+<p>Clearly, there is a security exception. Looking at the stack trace, you see that the exception occurs in the <strong>BinaryFormatter.Deserialize</strong>. Indeed, the binary formatter requires full trust and... <strong>code running inside Windows Azure is only partially trusted</strong>. </p>
+
+<p>I could have written the same for code running inside SQL Server 2005, but it's less hyped: very often, when your code is hosted, it is not granted full trust.</p>
+
+<h3>Pluggable Serializers</h3>
+
+<p>If you are new to PostSharp, you may wonder why BinaryFormatter is invoked at runtime. In fact, at build time, aspects are instantiated and serialized into a binary stream. This stream is stored in a managed resource in the assembly and deserialized at runtime. That's why the binary formatter is invoked.</p>
+
+<p>Fortunately, PostSharp 1.5 CTP 2 comes with a new feature called <strong>pluggable serializers</strong>. Before, you had no choice: aspects were always serialized using the BinaryFormatter. It is the best tool for the job for most situations, but, as you can see here with partial-trust scenarios, it is not always possible to use it.</p>
+
+<p>But there are other serializers in .NET, isn't it? So why not to use them? That's exactly the idea behind pluggable serializers: you can now choose the serializer used to to serialize aspects at build time and deserialize them at rutime. </p>
+
+<p>PostSharp 1.5 comes with three serializers: <strong>BinaryLaosSerializer</strong> (relying on <strong>BinaryFormatter</strong>), <strong>XmlLaosSerializer</strong> (relying on <strong>XmlSerializer</strong>) and <strong>StateBagSerializer</strong> (requiring manual implementation in all classes, see documentation). All implement the abstract class <strong>PostSharp.Laos.Serializer</strong>; if you need another serializer, you can develop your.</p>
+
+<p>Once you have selected a serializer, you should tell PostSharp to use it for your aspect. This is done by applying the custom attribute <strong>LaosSerializerAttribute</strong> to your aspect class. For instance:</p>
+
+<div>
+  <pre class="csharpcode">[LaosSerializer(<span class="kwrd">typeof</span>(XmlLaosSerializer))]
+<span class="kwrd">public</span> <span class="kwrd">class</span> SomeAspect : OnMethodBoundaryAspect
+{ <br />  [XmlElement] <span class="kwrd">public</span> <span class="kwrd">string</span> Name;<br />
+  <span class="kwrd">public</span> <span class="kwrd">override</span> <span class="kwrd">void</span> OnEntry(MethodExecutionEventArgs eventArgs)
+  {
+      
+  }
+}</pre>
+  <style type="text/css">
+.csharpcode, .csharpcode pre
+{
+	font-size: small;
+	color: black;
+	font-family: consolas, "Courier New", courier, monospace;
+	background-color: #ffffff;
+	/*white-space: pre;*/
+}
+.csharpcode pre { margin: 0em; }
+.csharpcode .rem { color: #008000; }
+.csharpcode .kwrd { color: #0000ff; }
+.csharpcode .str { color: #006080; }
+.csharpcode .op { color: #0000c0; }
+.csharpcode .preproc { color: #cc6633; }
+.csharpcode .asp { background-color: #ffff00; }
+.csharpcode .html { color: #800000; }
+.csharpcode .attr { color: #ff0000; }
+.csharpcode .alt 
+{
+	background-color: #f4f4f4;
+	width: 100%;
+	margin: 0em;
+}
+.csharpcode .lnum { color: #606060; }</style></div>
+
+<p>Since this serializer does not require full trust... it simply works in Windows Azure!</p>
+
+<h3></h3>
+
+<h3>Why do I need a serializer, anyway?</h3>
+
+<p>Excellent remarks. Serializers are good when there there is some non-trivial state to be stored. But if your aspect is an isolated custom attribute with some public fields or public properties, it is far better to instantiate the attribute at runtime using the values provided to construct the custom attribute.</p>
+
+<p>For instance, if a custom attribute instance is defined by:</p>
+
+<div>
+  <pre class="csharpcode">[SomeAspect(Name = <span class="str">&quot;Hello&quot;</span>)]</pre>
+</div>
+
+<p>It would be much better (faster and byte-wise more compact) to create the aspect using the following code:</p>
+
+<pre class="csharpcode">SomeAspect instance = <span class="kwrd">new</span> SomeAspect { Name = <span class="str">&quot;Hello&quot;</span> };</pre>
+
+<p>This is exactly what happens if you use the custom attribute <strong>LaosSerializerAttribute </strong>and pass <strong>null</strong> to the constructor parameter. The aspect won't be serialized; it will be instantiated and initialized at runtime by some auto-generated code. And this is actually the way aspects for Compact Framework and Silverlight work.</p>
+
+<p>So remember: even if you don't write partially trusted code, you can still use the &quot;null serializer&quot; to improve the size and performance of your assemblies.</p>
+
+<p>Happy PostSharping!</p>
+
+<p>-gael</p>

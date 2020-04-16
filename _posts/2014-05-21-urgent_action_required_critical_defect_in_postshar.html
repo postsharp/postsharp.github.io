@@ -1,0 +1,173 @@
+---
+layout: post
+title: "URGENT ACTION REQUIRED. Critical Defect in PostSharp 3.1: process exits with code -199."
+date: 2014-05-21 11:36:42 +02:00
+categories: []
+permalink: /post/urgent-action-required-critical-defect-in-postsharp-31-process-exits-with-code-199.html
+---
+
+<p>
+    We’re sorry to announce that a critical defect affects all builds of PostSharp versions 3.1.0-3.1.40 and 3.2.0-3.2.20. We strongly recommend all projects
+    using PostSharp 3.1 to be upgraded to PostSharp 3.1.42.
+</p>
+<p>
+    <strong>Which projects are affected?
+</strong></p>
+<p>
+    It is important to understand that the defect acts as a “time bomb”. You will be affected by the project even if (a) you did not modify its source code, (b)
+    you did not upgrade PostSharp and (c) you did not install any Windows update.
+</p>
+<p>
+    Projects that (a) are bound to PostSharp 3.1.0-3.1.33 AND (b) that don’t cause PostSharp to emit an error or warning message are not affected.
+</p>
+<p>
+    <strong>Does the issue affect run-time behavior of applications built with PostSharp?
+</strong></p>
+<p>
+    No. The defect only affects build-time behavior.
+</p>
+<p>
+    <strong>What are the symptoms of the error?
+</strong></p>
+<p>
+    You may see one of the following symptoms, according to the kind of host:
+</p>
+<ul>
+    <li>
+        <p>
+            With <em>PostSharpHost=PipeServer </em>(typically on developer workstations): “connection unexpectly closed by the server” followed by
+            “Retrying to execute the pipe server” followed by “Error connecting to the pipe server. See previous warnings for details”
+        </p>
+    </li>
+    <li>
+        <p>
+            With <em>PostShatpHost=Native</em> (typically on build servers):
+        </p>
+        <ul>
+            <li>
+                <p>
+                    error MSB6006: "postsharp.4.0-x64.exe" exited with code -199
+                </p>
+            </li>
+            <li>
+                <p>
+                    error MSB6006: "postsharp.4.0-x86.exe" exited with code -199.
+                </p>
+            </li>
+            <li>
+                <p>
+                    error MSB6006: "postsharp.4.0-x64-cil.exe" exited with code -199
+                </p>
+            </li>
+            <li>
+                <p>
+                    error MSB6006: "postsharp.4.0-x86-cil.exe" exited with code -199.
+                </p>
+            </li>
+        </ul>
+    </li>
+    <li>
+        <p>
+            With <em>PostSharpHost=Managed</em>: The license dialog of Nove.CodeDOM appears.
+        </p>
+    </li>
+</ul>
+<p>
+    <strong>ACTION REQUIRED
+</strong></p>
+<p>
+    Upgrade all projects using PostSharp 3.1.0-3.1.40 using NuGet Package Managers:
+</p>
+<ol>
+    <li>
+        <p>
+            Open the solution in Visual Studio
+        </p>
+    </li>
+    <li>
+        <p>
+            Click on menu item Tools / NuGet Package Manager / Manage NuGet Packages for Solutions…
+        </p>
+    </li>
+    <li>
+        <p>
+            Go to the Update tab.
+        </p>
+    </li>
+    <li>
+        <p>
+            Update all PostSharp packages to version 3.1.42 or higher.
+        </p>
+    </li>
+    <li>
+        <p>
+            Deploy the new source code to build server and team members.</p></li></ol><p>Note: Updating the PostSharp Visual Studio Extension (VSiX) is not required and does not solve the issue.</p>
+    
+
+<p>
+    <strong>What happens if I don’t upgrade the projects?
+</strong></p>
+<p>
+    If you don’t upgrade the project, the issue may appear later, and your team may lose productivity in diagnosing it.
+</p>
+<p>
+<strong>What is I don’t have an active maintenance subscription?</strong></p><p>We “tricked” the 3.1.42 build so it is available to anyone who was properly licensed for PostSharp 3.1 RTM, even with an expired license subscription. You should then specifically upload to build 3.1.42. Other builds don’t have the license “trick”.</p><p><strong>What is the cause of the defect?
+</strong></p>
+<p>
+    The error is caused by the license enforcement component of Nova.CodeDOM, a library that we lawfully sourced from Inevitable Software. PostSharp uses this
+    library to provide file and line number information of error messages.
+</p>
+<p>
+    Previously to 3.1.33, PostSharp initialized Nova.CodeDOM lazily, when the first error message needed to be resolved. Starting 3.1.33, PostSharp initialized
+    Nova.CodeDOM unconditionally. This is why projects built with PostSharp 3.1.33 and later are more likely to be affected by the issue.
+</p>
+<p>
+    <strong>Why was this issue not anticipated?
+</strong></p>
+<p>
+    We anticipated issues in the Nova.CodeDOM library and implemented a fail-safe behavior, so that a failure in the library would just cause a failure to
+    locate the file and line number of error messages, but except of having no file and line information, the build would work as usually. However, we did assumed that all failures would be in the form of a managed exceptions. We did not
+    anticipate that the library would terminate the process.
+</p>
+<p>
+    <strong>When did the symptoms first occur?
+</strong></p>
+<p>
+The issue first hit our support line on May 20<sup>th</sup> at 16:00, Central Europe Time. We became aware of the severity of the issue on May 21<sup>st</sup> at 10:00 when more support tickets were filed.
+</p>
+<p>
+    <strong>When was a fix released?
+</strong></p>
+<p>
+    We uploaded the build 3.1.41 fixing this issue on May 21<sup>st</sup> at 14:00, Central Europe Time.
+</p><p>Completed in a rush, this build contained two non-blocking issues, which were fixed in 3.1.42 and uploaded on May 23rd. </p>
+<p>
+    <strong>How was the issue solved?
+</strong></p>
+<p>
+    As we lost trust in Nova.CodeDOM, we decided to immediately remove the library from our product. As from version 3.1.41, we will no longer ship
+    Nova.CodeDOM with our products.
+</p>
+<p>
+    Therefore, we unfortunately had to surrender the feature that was using Nova.CodeDOM. Namely, current versions of PostSharp no longer resolve the file and
+    line number of error messages. We will restore the feature with Roslyn as soon as the license will allow for redistribution.
+</p>
+<p>
+    <strong>Summary
+</strong></p>
+<p>
+    At PostSharp, we are taking our customers’ productivity extremely seriously. We are aware that this issue prevented whole teams of developers from working
+    during several hours, and that the potential impact of the issue may account for dozens of thousands of dollars of combined productivity losses.
+</p>
+<p>
+    Although the defect was caused by a third-party component, we are ultimately responsible for the overall quality of our product, and this includes
+    selection of suppliers.
+</p>
+<p>
+    Therefore, on behalf of PostSharp Technologies, I would like to profoundly apologize for the inconveniences caused by the issue.
+</p>
+<p>
+    Gael Fraiteur
+    <br>
+    CEO
+</p><p><em>UPDATE: Edited the article to mention our build 3.1.42 fixing minor issue and licensing friction.</em></p>

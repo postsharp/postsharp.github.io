@@ -1,0 +1,219 @@
+---
+layout: post
+title: "PostSharp Principles: Day 15 – Introducing Members and Interfaces, Part 2"
+date: 2011-07-15 15:34:00 +02:00
+categories: [Tutorial]
+permalink: /post/postsharp-principals-day-15-e28093-introducing-members-and-interfaces-part-2.html
+---
+<p>Yesterday we introduced members into our target class. Today we&rsquo;re going to go the other way and introduce members from our target class into our aspect for consumption by the process of importing.</p>
+<h3>Importing Members</h3>
+<p>There are cases when you will need to bring in a field or method from a target class so that you have access to it from within the aspect. What we&rsquo;re doing is making assumptions about the target. It&rsquo;s important to document what the aspect is assuming about the target code. Another approach instead of importing, is to cast the instance to a interface (or type) known to be implemented on the target.</p>
+<p>To import, we use the ImportMember attribute. ImportMember allows us to import fields, properties, methods and events. As an example, let&rsquo;s look at some sample code.</p>
+<pre>public interface IIdentifiable
+{
+    Guid ID { get; }
+    void PrintID();
+
+}
+
+public class ExampleClass : IIdentifiable
+{
+    public Guid ID { get; private set; } //Satisfy the interface
+
+    public ExampleClass()
+    {
+        this.ID = Guid.NewGuid();
+    }
+
+    [ImportExampleAspect]
+    public void DoWork()
+    {
+        Console.WriteLine("Doing work");
+    }
+
+    public void PrintID()
+    {
+        Console.WriteLine(this.ID.ToString());
+    }
+
+}
+
+[Serializable]
+public class ImportExampleAspect : OnMethodBoundaryAspect, IInstanceScopedAspect
+{
+    [ImportMember("PrintID", IsRequired = true)]
+    public Action PrintID;
+
+    [ImportMember("ID")]
+    public Property IDFromClass;
+
+    public override void OnEntry(MethodExecutionArgs args)
+    {
+        Guid value = IDFromClass.Get();
+        PrintID();
+        Console.WriteLine("Value from IIdentifiable.ID is {0}", value.ToString());
+    }
+
+    public object CreateInstance(AdviceArgs adviceArgs)
+    {
+        return this.MemberwiseClone();
+    }
+
+    public void RuntimeInitializeInstance() {}
+
+}</pre>
+<p>We have an example class that implements a simple interface and an aspect based on OnMethodBoundaryAspect. When you run this example code, the value of the &lsquo;ID&rsquo; property will be written to the console.</p>
+<pre>178411e1-c79b-43fc-9aa0-ff309425abaa
+Value from IIdentifiable.ID is 178411e1-c79b-43fc-9aa0-ff309425abaa
+Doing work</pre>
+<p>Notice that our aspect implements the IInstanceScopedAspect interface. ImportMember cannot import static fields so we have to define our aspect as instance scoped. For more information on the life time and scope of aspects, refer to <a href="http://www.sharpcrafters.com/blog/post/Day-9-Aspect-Lifetime-Scope-Part-1.aspx">Day 9</a> and <a href="http://www.sharpcrafters.com/blog/post/Day-10-Aspect-Lifetime-Scope-Part-2.aspx">Day 10</a> of the PostSharp Principals series.</p>
+<p>We expect the target to implement the interface which has a PrintID method defined. So we setup a public Action and we call it PrintID. We decorate our Action with the ImportMember attribute passing in the target&rsquo;s member name which is &lsquo;PrintID&rsquo;.</p>
+<p>Next we defined the IDFromClass public field of type Property&lt;Guid&gt;. This class has two properties: Get and Set. At runtime, the Get and Set properties will contain a delegate to the getter and setter of this property. In order to import an event, we need a public field of type Event&lt;EventArgs&gt;, which has two delegate properties: Add and Remove.</p>
+<p>We do not have to use the same name as the target&rsquo;s member name, so instead of &lsquo;ID&rsquo; we are using &lsquo;IDFromClass&rsquo;.Inside of the OnEntry method we get the value of ID from our target class using the Get delegate provided by IDFromClass, make a call to the PrintID method and then write out the value to the console.</p>
+<p>Note: ImportMember will work on members of any visibility, even private.</p>
+<h3>ImportMemberAttribute</h3>
+<p>There should be no surprise when I say that we can control the behavior of the import using the attribute&rsquo;s parameters.</p>
+<h4>IsRequired</h4>
+<p>Specifies whether the member being imported is required or not. If true, a compiler error will occur if the member is not present in the target class. If false, the reference to the member will be null if it does not exist in the target.</p>
+<h4>Order</h4>
+<p>Order takes an enumeration from PostSharp.Aspects.Advices.ImportMemberOrder to determine when the importing will occur.</p>
+<p>&middot; AfterIntroductions (default) &ndash; Importing will occur only after the aspect has introduced its own members. This is useful if the imported member is virtual and we need to import the last override.BeforeIntroductions &ndash; Importing will occur before any members are introduced by the aspect. This gives you a chance to get a reference to the original member before any overriding occurs. This is similar to calling an overridden method by the &ldquo;base&rdquo; keyword.</p>
+<p>&middot; Default &ndash; The default is AfterIntroductions.</p>
+<p>There can be any number of aspects on the same class that override the same method. Importing before the introductions allows you to call the next node in the chain of overwriting.</p>
+<h3>Better Example</h3>
+<p>Let&rsquo;s have a look at a more in-depth example using both importing and introduction, the MakeDirtyOnChange aspect. When working with workspaces or MDI (multi-document interface) applications, many &ldquo;documents&rdquo; can be open at one time. There is a need to know when one or more of the &ldquo;documents&rdquo; have been modified so that you can inform the user visually and also to know which items need to be updated in the data store. Think about working with five C# files in Visual Studio. When a change is made to a file, you will see an asterisk next to the filename on the file&rsquo;s tab. This is the indication that a change has been made and not yet saved.</p>
+<p>Implementing the IsDirty pattern is similar to the INotifyPropertyChange, the code to wire up the change notification is redundant and tedious. Let&rsquo;s check out our interface and test class before diving into our aspect</p>
+<pre>public interface IsDirty
+{
+    bool IsDirty { get; }
+    event EventHandler WasMadeDirty;
+    void ResetDirtyState();
+    ReadOnlyCollection DirtyProperties { get; }
+}
+
+public class DirtyEventArgs : EventArgs
+{
+    public string DirtyProperty { get; private set; }
+
+    public DirtyEventArgs(string dirtyProperty)
+    {
+        this.DirtyProperty = dirtyProperty;
+    }
+}
+
+[MakeDirtyOnChange]
+public class Document
+{
+    private Guid _docId = Guid.NewGuid();
+    public Guid DocId { get { return _docId; } }
+
+    public string Title { get; set; }
+    public string Author { get; set; }
+    public string Content { get; set; }
+}</pre>
+<p>Our IDirty interface has a few requirements that we can and will use to determine if an item has changes. We specify a custom EventArgs class that allows us to provide details about the changes made to the item when invoking the WasMadeDirty event. Our Document class is a clean model that knows nothing about the IsDirty interface.</p>
+<pre>[Serializable]
+[IntroduceInterface(typeof(IsDirty), OverrideAction = InterfaceOverrideAction.Ignore)]
+public class MakeDirtyOnChange : InstanceLevelAspect, IsDirty
+{
+    [OnLocationSetValueAdvice, MulticastPointcut(Targets=MulticastTargets.Property)]
+    public void OnValueChanged(LocationInterceptionArgs args)
+    {
+        MakeDirty(args.LocationName);
+    }
+
+    private bool _isDirty;
+    private List _dirtyProperties;
+
+    [ImportMember("SetDirty")]
+    public Action MakeDirty;
+
+    [IntroduceMember(IsVirtual=true, OverrideAction=MemberOverrideAction.Ignore)]
+    public void SetDirty(string property)
+    {
+        _isDirty = true;
+        if (WasMadeDirty != null)
+        {
+            WasMadeDirty.Invoke(this.Instance, new DirtyEventArgs(property));
+        }
+    }
+
+    #region IsDirty Members
+
+    [IntroduceMember(OverrideAction = MemberOverrideAction.Ignore)]
+    public bool IsDirty { get { return _isDirty; } }
+
+    [IntroduceMember(OverrideAction = MemberOverrideAction.Ignore)]
+    public ReadOnlyCollection DirtyProperties { get { return _dirtyProperties.AsReadOnly(); } }
+
+    [IntroduceMember(OverrideAction = MemberOverrideAction.Ignore)]
+    public event EventHandler WasMadeDirty;
+
+    [IntroduceMember(IsVirtual=true, OverrideAction=MemberOverrideAction.Ignore)]
+    public void ResetDirtyState()
+    {
+        _isDirty = false;
+        _dirtyProperties.Clear();
+    }
+ 
+    #endregion
+
+    public override void RuntimeInitializeInstance()
+    {
+        _isDirty = false;
+        _dirtyProperties = new List();
+    }
+}</pre>
+<p>We decorate our aspect with the IntroduceInterface attribute, specifying the IsDirty interface. Our aspect implements the IsDirty interface to satisfy the requirements and then we introduce those members to the target.</p>
+<p>We setup a location interception using OnLocationSetValueAdvice attribute and specify the target is MulticastPointcut.Property ([MARKER, Advice link]). When a property is changed, we&rsquo;re going to invoke the MakeDirty method which we tell PostSharp to import from the target&rsquo;s &ldquo;SetDirty&rdquo; method, if it has one. We&rsquo;re using the defaults for ImportMember which means the import will happen after our members are introduced. Since we&rsquo;re introducing our own SetDirty method, MakeDirty will contain our SetDirty implementation if the target class did not already have its own implementation.</p>
+<p>Since our aspect derives from InstanceLevelAspect we override the RuntimeInitializeInstance method and use it to initialize our private members to their default states.</p>
+<p>We can use the following code to try out the aspect</p>
+<pre>class Program
+{
+    private static List _changedDocuments = new List();
+    private static List _openDocuments = new List();
+
+    static void Main(string[] args)
+    {
+        for (int i = 0; i &lt; 5; i++)
+        {
+            Document doc = new Document();
+            Post.Cast(doc).WasMadeDirty 
+                += new EventHandler(doc_WasMadeDirty);
+
+            _openDocuments.Add(doc);
+        }
+
+        _openDocuments[0].Author = "Dustin Davis";
+        _openDocuments[0].Title = "PostSharp Principals - Day 1";
+
+        _openDocuments[2].Author = "Dustin Davis";
+        _openDocuments[2].Title = "PostSharp Principals - Day 3";
+
+        Console.ReadKey();
+    }
+
+    static void doc_WasMadeDirty(object sender, DirtyEventArgs e)
+    {
+        Document doc = (Document)sender;
+
+        if (_changedDocuments.Any(c =&gt; c.Equals(doc.DocId)))
+        {
+            return;
+        }
+            
+        _changedDocuments.Add(doc.DocId);
+        Console.WriteLine("Document {0} was modified.", doc.DocId);
+    }
+}</pre>
+<p>The code is pretty straight forward. We create five documents and then add them to our open documents collection. Finally we make changes to two documents. When we run the code, we see the following results</p>
+<pre>Document acbd247a-e742-499e-b27c-ee028e8e6789 was modified.
+Document 9ded92cc-008f-48bc-b1b5-e1b0b967e42d was modified.</pre>
+<p>But wait, how are we handling the WasMadeDirty event? I&rsquo;m glad you asked.</p>
+<h3>Post.Cast&lt;&gt;()</h3>
+<p>Post.Cast&lt;&gt;() allows us to cast an instance of a type to <a name="_GoBack"></a>another type at design time. For example, our Document class doesn&rsquo;t implement the IsDirty interface so we can&rsquo;t access the IsDirty specific members unless we casting. We use the generic Cast&lt;SourceType, TargetType&gt;(SourceType Instance) method to give us back an instance of TargetType.</p>
+<p>It&rsquo;s basically nothing more than regular casting, but the difference is when you use Post.Cast&lt;&gt;() you receive compile-time errors if the cast cannot take place. The obvious benefit is that you know right away that the cast fails instead of at run time, potentially introducing bugs.</p>
+<p>In the final result, the call to Post.Cast&lt;&gt;() is replaced with an actual cast.</p>
+<h3>Conclusion</h3>
+<p>Previous aspects we looked at have been pretty disconnected from the targets. Being able to introduce and import members gives us a connection and increased flexibility. Being able to automatically introduce interfaces and boiler plate code that is sometimes only consumed at run time frees us and keeps our code clean.</p>
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-15-postsharp_principals_day_15_e28093_introducing_mem/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" src="/assets/2011-07-15-postsharp_principals_day_15_e28093_introducing_mem/self573_thumb[1]_thumb_3.jpg" border="0" alt="self573_thumb[1]" width="66" height="66" align="left" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a></div>

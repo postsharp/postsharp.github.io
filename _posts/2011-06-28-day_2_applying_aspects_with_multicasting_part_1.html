@@ -1,0 +1,118 @@
+---
+layout: post
+title: "PostSharp Principles: Day 2 - Applying Aspects with Multicasting Part 1"
+date: 2011-06-28 15:10:00 +02:00
+categories: [Tutorial]
+permalink: /post/day-2-applying-aspects-with-multicasting-part-1.html
+---
+<p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>  <p>Yesterday we went over creating an aspect and applying it to a method. PostSharp is flexible in how aspects can be applied which results in outstanding benefits for us as developers. Imagine our exception wrapper aspect automatically being applied to any new method that is added to any class in the project. What about logging exceptions? No longer do we have to remember to add exception logging code to new methods. Of course, the practical applications are far beyond these simple scenarios but it gives you an idea of the power of PostSharp.</p>  <p>OnExceptionAspect is intended to work with methods. Yesterday we applied our aspect to the target method directly, which did the job but</p>  <ul>   <li>What happens when we need to profile multiple methods? </li>    <li>What happens when we want to profile every method in every class? </li> </ul>  <p>That's a lot of work if we were to manually apply the aspect to each method. </p>  <h3>OnMethodBoundaryAspect</h3>  <p>PostSharp comes with another aspect that we can use called OnMethodBoundaryAspect. This class allows us to intercept certain points in a method’s execution by providing 4 virtual methods we can override</p>  <ul>   <li><strong>OnEntry</strong> - Before the execution of the method body </li>    <li><strong>OnExit</strong> - Always called when a method is done executing even if there was an error </li>    <li><strong>OnSuccess</strong> - Called only when a method is done executing and there were no exceptions </li>    <li><strong>OnException</strong> - Called only when a method has stopped executing due to an unhandled exception </li> </ul>  <p>To give a clear understanding of multicasting, we’ll build a simple tracing aspect that will log the entry and exit of a method as it’s executed. Add a new file called MethodTraceAspect.cs and add the following code</p>  <pre>[Serializable]
+public class MethodTraceAspect : OnMethodBoundaryAspect
+{
+    public override void OnEntry(MethodExecutionArgs args)
+    {
+        Debug.WriteLine(args.Method.Name + &quot; started&quot;);
+    }
+
+    public override void OnExit(MethodExecutionArgs args)
+    {
+        Debug.WriteLine(args.Method.Name + &quot; finished&quot;);
+    }
+}</pre>
+
+<p>This aspect is the, “Hello World” of Aspect Oriented Programming, but it serves our purpose for today. When applied to a method this aspect will write ‘Started’ and ‘Finished’ to the output window. Go ahead and apply it to the GetByName method in InMemoryDataStore.cs file</p>
+
+<pre>[DatabaseExceptionWrapper]
+[MethodTraceAspect]
+public IQueryable<contact> GetByName(string value)
+{
+    var res = _contactStore.Where(c =&gt; c.FirstName.Contains(value) 
+                    || c.LastName.Contains(value));
+
+    if (res.Count() &lt; 1)
+    {
+        ThrowNoResultsException();
+    }
+
+    Thread.Sleep(3000);
+    return res.AsQueryable();
+}</pre>
+
+<p>Run the application and do a search. As expected you see</p>
+
+<blockquote><font face="Courier New">GetByName started 
+    <br />GetByName finished</font></blockquote>
+
+<p>In the output window. </p>
+
+<h3>Class Level Declaration</h3>
+
+<p>Instead of applying the aspect manually to every method, we can apply the aspect only once, on the class. PostSharp will automatically apply the aspect to all methods in the class. Let's try it. Remove the [MethodTraceAspect] from GetByName method and apply to the InMemoryDataStore class</p>
+
+<pre>[MethodTraceAspect]
+internal class InMemoryDataStore : PostSharpDemo1.IContactRepository
+{
+    …
+}</pre>
+
+<p>When we run the application there is a lot more being displayed in the output window, just by starting the application. </p>
+
+<blockquote><font face="Courier New">.cctor Started 
+    <br />InitializeData Started 
+
+    <br />set__contactStore Started 
+
+    <br />set__contactStore Finished 
+
+    <br />get__contactStore Started 
+
+    <br />get__contactStore Finished 
+
+    <br />get__contactStore Started 
+
+    <br />get__contactStore Finished 
+
+    <br />get__contactStore Started 
+
+    <br />get__contactStore Finished 
+
+    <br />get__contactStore Started 
+
+    <br />get__contactStore Finished 
+
+    <br />get__contactStore Started 
+
+    <br />get__contactStore Finished 
+
+    <br />get__contactStore Started 
+
+    <br />get__contactStore Finished 
+
+    <br />InitializeData Finished 
+
+    <br />.cctor Finished 
+
+    <br />.ctor Started 
+
+    <br />.ctor Finished 
+
+    <br />GetAll Started 
+
+    <br />get__contactStore Started 
+
+    <br />get__contactStore Finished 
+
+    <br />GetAll Finished 
+
+    <br /></font></blockquote>
+
+<p>Notice that there are calls to methods not in the class. Remember that property getters and setters are turned into methods when your code is compiled which makes them eligible for receiving the aspect. The .cctor entry is the static constructor and .ctor is the instance constructor.</p>
+
+<p>As interesting as this is, you won’t always want to have the aspect applied to absolutely everything. There are a few ways to avoid aspect application on a specific target. We'll cover those tomorrow.</p>
+
+<h3>Conclusion</h3>
+
+<p>Today we saw another aspect we can take advantage of and we also saw how we can use multicasting to apply an aspect to multiple targets with one line of code. Tomorrow we’ll look at even more multicasting. </p>
+
+<p>&#160;</p>
+
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self[5]" border="0" alt="self[5]" align="left" src="/assets/2011-06-28-day_2_applying_aspects_with_multicasting_part_1/self[5]_1.jpg" width="66" height="66" />Dustin Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

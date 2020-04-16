@@ -1,0 +1,176 @@
+---
+layout: post
+title: "The Definitive INotifyPropertyChanged, Pt. 2"
+date: 2012-08-28 14:46:00 +02:00
+categories: []
+permalink: /post/the-definitive-inotifypropertychanged-pt-2.html
+---
+<p>Continuing from the <a href="http://www.sharpcrafters.com/blog/post/The-Definitive-INotifyPropertyChanged.aspx">previous post</a> on <em>INotifyPropertyChanged</em> and the PostSharp Domain Toolkit, it&rsquo;s now time to satisfy curiosities and share some details on how the framework works, what its limitations are and how to overcome them by using available customization.</p>
+<h2>What the Domain Toolkit Does</h2>
+<p>If you looked closely at the sample classes in the previous blog post, you probably noticed they did not actually implement <em>INotifyPropertyChanged</em> interface, yet WPF still received the notifications.</p>
+<p>How is that possible?</p>
+<p>Our <em>NotifyPropertyChangedAttribute</em> simply introduces the interface during compilation. This is a very convenient approach in many cases, especially if you don&rsquo;t need to listen for the notifications yourself.</p>
+<p>In cases where you want to implement the interface explicitly or inherit from a class that already has the interface, the toolkit will expect you to implement an <em>OnPropertyChanged(string) method</em> raising the <em>PropertyChanged</em> event, because it&rsquo;s impossible in .NET world to externally raise an object&rsquo;s event.</p>
+<pre>[NotifyPropertyChanged]
+class Entity : INotifyPropertyChanged
+{
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    protected void OnPropertyChanged( string propertyName )
+    {
+	PropertyChangedEventHandler handler = this.PropertyChanged;
+        if ( handler != null )
+            handler( this, new PropertyChangedEventArgs( propertyName ) );
+    }
+
+    //...
+} </pre>
+<h2>When the Domain Toolkit Does It</h2>
+<p>In the previous post I mentioned that one of the features that distinguish our solution from the competition is the ability to automatically raise notifications only at the points in time in which objects are expected to be consistent.</p>
+<p>Recall this snippet:</p>
+<pre>public class Account
+{
+    public decimal Balance { get; private set; }
+    public DateTime LastOperationTime { get; private set; }
+    public int RemainingDailyOperationsLimit { get; private set; }
+ 
+    //...
+
+    public void Withdraw(decimal amount)
+    {
+        //... all kinds of checks ...
+
+        this.LastOperationTime = DateTime.UtcNow;
+        this.RemainingDailyOperationsLimit--;
+        this.Balance -= amount;
+    }
+ 
+    //...
+}</pre>
+<p>Here you probably want to raise the change notifications when the full withdrawal operation has been completed and not after each property change. Our algorithm here assumes that whenever control returns from an object&rsquo;s method to its caller in another object the executing instance (as well as all other objects modified by the method) should be in a consistent state. The toolkit at this point will raise notifications for all modified properties except those belonging to other objects currently higher in the stack trace (these objects may still be inconsistent).</p>
+<p>Additionally, it tracks changes separately for each executing thread and always raises notifications on the thread whose actions resulted in the property value change.</p>
+<h2>How the Domain Toolkit Works</h2>
+<p>You may have figured out by now that our solution relies heavily on static compile-time analysis of the code of your property getters (and all other code they invoke directly or indirectly). This allows us to build a dependency map of all the fields and properties of the instrumented classes, which is then used during runtime for notifications generation.</p>
+<p>Obviously, while this process is very powerful it also has its limitations. Since we perform static analysis only, there are some code constructs we cannot understand fully and automatically. We can still be ready to deal with some of those cases but from time to time we will need your help. Fortunately, we put strong emphasis on early detection of any and all unsupported scenarios and warn you about them with build-time errors (accompanied by advice on how to fix the problem).</p>
+<p>Let&rsquo;s have a look at exactly what is supported and what isn&rsquo;t.</p>
+<h2>Automatically Supported Scenarios</h2>
+<p>As you have seen in the previous post, there is a good chance we can handle your full code base automatically. Here is a short summary of the scenarios we support:</p>
+<ul>
+<li>Automatic properties: </li>
+</ul>
+<pre>public string FirstName { get; set; }</pre>
+<ul>
+<li>Field-backed properties: </li>
+</ul>
+<pre>private string lastName;
+
+public string LastName
+{
+    get { return this.lastName; }
+    set { this.lastName = value; }
+}</pre>
+<ul>
+<li>Properties depending on multiple fields: </li>
+</ul>
+<pre>private string firstName;
+private string lastName;
+
+public string FullName
+{
+    get { return string.Join(" ", this.firstName, this.lastName); }
+}</pre>
+<ul>
+<li>Properties depending on other properties of the same object: </li>
+</ul>
+<pre>public string FirstName { get; set; }
+public string LastName { get; set; }
+
+public string FullName
+{
+    get { return string.Join(" ", this.FirstName, this.LastName); }
+}</pre>
+<ul>
+<li>Properties depending (directly or indirectly) on methods within the same class: </li>
+</ul>
+<pre>public string FullName { get { return this.GetFullName(); } }
+
+public string GetFullName()
+{
+    return string.Join(" ", this.FirstName, this.LastName);
+}</pre>
+<ul>
+<li>Properties depending on chains of invocations of properties of other instrumented classes: </li>
+</ul>
+<pre>public string CustomerCity
+{
+   get { return this.customer.Address.City; }
+}</pre>
+<ul>
+<li>Properties depending on some well-known and static .NET framework methods with no hidden dependencies, as well as any void methods with no ref or out parameters: </li>
+</ul>
+<pre>public string GetFullName()
+{
+    return string.Join(" ", this.FirstName, this.LastName);
+}</pre>
+<ul>
+<li>Any combination of the above cases, including recursive dependencies on properties and methods fulfilling above criteria </li>
+</ul>
+<h2>Limitations</h2>
+<p>You can probably use the above list to find the missing scenarios and work out library limitations but here&rsquo;s a quick round-up of the most important ones in the current version of the framework:</p>
+<ul>
+<li>Property getters depending on methods on other objects (except cases mentioned above) </li>
+<li>Dependencies on external objects&rsquo; properties more complex than property getters invocation chains mentioned above </li>
+<li>Properties depending on virtual methods </li>
+<li>Direct or indirect usage of delegates in property getters </li>
+<li>Dependencies on static fields </li>
+<li>Properties depending on items in collections </li>
+</ul>
+<p>As I mentioned before, all of these cases are detected at build-time and generate compile errors, at the same time advising you on possible workarounds.</p>
+<p>The good news is we also provide you with a handy set of tools and APIs to effectively deal with the cases above if you should ever encounter them. Let&rsquo;s have a look at them, starting with the simplest ones.</p>
+<h2>Manual Overrides</h2>
+<p>Should you decide you don&rsquo;t need automatic change notifications for a single property in an otherwise instrumented class, be it the property never changes, or you know you&rsquo;ll never bind to it, or that you simply want to raise the events manually, we provide you with that option. Simply mark the property with <em>NotifyPropertyChangedIgnoreAttribute</em>:</p>
+<pre>[NotifyPropertyChangedIgnore]
+public string FullName { get { return this.GetFullName(); } }</pre>
+<p>If, in some scenarios, you feel that our toolkit plays it a bit too safe, e.g. reporting errors about unsupported code constructs in your property getter when in reality those non-analyzable snippets have no influence on the property value , you can ignore the errors by using <em>NotifyPropertyChangedSafeAttribute</em>:</p>
+<pre>[NotifyPropertyChangedSafe]
+public string FullName
+{
+    get
+    {
+        this.logger.Log( "FullName property getter on {0}", this );
+        return this.GetFullName();
+    }
+}</pre>
+<p>Let&rsquo;s say you want to skip the analysis phase completely and simply define what your property depends on. Our framework supports dependencies on fields of the same class and properties of other instrumented classes. You can also construct dependencies as chains of such properties. All you need to do is put a snippet of code at the beginning of your property getter:</p>
+<pre>public string BusinessCard
+{
+    get
+    {
+       if (Depends.Guard)
+       {
+          Depends.On(this.FirstName, this.LastName,
+                      customer.Address.Line1, customer.Address.Line2);
+       }
+
+       //&hellip;
+    }
+}</pre>
+<p>The <em>Depends.Guard</em> statement always evaluates to false, so that <em>Depends.On()</em> method is never actually executed and has no performance impact. We treat the necessity of using the <em>if (Depends.Guard ) </em>statement as a temporary solution and plan to get rid of it completely in a future release (allowing you to write single <em>Depends.On()</em> statements with no performance impact).</p>
+<p>Still, the current syntax is already fully IntelliSense and refactoring friendly and these were our most important design goals for this iteration.</p>
+<h2>Idempotent Methods</h2>
+<p>In some cases you may know more about a method than our static analyzer can infer. You may know for instance that a particular method&rsquo;s output value depends only on its arguments, or that any other dependencies it has can be safely treated as read-only. In such cases it&rsquo;s not necessary for the toolkit to analyze the method nor does it matter if it violates some of the constraints.</p>
+<p>We call such methods idempotent.</p>
+<p>We introduced a special attribute called <em>IdempotentMethodAttribute</em>, which you can apply to a method to let the toolkit know that it can be safely ignored by the analyzer as long as only intrinsic types are passed as its arguments (in any other case the method&rsquo;s return value could depend on arbitrary fields and properties of the passed objects).</p>
+<p>That&rsquo;s not to say that our library doesn&rsquo;t know about some idempotent methods. If you have a look at the examples in this post and the previous one, you&rsquo;ll notice that the toolkit automatically ignores calls to many .NET framework methods, such as <em>string.Format()</em>, <em>string.Concat()</em> or any usage of <em>StringBuilder</em>.</p>
+<p>The algorithm assumes all static framework methods to be idempotent as long as only intrinsic type values are passed to them. Additionally, our solution also understands some of the often-used methods and classes, including the previously mentioned StringBuilder as well <em>ToString()</em> or <em>GetHashCode()</em>.</p>
+<h2>Runtime Manipulations</h2>
+<p>Finally, for those of you who want to take full control and force the toolkit to raise events exactly when you need them, simply use static utility class <em>NotifyPropertyChangedController</em>and to perform one of several actions:</p>
+<ul>
+<li>immediately raise events for all modified properties (except objects higher in the stack trace, which may be in an inconsistent state); </li>
+<li>immediately raise events for all modified properties of a given object; </li>
+<li>immediately raise notification for a specific property on a specific object (no matter whether the toolkit thinks it was modified or not). </li>
+</ul>
+<h2>Summary</h2>
+<p>All in all, our Domain Toolkit works &ldquo;automagically&rdquo; by default, giving you a <em>INotifyPropertyChanged</em> package that solves most of your needs, while also letting you take full control to tweak its behavior to meet all your needs. So grab the <a href="http://nuget.org/packages/PostSharp.Toolkit.Domain">nuget package</a> or download the source code from <a href="https://github.com/sharpcrafters/PostSharp-Toolkits">github</a>, try it out and let us know what you think. We are, as always, open to your suggestions.</p>
+<p>Happy PostSharping!</p>
+<p><em>Karol Walędzik is an enterprise software applications architect and developer at Internetium Sp.z o.o. (Warsaw, Poland), as well as a .NET Programming and Artificial Intelligence lecturer and AI researcher at <em>Warsaw University of Technology.</em></em></p>

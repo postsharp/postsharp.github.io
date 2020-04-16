@@ -1,0 +1,102 @@
+---
+layout: post
+title: "Deadlock Detection using PostSharp Threading Toolkit"
+date: 2012-07-19 11:53:00 +02:00
+categories: [Announcements]
+permalink: /post/deadlock-detection-using-postsharp-threading-toolkit.html
+---
+<p><span style="font-weight: normal">We’ve all experienced, with great frustration, desktop application freeze: the user interface becomes unresponsive and, after a while, the message “Not Responding” is displayed in the title bar and the only escape is to kill the process. Typically, application freezes are the result of a deadlock where the foreground thread, instead of processing the message loop, waits for some resource to be released by a background thread, which in turn waits for the foreground thread to release some other resource.</span></p>  <h2>Deadlocks Defined</h2>  <p>A deadlock is a situation in which two or more competing actions are waiting for each other to finish, and thus neither ever does. Whenever you’re using locks there is a risk of deadlocks.</p>  <p>There are four main conditions necessary for a deadlock to occur:</p>  <p>a) <em>A limited number of instances of a particular resource.</em> In the case of a monitor in C# (what you use when you use the lock keyword), this limited number is one, since a monitor is a mutual-exclusion lock.</p>  <p>b) <em>The ability to hold one resource and request another.</em> In C#, this can be done by locking on one object and then locking on another before releasing the first lock, for example:</p>  <pre>lock(a)
+{
+   lock(b)
+   {…}
+}</pre>
+
+<p>c) <em>No preemption capability.</em> In C#, this means that one thread can't force another thread to release a lock.</p>
+
+<p>d) <em>A circular wait condition.</em> In C#, this means that thread 1 is waiting for thread 2, thread 2 for 3 and the last one is waiting for thread 1. This makes a cycle that results in deadlock.</p>
+
+<p>If any one of these conditions is not met, deadlock is not possible.</p>
+
+<h2>Avoiding Deadlocks</h2>
+
+<p>So simple solution to deadlock problem would be to ensure that at least one of above condition is not met at any time in your application. Unfortunately all above conditions are met in any large-scale application using C#.</p>
+
+<p>In theory, deadlocks could be defeated by aborting one of the threads involved in the circular relationship. However, interrupting a thread is a dangerous operation unless its work can be fully and safely rolled back as is the case with database stored procedures.</p>
+
+<p>Some advanced techniques such as lock leveling (<a href="http://msdn.microsoft.com/pl-pl/magazine/cc163618%28en-us%29.aspx#S3">link</a>) have been proposed to prevent the apparition of deadlocks. With lock leveling, all locks are assigned numeric value and a thread can acquire only locks with number greater than those it already holds. As you can imagine, this would stop you from using pretty much anything from the .NET Framework, so it is not a practical solution.</p>
+
+<h2>Detecting Deadlocks</h2>
+
+<p>Since we can’t prevent deadlocks, we can try to detect them and, if we find one, we can eliminate it. Since application code is typically not transactional, the only safe action we can take to eliminate a deadlock is to terminate the application after having written appropriate diagnostic information that will help developers understanding and resolving the deadlock. The rationale here is that it is better to terminate an application properly than to let it remain in a frozen state. This rationale is true for both client and server applications.</p>
+
+<p>In order to detect deadlocks we have to track all blocking instructions used in user code and build threads dependency graph from them. When deadlock is suspected all we have to do is check if there is a cycle in the graph.</p>
+
+<p>It sounds simpler than it really is. Tracking all locking instructions using hand-written C# code would be very tedious. Normally one would write a wrapper for all synchronization primitives such as Monitor and use these wrappers instead of standard sync objects. This generates a couple of problems: a need to change existing code, introduction of boilerplate code and clutter to your codebase.</p>
+
+<p>Moreover, there are some synchronization primitives, such as semaphore or barrier, which are hard to track because they can be signaled from any thread.</p>
+
+<h2>Detecting Deadlocks using the PostSharp Threading Toolkit</h2>
+
+<p>PostSharp Threading Toolkit features a drop-in deadlock detection policy that tracks use of thread synchronization primitives in transparent way without requiring any change in your code. You can use locks, monitors, mutexes and most common primitives in the usual way and PostSharp Threading Toolkit will track all resources for you.</p>
+
+<p>When a thread waits for a lock for more than 200ms, the toolkit will run a deadlock detection routine. If it detects a deadlock, it will throw DeadlockException in all threads that are part of the deadlock. The exception gives a detailed report of all threads and all locks involved in the deadlock, so you can analyze the issue and fix it.</p>
+
+<p>In order to use deadlock detection mechanism, all you have to do is:</p>
+
+<p>&#160; 1. Add the PostSharp-Threading-Toolkit package to your project using NuGet.</p>
+
+<p>&#160; 2. Add the following line somewhere in your code (typically in AssemblyInfo.cs):</p>
+
+<pre>[assembly: PostSharp.Toolkit.Threading.DeadlockDetectionPolicy]</pre>
+
+<p>&#160;</p>
+
+<p>In order to be effective, deadlock detection should be enabled in all projects of your application.</p>
+
+<h2>Supported Threading Primitives</h2>
+
+<p>Here’s the list of synchronization methods supported by DeadlockDetectionPolicy:</p>
+
+<ul>
+  <li>Mutex: WaitOne, WaitAll, Release </li>
+
+  <li>Monitor: Enter, Exit, TryEnter, TryExit (including c# lock keyword; Pulse and Wait methods are not supported) </li>
+
+  <li>ReaderWriterLock: AcquireReaderLock, AcquireWriterLock, ReleaseReaderLock, ReleaseWriterLock, UpgradeToWriterLock, DowngradeToReaderLock (ReleaseLock, RestoreLock not supported) </li>
+
+  <li>ReaderWriterLockSlim: EnterReadLock, TryEnterReadLock, EnterUpgradeableReadLock, TryEnterUpgradeableReadLock, EnterWriteLock, TryEnterWriteLock, ExitReadLock, ExitUpgradeableReadLock, ExitWriteLock, </li>
+
+  <li>Thread: Join </li>
+</ul>
+
+<p>When using deadlock detection you can use all above methods in normal manner and threading toolkit will do the rest. In the current version of the Threading Toolkit we assume that waits with timeout don’t cause deadlocks (eventual deadlock will be broken when timeout expires). Due to performance issues deadlock detection is enabled only when DEBUG or DEBUG_THREADING debugging symbols are defined.</p>
+
+<h2>Limitations</h2>
+
+<p>Although PostSharp Threading Toolkit detects a large class of deadlocks, we cannot detect deadlocks involving any of the following elements:</p>
+
+<ul>
+  <li>Livelocks, i.e. situation when threads alternate acquiring resources not advancing in execution (A real-world example of livelock occurs when two people meet in a narrow corridor, and each tries to be polite by moving aside to let the other pass, but they end up swaying from side to side without making any progress because they both repeatedly move the same way at the same time); </li>
+
+  <li>Asymmetric synchronization primitives, i.e. primitives such as ManualResetEvent, AutoResetEvent, Semaphore and Barrier, where it is not clear which thread is responsible for “signaling” or “releasing” the synchronization resource. There are some sophisticated algorithms that can detect deadlocks involving semaphores and other asymmetric synchronization mechanisms but these require advanced static code analysis, have enormous computation cost and some even argue that they cannot be implemented in languages with delegates and virtual methods at all. </li>
+</ul>
+
+<p>Even in the case of supported threading primitives some methods make deadlock detection hard or impossible:</p>
+
+<ul>
+  <li>Getting a SafeWaitHandle of a Mutex is dangerous, because there is a risk that it gets exposed to unmanaged code, which is not tracked by the toolkit. </li>
+
+  <li>Methods ReleaseLock/RestoreLock of ReaderWriterLock are not supported. </li>
+
+  <li>Methods Pulse/Wait of Monitor are not supported. </li>
+</ul>
+
+<p>What we need to avoid at any cost, is any kind of false positive, i.e. reporting a deadlock when there is none. In order to avoid such cases we construct a list of ignored resources which are not considered during deadlock detection routine. Additionally, if ignored resources list expands too much, deadlock detection becomes inefficient, so when ignored list contains more than 50 objects we disable deadlock detection mechanism and issue a debug trace informing about it.</p>
+
+<h2>Summary</h2>
+
+<p>If you’ve ever experienced a deadlock in production, you know how hard it is to diagnose. Not anymore. By adding the PostSharp-Threading-Toolkit NuGet package to your project and adding a single line of code to your codebase, you can get nice exception messages whenever a deadlock occurs.</p>
+
+<p>In case you’re interested how this works under the hood, simply have a look at the source code in the Github repository (<a href="https://github.com/sharpcrafters/PostSharp-Toolkits">https://github.com/sharpcrafters/PostSharp-Toolkits</a>).</p>
+
+<p>Happy PostSharping!</p>

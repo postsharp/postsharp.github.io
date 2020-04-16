@@ -1,0 +1,49 @@
+---
+layout: post
+title: "Webinar: Real World AOP Usage with Ward Bell from IdeaBlade – with Video and Q&A!"
+date: 2012-02-28 12:58:00 +01:00
+categories: [Webinars]
+permalink: /post/webinar-real-world-aop-usage-ward-bell-ideablade.html
+---
+<p><img style="margin: 10px 5px 0px 0px; display: inline; float: left;" src="http://i.msdn.microsoft.com/ff797017.Ward_Bell(en-us,MSDN.10).jpg" alt="" align="left" /></p>
+<p>Last week we were honored to have our friends at <a href="http://www.ideablade.com/">IdeaBlade</a> join us for a very special webinar, dealing with real world AOP usage. Ward Bell, V.P. of Technology at IdeaBlade, did an excellent job of demonstrating how Aspect-Oriented Programming and PostSharp helps creating clutter-free data access, using their flagship product, DevForce.</p>
+<p>DevForce uses PostSharp to infuse &ldquo;Code First&rdquo; entity model classes - entities like Customer and Order &ndash; with rich behaviors that go way beyond property change notification. You write entities with simple getters and setters; after PostSharp, they support property validation, entity navigation, lazy loading, dirty tracking, and UI data binding.</p>
+<p>Here is the recorded webinar and the slides for your viewing pleasure! You can download the source code for the demo application and the slides from the <a href="http://drc.ideablade.com/xwiki/bin/view/Documentation/code-first-aop">IdeaBlade Documentation</a> site.</p>
+<p><iframe src="https://player.vimeo.com/video/37586393" frameborder="0" width="640" height="360"></iframe></p>
+<h2>&nbsp;</h2>
+<h3>Q&amp;A</h3>
+<p>During the webinar you have asked us great questions, and, as promised, here are the answers to all of them:</p>
+<p><strong>Q: Does DevForce integrate with PostSharp?</strong></p>
+<p><strong>A:</strong> Yes, DevForce Code First is built with PostSharp, so you don&rsquo;t need a PostSharp to use it!</p>
+<p><strong>Q: Does any entity with a FirstName property get that clown verifier, or just Employee?</strong></p>
+<p><strong>A:</strong> Just the Employee. As you can see, the type of the entity is passed into the custom verifier:</p>
+<p><img style="display: inline;" title="" src="/blog/image.axd?picture=750154c57b023c0b.png" alt="" width="640" height="180" /></p>
+<p><strong>Q: Is it possible to step through the injected behaviors?</strong></p>
+<p><strong>A: </strong>Yes, if you have the requisite symbol files (pdb files) loaded. It is rare to want to step through either the PostSharp or DevForce code itself, though. You&rsquo;re usually debugging your own code, such as the &ldquo;NoClownsVerifier&rdquo;.</p>
+<p><strong>Q: Can you show some of the code in IdeaBlade.Aop?</strong></p>
+<p><strong>A:</strong> Here is the definition for the two aspects provided by DevForce:</p>
+<p><img style="display: inline;" title="" src="/blog/image.axd?picture=1a76985b1f2a8814.png" alt="" width="640" height="455" /></p>
+<p>As you can see, it uses PostSharp&rsquo;s abilities to introduce, or inject, behaviors at compile-time to the target classes, so it implements things like <code><a href="http://www.sharpcrafters.com/solutions/notifypropertychanged">INotifyPropertyChanged</a></code> for you in your entities automatically!</p>
+<p>Please note that the specific behaviors we have injected may or may not be enabled when the entity is detached. For example, entity navigation properties require the EntityManager to locate the related entities in cache or query them from the database if necessary. Validation triggered by property setting requires an attached validation engine (our <em>VerifierEngine</em>) which is made available to the entity instance via its attached EntityManager. Accordingly, DevForce only enables these behaviors when the entity is attached. The capability has been injected, the code has been woven into the class, but the feature is turned off for detached entities.</p>
+<p><strong>Q: If you add your own properties to POCO class do you need to somehow tell PostSharp not to interfere with it?</strong></p>
+<p><strong>A: </strong>The <code>[Unmapped]</code> attribute tells DevForce (and Entity Framework) that this property is NOT mapped to a column in the database and is not persisted. DevForce won&rsquo;t activate the injected behaviors for such properties either (although we are considering an attribute that would tell DevForce to enable some of the behaviors for non-persistent properties in a future release).</p>
+<p><strong>Q: Can you provide you own base class for navigation property collections?</strong></p>
+<p><strong>A: </strong>You can take over the behavior of any property, including navigation properties, via DevForce &ldquo;property interceptors&rdquo;, another feature that PostSharp weaves into your entity properties. Interceptors can be specified in the entity, in the base class, or in a separate property interceptor provider that DevForce will discover (we never require a base class in Code First).</p>
+<p><strong>Q: How do you mark a property to not have a specific aspect apply to it?</strong></p>
+<p><strong>A: </strong>If this is a PostSharp question, the answer is &ldquo;it&rsquo;s up to how you implement your aspects.&rdquo;</p>
+<p>The DevForce aspects are applied at the class level but you can opt out at the property level with the <code>[Unmapped]</code> attribute. We only have two aspects (one for entities, one for complex objects) so I think what you&rsquo;re asking is about opting out of one or more of the interfaces. DevForce lets you inject your own custom behavior into our interface implementations so you can do coarse grain or fine grained alterations of our implementations.</p>
+<p><strong>Q: How were the <code>Employee.cs</code>, <code>Customer.cs</code> and other table classes created?</strong></p>
+<p><strong>A: </strong>I could have written them entirely by hand.&nbsp; I found that boring so I used what we call our &ldquo;<a href="http://drc.ideablade.com/xwiki/bin/view/Documentation/code-second">Code Second</a>&rdquo; technique. I pointed the EF Designer at the database and asked it to generate code with our &ldquo;Code First&rdquo; T4 code generator. Then I threw away the EDMX and went to town, cleaning out anything I didn&rsquo;t like in the generated entity classes. What you see is what I decided to keep.</p>
+<p><strong>Q: How do you convert an existing &ldquo;Database First&rdquo; to the code-first model?</strong></p>
+<p><strong>A: </strong>You might try the <a href="http://drc.ideablade.com/xwiki/bin/view/Documentation/code-second">Code Second</a> technique that I described above.</p>
+<p><strong>Q: How is the raising change notification done on the <code>FullName</code> property in the Employee class?</strong></p>
+<p><strong>A: </strong>I used <strong>DevForce property interception</strong> feature which is also woven into the properties via AOP. I added the following code at the bottom of the Employee class:</p>
+<p><img style="display: inline;" title="" src="/blog/image.axd?picture=37dba007064f4fed.png" alt="" width="640" height="98" /></p>
+<p>DevForce recognizes this as an Employee property interceptor for FirstName and LastName. The implementation raises PropertyChanged when either of those properties has finished setting its value.</p>
+<p>We are considering the possibility of automating discovery of FullName&rsquo;s dependence upon FirstName and LastName but that capability is not in this release.</p>
+<h3>Final words</h3>
+<p>We hope that you enjoyed this very special webinar! If you have any more questions about how to use PostSharp, please visit our <a href="http://www.sharpcrafters.com/forum/">Support Forums</a> to have them answered. For more information about DevForce and IdeaBlade, please visit their <a href="http://www.ideablade.com/">website</a>.</p>
+<p>We thank Ward Bell and IdeaBlade for the wonderful presentation and the Q&amp;A! See you all next time!</p>
+<p>Until then,</p>
+<p>Happy PostSharping!</p>
+<p>-Igal</p>

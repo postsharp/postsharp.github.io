@@ -1,0 +1,114 @@
+---
+layout: post
+title: "PostSharp Principles: Day 3 - Applying Aspects with Multicasting Part 2"
+date: 2011-06-29 15:10:00 +02:00
+categories: [Tutorial]
+permalink: /post/day-3-applying-aspects-with-multicasting-part-2.html
+---
+<p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>  <p>Yesterday we started looking at multicasting. Today we’ll go even further with assembly level declarations and how to prevent aspects from being applied.</p>  <h3>Assembly Level Declaration</h3>  <p>At the highest level we have assembly declarations. This is a powerful feature that allows us to achieve many tasks. Before we explore the details, let’s see it in action. Remove any aspect declarations you have currently. </p>  <p>Note: Depending on your own tastes, you can apply this assembly declaration in any file. Commonly, these are put in the AssemblyInfo.cs file, but they can go anywhere. I recommend putting them in relevant class files to keep the visibility or creating an AspectInfo.cs file to keep them in. Putting them in the AssemblyInfo.cs could be a problem since it's a rarely used file.</p>  <pre>[assembly: PostSharpDemo1.MethodTraceAspect()]
+namespace PostSharpDemo1
+{
+    …
+}</pre>
+
+<p>It can be as simple as that. With no other options this declaration will apply our aspect to every method in every class. Run it and check out the results.</p>
+
+<p>Oops! There was a problem. We can't build the project because PostSharp is trying to apply our aspect to our aspect. The result of this, at least in this case, would be a stack overflow.</p>
+
+<h3>Preventing Aspect Application</h3>
+
+<p>So how do we prevent an aspect from being applied to certain targets? There are a few ways to achieve this but the easiest and most direct way to explicitly declare the aspect on the target and setting the AttributeExclude property to true. To fix the build errors we have to apply this technique to our aspect class. </p>
+
+<pre>[Serializable]
+[MethodTraceAspect(AttributeExclude = true)]
+public class MethodTraceAspect: OnMethodBoundaryAspect
+{
+    …
+}</pre>
+
+<p>Do the same thing for DatabaseExceptionWrapper. Build and run. The output window is filled with every method, constructor and property call made. </p>
+
+<p>The AttributeExclude will work at the class and assembly level as well. Since there are far too many properties in this project to manually add exclusions to each one, we can declare an assembly level exclude</p>
+
+<pre>[assembly: PostSharpDemo1.MethodTraceAspect(AttributeExclude = true, AttributePriority = 0, 
+            AttributeTargetMemberAttributes = MulticastAttributes.CompilerGenerated)]</pre>
+
+<p>The result is the exclusion of property getter and setter methods. When we run the application now, we no longer see them in the output window.</p>
+
+<p><i>Note: Using the </i>MulticastAttributes.CompilerGenerated<i> will affect more than just properties; anything that gets transformed by the compiler during the build will be affected. </i></p>
+
+<h3>Aspect Priority</h3>
+
+<p>We’ve added a new parameter to this declaration called AttributePriority. Application of attributes is undeterministic so there is no guarantee of execution order. If you look at the Warnings when you build the demo project you’ll see warnings from PostSharp about this.</p>
+
+<p>Aspects do different things and the order is which they are applied can affect how they operate. It’s very important to keep this in mind when applying multiple aspects to a target.</p>
+
+<p>We can set the AttributePriority with an integer value to determine the priority. The lower the value is, the higher the priority of the aspect. Higher priority aspects get applied first. Example:</p>
+
+<pre>[MethodTraceAspect(AttributePriority = 10)]
+[DatabaseExceptionWrapper(AttributePriority = 20)]
+public IQueryable<contact> GetByName(string value)
+{
+    …
+}</pre>
+
+<p>We're telling PostSharp to apply the MethodTraceAspect first and then apply the DatabaseExceptionWrapper second. I used 10 and 20 because it gives better flexibility when you need to apply more aspects. You won’t have to adjust the priority values for each aspect this way. Feel free to use your own system.</p>
+
+<p><i>Note that using </i><i>AttributePriority </i><i>is not considered best practice, because it quickly becomes difficult to manage. We’ll see another day how to address this issue in a clean and robust way.</i></p>
+
+<h3>Assembly Level Part 2</h3>
+
+<p>To wrap up this post, let's cover some of the options when declaring assembly declarations. To limit the scope of aspect application we can use the AttributeTargetTypes property to declare a specific type or namespace.</p>
+
+<p><b>Namespace and Types</b></p>
+
+<pre>[assembly: PostSharpDemo1.MethodTraceAspect(
+                       AttributeTargetTypes = &quot;PostSharpDemo1.InMemoryDataStore&quot;)]</pre>
+
+<p>This declaration will apply the aspect only to the InMemoryDataStore type. The result is the same as decorating the class manually. This is useful when specifying an abstract class because the aspect is applied to all derived classes. </p>
+
+<p><b>Wildcards</b> 
+
+  <br />We can also declare wildcards. Specifying an asterisk on part of a namespace will apply the aspect to all types under that namespace and all types in sub namespaces.</p>
+
+<pre>[assembly: PostSharpDemo1.MethodTraceAspect(
+                       AttributeTargetTypes = &quot;PostSharpDemo1.Data.*&quot;)]</pre>
+
+<p>Any qualified type under PostSharpDemo1.Data namespace will receive the aspect. </p>
+
+<p><b>Regular Expressions</b> 
+
+  <br />PostSharp also lets us use regular expressions to declare target types.</p>
+
+<pre>[assembly: PostSharpDemo1 MethodTraceAspect(AttributeTargetTypes = &quot; regex:.*Memory.*&quot;)]</pre>
+
+<p>Any qualified type with ‘Memory’ in the type name will receive the aspect.</p>
+
+<p><b>By name</b> 
+
+  <br />Last but not least, we can specify the exact name of the target. In this case we can declare</p>
+
+<pre>[assembly: PostSharpDemo1.MethodTraceAspect(AttributePriority = 10
+                            AttributeTargetMembers=&quot;GetByName&quot;)]
+
+[assembly: PostSharpDemo1.MethodTraceAspect(AttributePriority = 10,
+                            AttributeTargetMembers=&quot;GetBy*&quot;)]
+
+[assembly: PostSharpDemo1.MethodTraceAspect(AttributePriority = 10,
+                            AttributeTargetMembers=&quot;regex:GetBy.*&quot;)]</pre>
+
+<p>AttributeTargetMembers is where we declare the name criteria for members. </p>
+
+<p>For example, if we wanted to exclude all properties but using a <ins datetime="2011-05-16T09:50" cite="mailto:Gael%20Fraiteur">more specific </ins>method than specifying MulticastAttributes.CompilerGenerated we can use the following regular expression to filter any method starting with get_ or set_ since these are what the compiler automatically prefixes getter/setter methods with</p>
+
+<pre>[assembly: PostSharpDemo1.MethodTraceAspect(AspectPriority = 10)]
+[assembly: PostSharpDemo1.MethodTraceAspect(AspectPriority = 0, 
+    AttributeExclude = true, AttributeTargetMembers = &quot;regex:get_.*|set_.*&quot;)]</pre>
+
+<h3>Conclusion</h3>
+
+<p>Not by any means did we cover the breadth of applying aspects but you should now have a good grasp on how to get up and running quickly. Being able to declare what will receive an aspect with one single line of code frees up our time and reduces clutter and complexity. </p>
+
+<p>&#160;</p>
+
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self[5][7]" border="0" alt="self[5][7]" align="left" src="/assets/2011-06-29-day_3_applying_aspects_with_multicasting_part_2/self[5][7]_1.jpg" width="66" height="66" />Dustin is an enterprise solutions developer and regularly speaks at user groups and code camp. He can be followed on twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

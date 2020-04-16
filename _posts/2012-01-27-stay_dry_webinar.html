@@ -1,0 +1,25 @@
+---
+layout: post
+title: "Webinar: How to Stay DRY with AOP and PostSharp – with Video and Q&A!"
+date: 2012-01-27 13:20:00 +01:00
+categories: [Webinars]
+permalink: /post/stay-dry-webinar.html
+---
+<p>Wow! What a turnout for my first webinar! Thank you all for attending, I had a great time presenting it, and will continue to do more webinars in the future. The webinar was recorded, and the video is now online for your viewing:</p>
+<p><iframe src="https://player.vimeo.com/video/35741077" frameborder="0" width="640" height="460"></iframe></p>
+<p>As promised, here are the answers to the great questions you asked, which I didn&rsquo;t have the chance to answer during the live webinar. As always, you can always ask your questions on our <a href="http://www.sharpcrafters.com/forum/">Support Forums</a>.</p>
+<p><strong>Q: Any reason the [aspect] class must be Serializable?</strong></p>
+<p><strong>A:</strong> At (post) compilation, the aspect is serialized using binary serialization, and added as a resource to the target process. Then at runtime, the aspect is deserialized. PostSharp will emit a compilation error if you forget to mark your aspect as Serializable.</p>
+<p><strong>Q: What is the typical use case for creating interfaces using PostSharp?</strong></p>
+<p><strong>A:</strong> One typical scenario for implementing interfaces with PostSharp is implementing <a href="http://www.sharpcrafters.com/solutions/notifypropertychanged"><code>INotifyPropertyChanged</code></a> in WPF to support Data Binding.</p>
+<p><strong>Q: Are the OnExit and OnEnter aspects thread safe? How would one make it thread safe if it is not?</strong></p>
+<p><strong>A:</strong> While the aspects themselves are thread-safe, shared state (i.e. custom fields) within the aspects is not. To safely pass data around between OnEnter and OnExit events, you can use the <a href="http://doc.sharpcrafters.com/postsharp-2.1/Default.aspx##PostSharp-2.1.chm/html/P_PostSharp_Aspects_MethodExecutionArgs_MethodExecutionTag.htm"><code>MethodExecutionArgs.MethodExecutionTag</code></a><strong>&nbsp;</strong>property.</p>
+<p><strong>Q: What about signed DLLs and PostSharp?</strong></p>
+<p><strong>A:</strong> PostSharp has no problems with signed DLLs &ndash; they will be re-signed after the post-compilation process.</p>
+<p><strong>Q: What about Silverlight DLL's, is it also available?</strong></p>
+<p><strong>A: </strong>Of course, PostSharp comes with the Silverlight assemblies included, you need to add a reference to the <em>PostSharp.SL.dll</em> instead of <em>PostSharp.dll</em>. For more information, please refer to the <a href="http://doc.sharpcrafters.com/postsharp-2.1/Default.aspx##PostSharp-2.1.chm/html/695ec9f3-577a-4175-8cba-c00d0cb6e47c.htm">online documentation</a>.</p>
+<p><strong>Q: Can you provide a good definition of aspect oriented programming?</strong></p>
+<p><strong>A:</strong> Aspect Oriented Programming complements traditional OOP by allowing us to encapsulate infrastructure code (such as logging, security, validation, etc.) into small modules called <em>aspects</em>, and then <em>apply</em> those aspects throughout the entire system in such way that the business logic is completely separated from those concerns.</p>
+<p>So go ahead, download the <a href="http://www.sharpcrafters.com/postsharp/download">free starter edition</a> now!</p>
+<p>Happy PostSharping!</p>
+<p>-Igal</p>

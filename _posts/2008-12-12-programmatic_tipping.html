@@ -1,0 +1,38 @@
+---
+layout: post
+title: "Programmatic Tipping"
+date: 2008-12-12 09:06:12 +01:00
+categories: [General]
+permalink: /post/programmatic-tipping.html
+---
+<h1>Programmatic Tipping</h1>
+<p>Aspects can be added to fields, methods and types programmatically, i.e. using 
+a compiled imperative programming language.</p>
+<p>PostSharp Laos uses this approach for Compound Aspects. Here is an example from 
+the <span>
+<a href="http://doc.postsharp.org/UserGuide/Samples/PostSharp.Samples.Binding.html">
+Binding Sample</a></span>:</p>
+<pre xml:lang="csharp">public override void ProvideAspects(object targetElement, 
+    LaosReflectionAspectCollection collection)
+{  
+  // Get the target type.  Type targetType = (Type) targetElement;
+  // On the type, add a Composition aspect to implement 
+  // the IBindable interface.
+
+  collection.AddAspect(targetType, new AddBindableInterfaceSubAspect());   
+
+  // Add a OnMethodBoundaryAspect on each writable non-static property.  
+  foreach (PropertyInfo property in targetType.GetProperties())  
+  {   
+     if (property.DeclaringType == targetType &amp;&amp;
+          property.CanWrite )   
+      {    
+          MethodInfo method = property.GetSetMethod();               
+          if (!method.IsStatic)      
+            collection.AddAspect(method, 
+                    new OnPropertySetSubAspect(property.Name, this));    
+       }  
+  } 
+} </pre>
+<p>Programmatic tipping is also by high-level code weavers that assemble aspects 
+from many low-level advices. </p>

@@ -1,0 +1,86 @@
+---
+layout: post
+title: "New in PostSharp 2.1: Navigating Code Relationships"
+date: 2011-07-22 12:41:11 +02:00
+categories: []
+permalink: /post/new-in-postsharp-21-navigating-code-relationships.html
+---
+<p><a href="http://www.sharpcrafters.com/blog/post/New-in-PostSharp-21-Reflecting-Custom-Attributes.aspx" target="_blank">In my previous post</a>, I introduced the new class <em>ReflectionSearch</em> and two of its methods: <em>GetCustomAttributesOfType</em> and <em>GetCustomAttributesOnTarget</em>. These methods give access to PostSharp’s internal repository of custom attributes.</p>  <p>Today, I would like to cover the second feature of <em>ReflectionSearch</em>: querying the relationships between elements of code. Three kinds of relationships are supported:</p>  <ul>   <li>type inheritance (classes and interfaces), </li>    <li>usage in statements (a type, method, or field is used inside a method body), </li>    <li>member type, </li>    <li>any of the above, but as a type element (described below). </li> </ul>  <h2>Navigating Type Inheritance</h2>  <p>The system reflection API makes it easy to navigate from a child class to its parents, but the opposite is not true: if you want to retrieve all classes implementing a given interface in the assembly, you have to enumerate all types in this assembly, then enumerate all implemented interfaces, and do a recursion on the parent type. As was the case in the previous post with custom attributes, PostSharp indexes the type hierarchy for internal use. From PostSharp 2.1, <em>ReflectionSearch</em> exposes this feature to high-level aspects, and it comes with no performance cost.</p>  <p>The method <em>ReflectionSearch.GetDerivedTypes</em> does what it says, with one remark: by default, it returns only first-level derived types, i.e. it does not return derived types of derived types. If you want a deep search, you have to specify the option <em>ReflectionSearchOptions.IncludeDerivedTypes</em>. </p>  <p>Note that the method does not return an array of types, but of <em>TypeInheritanceCodeReference</em>. This object provides information about the base type. You may think the base type is always what you passed in the argument, but it isn’t always true. Consider the following code:</p>  <pre>class GenericCollection&lt;T&gt; : ICollection&lt;T&gt; {}
+
+class IntCollection : GenericCollection&lt;int&gt; {}
+
+TypeInheritanceCodeReference[] derivedTypes = <br />      ReflectionSearch.GetDerivedTypes( typeof(ICollection&lt;&gt;);</pre>
+
+<p>&#160;</p>
+
+<p>In this case, <em>GetDerivedTypes</em> would return two pairs: (<em>GenericCollection&lt;T&gt;, ICollection&lt;T&gt;)</em> and (<em>IntCollection, ICollection&lt;int&gt;</em>). In each case, the base type is a different instance of the generic type.</p>
+
+<h2>Navigating Usage</h2>
+
+<p>As a part of the post-compilation process, PostSharp scans all method bodies and builds a bi-directional map of using/used-by relationships, i.e. it determines which fields, methods or type are used in statements and expressions of a method body, and creates an index. This functionality is now available inside <em>PostSharp.dll</em> and is exposed on two methods:</p>
+
+<ul>
+  <li><em>ReflectionSearch.GetDeclarationsUsedByMethod</em> returns the set of fields, methods and types used by a given method. </li>
+
+  <li><em>ReflectionSearch.GetMethodsUsingDeclaration</em> returns all methods using a given field, method, or type. </li>
+</ul>
+
+<p>As you can note, it is not possible to query references to properties and events. Indeed, properties and events are compiler “syntactic sugar” and are never referred to by instructions at MSIL level. If you want to query properties or events, you have to query each accessor separately (add, remove, get, set).</p>
+
+<p>These methods return an array of <em>MethodUsageCodeReference</em>. This object contains both ends of the relationship, as well as a bit mask telling which instructions the declaration was used with – so you can distinguish between a get or a set operation on a field.</p>
+
+<h2>Navigating Member Types</h2>
+
+<p>The last thing you can do with <em>ReflectionSearch</em> is to get a list of all members of a given type. By member, I mean a field, a property, an event, a parameter, or a return-value parameter.</p>
+
+<p>This feature is exposed on <em>ReflectionsSearch.GetMembersOfType</em>.</p>
+
+<p>Note that PostSharp does <em>not</em> use this feature internally, so there is an additional performance cost in calling that method. The first time you invoke <em>GetMembersOfType</em>, the assembly will be scanned and indexed (using PostSharp’s internal APIes, not System.Reflection).</p>
+
+<h2>Type Elements</h2>
+
+<p>By default, all methods of <em>ReflectionSearch</em> match the exact type passed as an argument (or match derived types if <em>ReflectionSearchOptions.IncludeDerivedTypes</em> is specified). However, there are cases where you want a larger choice.</p>
+
+<p>Consider the following code:</p>
+
+<pre>class Bar {}
+
+class Foo : ICollection&lt;Bar&gt;
+{
+   Bar[] array;
+
+   void ICollection&lt;Bar&gt; FooBar()
+   {
+     return new List&lt;Bar&gt;();
+   }
+}
+
+var derivedTypes = ReflectionSearch.GetDerivedTypes( typeof(Bar), options );
+var members = ReflectionSearch.GetMembersOfType( typeof(Bar), options );
+var usages = ReflectionSearch.GetMethodsUsingDeclaration( typeof(Bar), options );</pre>
+
+<p>&#160;</p>
+
+<p>With the default value of <em>options</em>, the three methods return an empty set. Indeed, there is no type derived from <em>Bar</em>, no field or return value of type <em>Bar</em>, and no instruction using <em>Bar</em>. However, if you include the option <em>ReflectionSearchOptions.IncludeTypeElement</em>, you will get:</p>
+
+<ul>
+  <li>as derived type: <em>Foo,</em></li>
+
+  <li>as members: the field <em>array</em> and the return value of <em>FooBar</em>, and</li>
+
+  <li>as usages: the method <em>FooBar</em>.</li>
+</ul>
+
+<p>The <em>IncludeTypeElement</em> option asks PostSharp to index at a much deeper level. Pay attention: this comes at a performance cost. PostSharp does not use this feature internally, so the first time you use the option, it will have to scan all type signatures and build an index.</p>
+
+<h2></h2>
+
+<h2>Summary</h2>
+
+<p>The new <em>ReflectionSearch</em> class allows you to make complex queries over System.Reflection. Most of the times, the features are already used internally by PostSharp, so they come at minimal performance cost. </p>
+
+<p>The <em>ReflectionSearch</em> class is accessible at build time only. The primary use case is to write more powerful logic for <em>IAspectProvider</em> or <em>MethodPointcut</em>. The second use case is to validate your code. And this is for another blog post.</p>
+
+<p>Happy PostSharping!</p>
+
+<p>-gael</p>

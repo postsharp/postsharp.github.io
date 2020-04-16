@@ -1,0 +1,64 @@
+---
+layout: post
+title: "Multicasting of custom attributes"
+date: 2007-04-21 19:31:00 +02:00
+categories: [General]
+permalink: /post/multicasting-of-custom-attributes.html
+---
+<p>Normally, using the standard .NET Framework, custom attributes apply to the element onto which they are defined. This element can be the assembly, a type, a property, an event, a field, a method, a method parameter or the method return value.</p>
+<p>The multicasting feature enables to apply the same custom attribute to <i>many</i> elements using <i>a single </i>declaration of the custom attribute. The benefit is obvious: write one line of code where you should write one hundred.</p>
+<p>Let's see how it works.</p>
+<h2>Using a custom attribute <br /></h2>
+
+<p><b>A basic example</b></p>
+Let's take inspiration from the sample <b>PostSharp.Sample.Trace</b>, which is shipped with PostSharp. We have a custom attribute [Trace] that allows to write something to the console. We can set up the trace category.<br /><br />The most natural way is to add the [Trace] attribute to each method:<br />
+<pre>namespace BusinessLayer<br />{<br />  public class CustomerProcesses<br />  {<br />   [Trace("Business")]<br />   public Customer CreateCustomer(string firstName, string lastName) { ... }<br /><br />   [Trace("Business")]<br />   public void DeleteCustomer(long customerId) { ... }<br />  }<br /><br />  public class LoanProcesses<br />  {<br />   [Trace("Business")]<br />   public Loan CreateLoan(long customerId, decimal amount, int periods, DateTime firstPaymentDate ) { ... }<br /><br />   [Trace("Business")]<br />   public void DeleteLoan(long loanId) { ... }<br />  }<br />}<br /></pre>
+
+This seems classical but it forces us to duplicate code. And what if each class has tenths of methods? We can do the same with less code. The following snippet is exactly equivalent to the previous one:<br />
+<pre>namespace BusinessLayer<br />{<br />  <br />  [Trace("Business")]<br />  public class CustomerProcesses<br />  {<br />   public Customer CreateCustomer(string firstName, string lastName) { ... }<br />   public void DeleteCustomer(long customerId) { ... }<br />  }<br /><br />  [Trace("Business")]<br />  public class LoanProcesses<br />  {<br />   public Loan CreateLoan(long customerId, decimal amount, int periods, DateTime firstPaymentDate ) { ... }<br />   public void DeleteLoan(long loanId) { ... }<br />  }<br />}<br /></pre>
+
+Why does it work? Because PostSharp 'knows' that the trace attribute applies to method. <br /><br />
+<p class="callout">When the custom attribute is applied to a container (a type, in this case, is a container of methods), the custom attribute is multicasted recursively to all methods it contains.</p>
+So why not applying the custom attribute to the assembly? The assembly is a container of types, which are containers of methods, so all methods would be traced. But it's not what we want: we want to trace only the business layer. Fortunately, we can use wildcards to solve this problem. <br /><br />Again, the following snipset is equivalent to the ones above:<br />
+<pre>[assembly: Trace("Business", AttributeTargetTypes="BusinessLayer.*")]<br /><br />namespace BusinessLayer<br />{<br />  public class CustomerProcesses<br />  {<br />   public Customer CreateCustomer(string firstName, string lastName) { ... }<br />   public void DeleteCustomer(long customerId) { ... }<br />  }<br /><br />  public class LoanProcesses<br />  {<br />   public Loan CreateLoan(long customerId, decimal amount, int periods, DateTime firstPaymentDate ) { ... }<br />   public void DeleteLoan(long loanId) { ... }<br />  }<br />}</pre>
+
+We have used the <b>AttributeTargetTypes </b>property to limit the set of methods to which the custom attribute is applied. Without this property, the custom attribute would have been applied to each method of the whole assembly. <br /><br />
+<p class="callout">Thanks to the properties AttributeTargetTypes, AttributeTargetMembers and AttributeTargetElements and AttributeTargetMemberAttributes you can <i>restrict </i>the set of elements to which custom attributes are multicasted. When they are not specified, a 'match all' is assumed.</p>
+<br /><b>Priority of attributes</b><br />
+<br />
+Now say that our business process classes implement the interface IDisposable. We do not want to trace the Dispose method.<br />
+<br />We can use the following code:<br />
+<pre>[assembly: Trace("Business", AttributeTargetTypes="BusinessLayer.*", AttributePriority = 1)]<br />[assembly: Trace(AttributeTargetMembers="Dispose", AttributeExclude = true, AttributePriority = 2)]<br /></pre>
+
+The first line includes all types and methods of the business layer, the second line excludes the methods named "Dispose".<br /><br />
+<p class="callout">The AttributeExclude property tells that set of custom attributes multicasted on an element should be cleared. So it actually removes custom attributes.</p>
+Note the AttributePriority property in both lines. It tells that the first line should be processed first, then the second one. So first we include all, then we exclude. If you think it's stupid to add it, you are right (it would be so nicer without!), but the C# compiler does not guaranty that the custom attributes are written (into the binary) in the same order as in the source file. That is, the order between lines could (and will) be lost during compilation. So if you have to make an inclusion-exclusion and not an exclusion-inclusion, you have to specify the AttributePriority property.<br /><br />
+<p class="callout">The AttributePriority property determines in which order the custom
+attributes are processed by the multicasting engine, and nothing else.</p>
+<br />If you do not like to use named methods (there are good reasons for this), another way to perform the same is to apply the exclusion attribute directly on Dispose methods:<br /><br />
+<pre>[assembly: Trace("Business", AttributeTargetTypes="BusinessLayer.*")]<br /><br />namespace BusinessLayer<br />{<br />  public class CustomerProcesses : IDisposable<br />  {<br />   public Customer CreateCustomer(string firstName, string lastName) { ... }<br />   public void DeleteCustomer(long customerId) { ... }<br /><br />   [Trace(AttributeExclude=true)]<br />   public void Dispose() { ... }<br />  }<br /><br />  public class LoanProcesses : IDisposable<br />  {<br />   public Loan CreateLoan(long customerId, decimal amount, int periods, DateTime firstPaymentDate ) { ... }<br />   public void DeleteLoan(long loanId) { ... }<br /><br />   [Trace(AttributeExclude=true)]<br />   public void Dispose() { ... }<br />  }<br />}</pre>
+
+<br />The rule is:<br /><br />
+<p class="callout">Custom attributes applied on innermost element have always greater priority (i.e. is always processed after and has greater force) than custom attributes applied on outer elements.</p>
+Suppose now that you want to assign a special trace category to the methods of the namespace BusinessLayer.Internals. You can achieve this with the following code:<br />
+<pre>[assembly: Trace("Business", AttributeTargetTypes="BusinessLayer.*", AttributePriority = 1)]<br />[assembly: Trace("BusinessInternals", AttributeTargetTypes="BusinessLayer.Internals.*", <br />                   AttributeReplace = true, AttributePriority = 2)]</pre>
+<p class="callout">The AttributeReplace property clears the set of custom attributes applied to an element and add a new one. Without AttributeReplace, a new custom attribute instance would be added. AttributeReplace is automatically implied if the custom attribute does not allow multiple instances (see below [MulticastAttributeUsage]).</p>
+<br />
+<h2>Developing a multicasting custom attribute</h2>
+<p>Now that you know how to use multicasting custom attributes, let's see how to develop them.<br /></p>
+
+<p>First, note it works only <i>inside PostSharp</i> and with custom attributes that are derived from <b>MulticastAttribute</b>. All abstract custom attributes defined in PostSharp Laos are derived from MulticastAttribute, so they inherit its compile-time behavior.</p>
+<p>Just like normal custom attribute classes should be decorated with the [AttributeUsage] custom attribute, classes derived from MulticastAttribute should be decorated with [MulticastAttributeUsage]. When applied on the TraceAttribute class, the [MulticastAttributeUsage] custom attribute determines how the [Trace] attribute could be used. Since, say, we can trace only methods and constructors, we will use:</p>
+<pre>[MulticastAttributeUsage( MulticastTargets.Method | MulticastTargets.Constructor )]<br />public sealed class TraceAttribute : MulticastAttribute { ... }</pre>
+Using [MulticastAttributeUsage], you can also specify:<br />
+<ul><li>whether multiple instances are allowed on a single element (property AllowMultiple),</li><li>whether it can be applied on elements defined in external assemblies (property AllowExternalAssemblies),</li><li>whether a custom attribute should be emitted in the transformed assembly (after multicasting) -- this makes sense if the custom attribute is also used at runtime.</li></ul>
+
+But this is only information for PostSharp. You should still tell the C# compiler that it is valid to apply the custom attribute at assembly-level, at type-level or at method-level, and that having many instances of the attribute is allowed.<br /><br />In order to tell the C# compiler that the custom attribute may also be added on method containers (types, assembly, properties, events), you should use the standard [AttributeUsage] custom attribute. You should also tell the compiler that multiple instances of the custom attribute are allowed, even if you forbidded it using [MulticastAttributeUsage]. Why? Otherwise the user of your custom attribute could not use declare many custom attributes on assembly- or type-level, eventually using wildcards. What is important is uniqueness on the target element, and this is enforced by the [MulticastAttributeUsage] custom attribute.<br /><br />So finally:<br />
+<pre>[AttributeUsage( AttributeTargets.Assembly | AttributeTargets.Module |<br />                 AttributeTargets.Class | AttributeTargets.Struct | <br />                 AttributeTargets.Method | AttributeTargets.Constructor,<br />                 AllowMultiple = true, Inherited = false )]<br />[MulticastAttributeUsage( MulticastTargets.Method | MulticastTargets.Constructor, AllowMultiple=true )]<br />public sealed class TraceAttribute : MulticastAttribute { ... }</pre>
+<p class="callout">    You should quality your own multicast custom attributes both by [AttributeUsage] and [MulticastAttributeUsage].</p>
+<br />If the previous rule is correct, why is it optional to qualify the aspects we define using PostSharp Laos? Well, because Laos does it for you. Custom attributes are already defined in the base classes.<br /><br />
+
+<p class="callout">   [MulticastAttributeUsage] is inherited from the base class to derived classes. Usage can be restricted, but not enlarged, in derived classed.</p>
+That's nearly all. Of course this mechanism could still be enhanced (it would be nice for instance to be able to specify its own filter). This will be for a further version :).<br /><br />
+<p><i>Happy multicasting!</i></p>
+Gael<br />

@@ -1,0 +1,14 @@
+---
+layout: post
+title: "Introducing our new Roslyn-powered Samples Browser"
+date: 2016-03-08 10:39:00 +01:00
+categories: []
+permalink: /post/introducing-our-new-roslyn-based-samples-browser.html
+---
+<p>When developers first discover PostSharp and decide to give it a try, one of the most frequent feedback we hear is the lack of samples that they could just download, compile and study. After years of ignoring the problem and focusing on building (look, we don&rsquo;t have a single full-time marketing person in the company!), we&rsquo;ve finally decided to give it the priority it deserves.</p>
+<p>GitHub seemed to be the right way to share the source code, but let&rsquo;s face it: GitHub&rsquo;s source code browser could be better. The formatting is nice and colorful but GitHub does not link references to declarations and documentation.</p>
+<p>So we looked at another solution to complete the gaps in GitHub code browser, and this thing immediately came to our mind: <a href="http://www.hanselman.com/blog/AnnouncingTheNewRoslynpoweredNETFrameworkReferenceSource.aspx">the Roslyn-powered .NET Reference Source Browser</a> which <a href="https://github.com/KirillOsenkov/SourceBrowser">has been open-sourced</a>. That seemed the perfect solution, but some features would potentially drag the reader&rsquo;s attention away from PostSharp to implementation details of the .NET Framework, which was not our objective here. So we commented out a few lines of code in the sample browser and linked the samples source code to our documentation instead of to the .NET Framework source code. We also added support for Markdown.</p>
+<p>Today, we&rsquo;re proud to release <a href="http://samples.postsharp.net/">the best sample code browser in industry</a>! Try it by yourself on <a title="http://samples.postsharp.net/" href="http://samples.postsharp.net/">http://samples.postsharp.net/</a>. Of course, we&rsquo;re still hosting the source code on GitHub and you can download or clone all samples from <a title="https://github.com/postsharp/PostSharp.Samples" href="https://github.com/postsharp/PostSharp.Samples">https://github.com/postsharp/PostSharp.Samples</a>.</p>
+<p>What do you think? Do you agree we have the best sample code browser in industry? If not, which sample browser do you prefer and why?</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

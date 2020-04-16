@@ -1,0 +1,350 @@
+---
+layout: post
+title: "PostSharp Principles: Day 13 – Aspect Providers, Part 2"
+date: 2011-07-13 15:24:00 +02:00
+categories: [Tutorial]
+permalink: /post/postsharp-principals-day-13-e28093-aspect-providers-e28093-part-2.html
+---
+<p>When it comes to building complex aspects to solve a specific problem or implement a pattern, the base classes such as OnMethodBoundaryAspect and LocationInterceptionAspect aren’t always up-to the job. We covered the IAspectProvider yesterday, which allows us to dynamically tell PostSharp which aspects to apply to a target at compile time. Today we’re going to build complex aspects that encapsulate multiple transformations in a single aspect. </p>  <h3>Advices and Pointcuts</h3>  <p>Before we continue, we should cover some vocabulary. We’ve avoided the use of these terms until now to avoid any confusion.</p>  <p>· Advice – “An advice is anything that adds a behavior or a structural element to an element of code. For instance, introducing a method into a class, intercepting a property setter, or catching exceptions, are advices.” </p>  <p>· Pointcut – “A pointcut is a function returning a set of elements of code to which advices apply. For instance, a function returning the set of properties annotated with the custom attribute DataMember is a pointcut.”</p>  <p>When we override the OnEntry method when building an aspect based on OnMethodBoundaryAspect, we’re providing the advice to implement. By default the pointcut would be all methods in a class, if the class was decorated with our aspect based on the OnMethodBoundaryAspect base class. </p>  <p>PostSharp provides us with a set of attributes for declaring advice and pointcuts in any combination under a single aspect. Let’s have a look at an example to give a better picture</p>  <pre>[Serializable]
+public class ComplexAspect : TypeLevelAspect
+{
+    private int MethodCounter = 0; //Shared between all advices
+
+    [OnMethodInvokeAdvice, MulticastPointcut(Targets =
+                        MulticastTargets.Method, MemberName = &quot;DoSomethingElse&quot;)]
+    public void OnInvoke(MethodInterceptionArgs args)
+    {
+        Console.WriteLine(&quot;Before method {0}. MethodCounter = {1}&quot;, <br />                                              args.Method.Name, this.MethodCounter);
+        args.Proceed();
+        Console.WriteLine(&quot;After method {0}. MethodCounter = {1}&quot;, <br />                                              args.Method.Name, this.MethodCounter);
+    }
+
+    [OnMethodEntryAdvice, MulticastPointcut(Targets = MulticastTargets.Method)]
+    public void OnEntry(MethodExecutionArgs args)
+    {
+        MethodCounter++;
+        Console.WriteLine(&quot;Entering {0}. MethodCounter = {1}&quot;, <br />                                               args.Method.Name, this.MethodCounter);
+    }
+
+    [OnMethodExitAdvice(Master = &quot;OnEntry&quot;)]
+    public void OnExit(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;Exiting {0}. MethodCounter = {1}&quot;, <br />                                               args.Method.Name, this.MethodCounter);
+    }
+
+    [OnLocationSetValueAdvice, MulticastPointcut(Targets = MulticastTargets.Property)]
+    public void OnPropertySet(LocationInterceptionArgs args)
+    {
+        MethodCounter++;
+        Console.WriteLine(&quot;Setting property: {0} = {1}. MethodCounter = {2}&quot;, <br />                                     args.LocationName, args.Value, this.MethodCounter);
+    }
+}</pre>
+
+<p>Our aspect derives from TypeLevelAspect, not one of the base classes we’ve been using. We have four methods in our aspect and each method is decorated with an advice attribute along with a pointcut attribute. </p>
+
+<p>The OnEntry method is decorated with the OnMethodEntryAdvice attribute which has the same semantics of overriding the OnEntry method in an OnMethodBoundaryAspect. The MulticastPointcut attribute is used and passed the MulticastTargets.Method flag to let PostSharp know that we want to apply this advice to methods in general.</p>
+
+<p>Because we’re using TypeLevelAspect instead of OnMethodBoundaryAspect, we are able to share state between advices. When using OnMethodBoundaryAspect, an instance of our aspect is created for each target. For example, Method1 would have its own copy of our aspect and Method2 would have its own copy. Using TypeLevelAspect to implement our advices changes that behavior; we have a single instance of our aspect that is used for each target which means that the advices get to share state. We’re going to demonstrate this using the MethodCounter field to increment on each method entry and display its value throughout the other advices.</p>
+
+<p>Notice the OnExit advice isn’t specifying a pointcut, but instead is passing in a value to the Master parameter on the OnMethodExitAdvice attribute. We’re defining the master advice method, which means we’re grouping the advices on the same “layer”. OnExit will be a slave method and will inherit the pointcut selectors from OnEntry since only master advice methods can define pointcuts. We only do this for advices of the same category of transformations. For example, you wouldn’t define OnEntry as the master advice method for OnPropertySet because they perform different transformations. We’ll cover grouping on another day. </p>
+
+<p>The other methods in our aspect are the same, just using different advices. The OnInvoke method however has a different pointcut setup. We add an additional parameter, MemberName, giving it a value of “DoSomethingElse” which tells PostSharp to only apply the advice to methods matching “DoSomethingElse”. </p>
+
+<p>Let’s run our example code and look at the result</p>
+
+<pre>class Program
+{
+    static void Main(string[] args)
+    {
+        ExampleClass ec = new ExampleClass();
+        ec.DoSomething();
+        ec.DoSomethingElse();
+        ec.FirstName = &quot;John&quot;;
+        ec.LastName = &quot;Smith&quot;;
+
+        Console.ReadKey();
+    }
+}
+
+[ComplexAspect]
+public class ExampleClass
+{
+    public string FirstName { get; set; }
+    public string LastName { get; set; }
+
+    public void DoSomething()
+    {
+        Console.WriteLine(&quot;Doing something&quot;);            
+    }
+
+    public void DoSomethingElse()
+    {
+        Console.WriteLine(&quot;Doing something else&quot;);
+    }
+
+}</pre>
+<br />&nbsp;
+<pre>Entering DoSomething. MethodCounter = 1
+Doing something
+Exiting DoSomething. MethodCounter = 1
+Before method DoSomethingElse. MethodCounter = 1
+Entering DoSomethingElse. MethodCounter = 2
+Doing something else
+Exiting DoSomethingElse. MethodCounter = 2
+After method DoSomethingElse. MethodCounter = 2
+Entering set_FirstName. MethodCounter = 3
+Setting property: FirstName = John. MethodCounter = 4
+Exiting set_FirstName. MethodCounter = 4
+Entering set_LastName. MethodCounter = 5
+Setting property: LastName = Smith. MethodCounter = 6
+Exiting set_LastName. MethodCounter = 6</pre>
+
+<p>
+  <br />In a single aspect, we have implemented advice and pointcuts that we normally would have written three different aspects using the base classes. In addition, we were able to share state between those advices. Examine the output of the MethodCounter. It’s incrementing as we continue along with the execution. If we had three individual aspects the provided equivalent advices, the output would look more like</p>
+
+<pre>Entering DoSomething. MethodCounter = 1
+Doing something
+Exiting DoSomething. MethodCounter = 1
+Before method DoSomethingElse. MethodCounter = 0
+Entering DoSomethingElse. MethodCounter = 1
+Doing something else
+Exiting DoSomethingElse. MethodCounter = 1
+After method DoSomethingElse. MethodCounter = 0
+Entering set_FirstName. MethodCounter = 1
+Setting property: FirstName = John. MethodCounter = 1
+Exiting set_FirstName. MethodCounter = 1
+Entering set_LastName. MethodCounter = 1
+Setting property: LastName = Smith. MethodCounter = 1
+Exiting set_LastName. MethodCounter = 1</pre>
+
+<h3>Advices</h3>
+
+<p>There are a few advice attributes that you can use. Each advice attribute has a corresponding simple aspect base class and behaves in the same way. 
+  <table border="0" cellspacing="0" cellpadding="0"><tbody>
+      <tr>
+        <td valign="top" width="217">
+          <p><b>OnMethodEntryAdvice</b></p>
+
+          <p><b>OnMethodSuccessAdvice</b></p>
+
+          <p><b>OnMethodExceptionAdvice</b></p>
+
+          <p><b>OnMethodExitAdvice 
+              <br /></b></p>
+        </td>
+
+        <td valign="top" width="421">
+          <p>These advices are the equivalent to the advices in the OnMethodBoundaryAspect base class</p>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="217">
+          <p><b>OnMethodInvokeAdvice 
+              <br /></b></p>
+        </td>
+
+        <td valign="top" width="421">
+          <p>These advices are the equivalent to the advices in the MethodInterceptionAspect base class</p>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="217">
+          <p><b>OnLocationGetValueAdvice</b></p>
+
+          <p><b>OnLocationSetValueAdvice 
+              <br /></b></p>
+        </td>
+
+        <td valign="top" width="421">
+          <p>These advices are the equivalent to the advices in the LocationInterceptionAspect base class</p>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="217">
+          <p><b>OnEventAddHandlerAdvice</b></p>
+
+          <p><b>OnEventRemoveHandlerAdvice</b></p>
+
+          <p><b>OnEventInvokeHandlerAdvice 
+              <br /></b></p>
+        </td>
+
+        <td valign="top" width="421">
+          <p>These advices are the equivalent to the advices in the EventInterceptionAspect base class</p>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="217">
+          <p><b>IntroduceMember</b></p>
+        </td>
+
+        <td valign="top" width="421">
+          <p>Introduce a method, property or event to the target class.</p>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="217">
+          <p><b>IntroduceInterface</b></p>
+        </td>
+
+        <td valign="top" width="421">
+          <p>Introduce a method to the target class.<a name="_GoBack"></a></p>
+        </td>
+      </tr>
+    </tbody></table>
+</p>
+
+<p>When applying advice to a method, the method must be public and have the same signature as the corresponding base class advice signature. For example, in order to apply OnLocationGetValueAdvice on a method, the method must be public and have a single LocationInterceptionArgs parameter with no return value (void). </p>
+
+<h3>Pointcuts</h3>
+
+<p>A pointcut has to be defined in order to tell PostSharp where to apply the advice. You can think of pointcuts as expressions that return a set of elements of code. These elements of code must be compatible with the type of advice (for instance, do not try to add an OnLocationGetValue advice to a field). Remember that you can only add advices to code that belong to the target of the aspect. So if the aspect has been applied to a type, you can only add advices to members of this type, or to the type itself. 
+  <table border="0" cellspacing="0" cellpadding="0"><tbody>
+      <tr>
+        <td valign="top" width="193">
+          <p><b>MulticastPointcut</b></p>
+        </td>
+
+        <td valign="top" width="445">
+          <p>A declarative pointcut that works similarly to MulticastAttribute. </p>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="193">
+          <p><b>MethodPointcut</b></p>
+        </td>
+
+        <td valign="top" width="445">
+          <p>An imperative pointcut: the pointcut is a method that returns an enumeration of elements of code. The method can be implemented in C#, for instance using Linq.</p>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="193">
+          <p><b>SelfPointcut</b></p>
+        </td>
+
+        <td valign="top" width="445">
+          <p>A pointcut that evaluates to the target of the aspect.</p>
+        </td>
+      </tr>
+    </tbody></table>
+</p>
+
+<h4>MulticastPointcut</h4>
+
+<h6>MemberName</h6>
+
+<p>MemberName takes an expression (static name, wildcard or regular expression) to specify targets.</p>
+
+<h6>Targets</h6>
+
+<p>Targets can be set to a combination of MulticastTargets flags. For example, MulticastTargets.Method | MulticastTargets.Property to specify the targets will be methods and properties. </p>
+
+<h6>Attributes</h6>
+
+<p>Attributes is how we define the scope and visibility of the intended targets and can be set to a combination of MulticastAttributes flags. For example, we can target members that are private and static by using MulticastAttributes.Private | MulticastAttributes.Static.</p>
+
+<h3>MethodPointcut</h3>
+
+<p>MethodPointcut allows us to pass in the name of a method that PostSharp can use to get a list of targets. Let’s look at an example</p>
+
+<pre>[Serializable]
+public class ExampleAspect : TypeLevelAspect
+{
+    public IEnumerable<methodinfo> FindTargetMethods(Type target)
+    {
+        IEnumerable<methodinfo> targets = target.GetMethods()
+                         .Where(c =&gt; c.Name.Contains(&quot;Something&quot;));
+        return targets;
+    }
+
+    [OnMethodEntryAdvice, MethodPointcut(&quot;FindTargetMethods&quot;)]
+    public void OnEntry(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;Entering method: &quot; + args.Method.Name);
+    }
+
+}</pre>
+
+<p>Our aspect has only one advice that we want to implement, OnMethodEntryAdvice. We use the MethodPointcut attribute and pass it “FindTargetMethods” which is the name of the method we’ve setup to determine which methods will be targets. The method that is going to return the targets has to have a specific signature. PostSharp documentation defines this signature as</p>
+
+<pre>IEnumerable<advicetargettype> SelectCodeElements(AspectTargetType target)</pre>
+
+<p><b>AdviceTargetType</b> will be replaced with either object or a reflection type representing the targets of the advice. For example, MethodInfo when the advice targets are methods and PropertyInfo when the targets are Properties.</p>
+
+<p><b>AspectTargetType</b> will be replaced with either object or a reflection type corresponding to the targets of the aspect. For example, Type for AssemblyLevelAspect, TypeLevelAspect, InstanceLevelAspect and MethodInfo for MethodLevelAspect.</p>
+
+<p>If the signature is not valid for the type of aspect then PostSharp will produce a compiler error. When we apply the aspect to our example class and run the application, we see that PostSharp has applied the advice to both of the class methods.</p>
+
+<pre>public class Program
+{
+    static void Main(string[] args)
+    {
+        ExampleClass ec = new ExampleClass();
+        ec.DoSomething();
+        ec.DoSomething1();
+
+        Console.ReadKey();
+    }
+}
+
+[ExampleAspect]
+public class ExampleClass
+{
+    public int ID { get; set; }
+    public string First { get; set; }
+    public string Last { get; set; }
+
+    public void DoSomething()
+    {
+        this.First = &quot;John&quot;;
+        this.Last = &quot;Smith&quot;;
+    }
+
+    public void DoSomething1()
+    {
+        Console.WriteLine(&quot;Did something&quot;);
+    }
+}</pre>
+
+<p>The output is</p>
+
+<pre>Entering method: DoSomething
+Entering method: DoSomething1
+Did something</pre>
+
+<h3>
+  <br />SelfPointcut</h3>
+
+<p>There is a special attribute that you can use instead of MulticastPointcut, the SelfPointcut attribute. SelfPointcut tells PostSharp to select the exact aspect target. For example, if we have the following aspect</p>
+
+<pre>[Serializable]
+public class ExampleAspect: MethodLevelAspect
+{
+    [OnMethodEntryAdvice, SelfPointcut]
+    public void OnEntry(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;Entering &quot; + args.Method.Name);
+    }
+
+}</pre>
+
+<p>When applied to a method directly, the SelfPointcut will use that exact method as the target. If applied to a class, all methods in the class will get the advice because all of the methods would be the intended target. If the aspect was applied at the assembly level with specific targets configured, then PostSharp will use those exact targets. SelfPointcut is a way to defer the selection of pointcuts to a higher mechanism. </p>
+
+<h3>Benefits over base classes</h3>
+
+<p>Base classes encapsulate a single transformation, which means if you want to apply multiple transformations, you would need to build just as many aspects. For example, if you wanted to marshal a method invocation to a different thread and log exceptions that occur in that method, you would need to build two independent aspects and apply both to the target.</p>
+
+<p>Sharing state between advices in multiple independent aspects requires convoluted mechanics. Building complex aspects using advices and pointcuts provides the benefit of sharing state between advices.</p>
+
+<h3>Conclusion</h3>
+
+<p>By now you should have a clear understanding of how to build complex aspects using the tools provided by PostSharp. The term “complex” shouldn’t be a deterrent because over the last two days we’ve seen just how easy it is to build aspects. </p>
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-13-postsharp_principals_day_13_e28093_aspect_provider/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="/assets/2011-07-13-postsharp_principals_day_13_e28093_aspect_provider/self573_thumb[1]_thumb_3.jpg" width="66" height="66" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

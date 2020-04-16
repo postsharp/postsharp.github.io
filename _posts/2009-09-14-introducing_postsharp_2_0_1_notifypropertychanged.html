@@ -1,0 +1,174 @@
+---
+layout: post
+title: "Introducing PostSharp 2.0: #1 - NotifyPropertyChanged"
+date: 2009-09-14 17:50:17 +02:00
+categories: [General]
+permalink: /post/introducing-postsharp-2-0-1-notifypropertychanged.html
+---
+
+<p>Be seated safely before reading on. This kicks ass.</p>
+<p>I have already written enough abstract words in previous posts; let&#39;s now 
+introduce PostSharp 2.0 on a real example: the implementation of&nbsp; 
+NotifyPropertyChanged, one of the most frequently used patterns for all adepts 
+of MVC designs. </p>
+<p>It&#39;s not just about implementing the INotifyPropertyChanged interface; it&#39;s 
+also about modifying every property setter. It&#39;s deadly simple and deadly 
+boring. And gets you more than one step away from the idea you have of aesthetical 
+code.</p>
+<p>Enough words. See the implementation using PostSharp 2.0. There&#39;s a lot of 
+new concepts out there, so let&#39;s start easily:</p>
+<pre>[Serializable]
+[IntroduceInterface( typeof(INotifyPropertyChanged))]
+public sealed class NotifyPropertyChangedAttribute : 
+   InstanceLevelAspect, INotifyPropertyChanged
+{
+    public void OnPropertyChanged( string propertyName )
+    {
+        if ( this.PropertyChanged != null )
+        {
+            this.PropertyChanged( this.Instance, 
+               new PropertyChangedEventArgs( propertyName ) );
+        }
+    }
+
+    [IntroduceMember]
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    [OnLocationSetHandler, 
+     MulticastSelector( Targets = MulticastTargets.Property )]
+    public void OnPropertySet( LocationInterceptionArgs args )
+    {
+        if ( args.Value == args.GetCurrentValue() ) return;
+
+        this.OnPropertyChanged( args.Location.PropertyInfo.Name );
+    }
+}</pre>
+<p>The aspect is used this way:</p>
+<pre>[NotifyPropertyChanged]
+public class TestBaseClass
+{
+    public string PropertyA { get; set; }
+}</pre>
+<p>Some words of explanation.</p>
+<p>First, look at introductions: <i>IntroduceInterface</i> tells that the 
+interface <i>INotifyPropertyChanged</i> must be introduced into the target type. 
+And where is the interface implemented? Well, by the aspect itself! Note that <i>
+PropertyChanged</i> is itself introduced to the target type as a public member 
+thanks to the <i>IntroduceMember</i> custom attribute (without this attribute, 
+the interface would be implemented explicitely). </p>
+<p>The aspect actually becomes an extension of the class; aspect instances have the 
+same lifetime as objects of the class to which the aspect is applied... just 
+because the aspect inherits from <i>InstanceLevelAspect</i>.</p>
+<p>Got it? So let&#39;s continue to the <i>OnPropertySet</i> method. It is marked by 
+custom attribute <i>OnLocationSetHandler</i>: it makes this method a handler 
+that intercepts all calls to the setter of all target properties. And which are 
+target properties? This is told by custom attribute <i>MulticastSelector</i>: 
+all properties in this case, but we could filter on name, visibility and all 
+features you are used to. We could have used the same handler to handle access 
+to properties (it would have turned the field to a property as a side effect).</p>
+<p>Did you get it? You can now catch accesses to properties or fields using the
+<i>same aspects</i>. Same semantics, same aspect. Simple, powerful.</p>
+<p>Now look at the body of method <i>OnPropertySet </i>and see how easy it is to 
+read the current value of the property.</p>
+<p>The code above works on an isolated class, but a class is rarely isolated, 
+right? More of the time, it derives from an ancestor and have descendants. What 
+if the ancestor already implements interface <i>INotifyPropertyChanged</i>? The code 
+above would trigger a build time error. But we can improve it. What do we want, 
+by the way? Well, if the class above already implements <i>
+INotifyPropertyChanged</i>, it must also have implemented a protected method <i>
+OnPropertyChanged(string)</i>, and we have to invoke this method. If not, we 
+define this method ourselves. In both cases, we need invoke this method from all property setters.</p>
+<p>Let&#39;s turn it into code:</p>
+<pre>[Serializable]
+[IntroduceInterface( typeof(INotifyPropertyChanged), 
+                     OverrideAction = InterfaceOverrideAction.Ignore )]
+[MulticastAttributeUsage( MulticastTargets.Class, 
+                          Inheritance = MulticastInheritance.Strict )]
+public sealed class NotifyPropertyChangedAttribute : 
+   InstanceLevelAspect, INotifyPropertyChanged
+{
+   
+    [ImportMember( "OnPropertyChanged", IsRequired = false )] 
+    public Action&lt;string&gt; BaseOnPropertyChanged;
+
+    [IntroduceMember( Visibility = Visibility.Family, 
+                      IsVirtual = true, 
+                      OverrideAction = MemberOverrideAction.Ignore )]
+    public void OnPropertyChanged( string propertyName )
+    {
+        if ( this.PropertyChanged != null )
+        {
+            this.PropertyChanged( this.Instance, 
+               new PropertyChangedEventArgs( propertyName ) );
+        }
+    }
+
+    [IntroduceMember( OverrideAction = MemberOverrideAction.Ignore )]
+    public event PropertyChangedEventHandler PropertyChanged;
+
+    [OnLocationSetHandler, 
+     MulticastSelector( Targets = MulticastTargets.Property )]
+    public void OnPropertySet( LocationInterceptionArgs args )
+    {
+        if ( args.Value == args.GetCurrentValue() ) return;
+
+        if ( this.BaseOnPropertyChanged != null )
+        {
+            this.BaseOnPropertyChanged( args.Location.PropertyInfo.Name );
+        }
+        else
+        {
+            this.OnPropertyChanged( args.Location.PropertyInfo.Name );
+        }
+    }
+}</pre>
+<p>This time, the code is complete. No pedagogical simplification. Look at 
+custom attributes <i>IntroduceInterface</i> and <i>IntroduceMember</i>: I have 
+added an <i>OverrideAction</i>; it tells that interface and member introductions 
+will be silently ignored if already implemented above.</p>
+<p>Now look at field <i>BasePropertyChanged</i>: its type is <i>Action&lt;string&gt;
+</i>(a delegate with signature <i>(string):void</i>) and is annotated with custom 
+attribute <i>ImportMember</i>. At runtime, this field with be bound to method <i>
+OnPropertyChanged</i> of the base type. If there is no such method in the base 
+type, the field will simply be null. So, in method <i>OnPropertySet</i>, we can 
+now choose: if there was already a method <i>OnPropertyChanged,</i> we invoke 
+the existing one. Otherwise, we invoke the one we are introducing.</p>
+<p>Thanks to <i>ImportMember</i>, we know how to extend a class that already 
+implement the pattern. But how to make our own implementation extensible by 
+derived classes? We have to introduce the method <i>OnPropertyChanged</i> and 
+make it virtual. It&#39;s done, again, by custom attribute <i>IntroduceMember</i>.</p>
+<p>That&#39;s all. You can now use the code on class hierarchies, like here:</p>
+<pre>[NotifyPropertyChanged]
+public class TestBaseClass
+{
+    public string PropertyA { get; set; }
+}</pre>
+<pre>public class TestDerivedClass : TestBaseClass
+{
+    public int PropertyB { get; set; }
+}</pre>
+<pre>class Program
+{
+    static void Main(string[] args)
+    {
+        TestDerivedClass c = new TestDerivedClass();
+        Post.Cast&lt;TestDerivedClass, INotifyPropertyChanged&gt;( c ).PropertyChanged += OnPropertyChanged;
+        c.PropertyA = "Hello";
+        c.PropertyB = 5;
+    }
+
+    private static void OnPropertyChanged( object sender, PropertyChangedEventArgs e )
+    {
+        Console.WriteLine("Property changed: {0}", e.PropertyName);
+    }
+}</pre>
+<p>With PostSharp 1.5, you could do implement <i>easy</i> aspects easily. <b>With 
+PostSharp 2.0, you can implement more complex design patterns, and it&#39;s 
+still easy.</b></p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+
+<p>
+P.S. Kicking?  
+</p>
+

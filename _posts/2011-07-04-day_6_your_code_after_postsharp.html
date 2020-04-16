@@ -1,0 +1,107 @@
+---
+layout: post
+title: "PostSharp Principles: Day 6 Your code after PostSharp"
+date: 2011-07-04 15:08:00 +02:00
+categories: [Tutorial]
+permalink: /post/day-6-your-code-after-postsharp.html
+---
+<p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>  <p>Welcome to week 2 of PostSharp Principles. As we move forward we’ll continue to explore the features of PostSharp. We still have a lot to cover and just like last week, we’re going to explore two more aspects provided by PostSharp and we’ll look at what is going on under the hood as we go.</p>  <p>Before we get any deeper into PostSharp, it’s important to understand how PostSharp implements your aspects especially when multiple aspects are applied to a single target. Today we’ll have a look at how PostSharp implements OnMethodBoundaryAspect when applied to a method.</p>  <h3>Getting Started</h3>  <p>If you have not done so, you will need to <a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">download demo project source code</a> and you will also need to download and install a copy of <a href="http://wiki.sharpdevelop.net/ILSpy.ashx">ILSpy</a>. You are welcome to use Reflector as the two tools are very similar.</p>  <h3>Example</h3>  <p>Continuing with the demo project from last week, let’s look at the GetByName method in the InMemoryDataStore.cs file.</p>  <pre>public IQueryable<contact> GetByName(string value)
+{
+    var res = _contactStore.Where(c =&gt; c.FirstName.Contains(value) <br />                                     || c.LastName.Contains(value));
+
+    if (res.Count() &lt; 1)
+    {
+        ThrowNoResultsException();
+    }
+
+    Thread.Sleep(3000);
+    return res.AsQueryable();
+}</pre>
+
+<p>Since this is a pretty basic method it will be easy to see how PostSharp applies our aspects. Build the project with no aspects applied and then open ILSpy. Once ILSpy is open, browse to the output folder for the demo project and select PostSharpDemo1.exe. Navigate down the namespace tree until you reach the GetByName method in the InMemoryDataStore class.</p>
+
+<p><a href="/assets/2011-07-04-day_6_your_code_after_postsharp/image_11.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-04-day_6_your_code_after_postsharp/image_thumb_11.png" width="628" height="359" /></a></p>
+
+<p>It looks exactly the same as our original code. Let’s apply an aspect and see what changes. </p>
+
+<p>Just for demonstration purposes, let’s build a new aspect based on OnMethodBoundaryAspect. Add a new file called DemoAspect.cs and add the following code</p>
+
+<pre>[Serializable]
+public class DemoAspect : OnMethodBoundaryAspect
+{
+    public override void OnEntry(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;OnEntry&quot;);
+    }
+
+    public override void OnExit(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;OnExit&quot;);
+    }
+
+    public override void OnSuccess(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;OnSuccess&quot;);
+    }
+
+    public override void OnException(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;OnException&quot;);
+    }
+}</pre>
+
+<p>Apply the aspect to the GetByName method and then rebuild the project. Back in ILSpy, click refresh (you might have to navigate back to the GetByName method). What you see now is much different than before.</p>
+
+<p><a href="/assets/2011-07-04-day_6_your_code_after_postsharp/image_12.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-04-day_6_your_code_after_postsharp/image_thumb_12.png" width="628" height="488" /></a></p>
+
+<p>There is a try/catch/finally added to the method and references to InMemoryDataStore.&lt;&gt;z__Aspects.a0 throughout. Let’s start at the top.</p>
+
+<h3>InMemoryDataStore.&lt;&gt;z__Aspects</h3>
+
+<p>So what is this? A simple explanation is that this is a helper class that PostSharp creates to hold references to your aspect(s) and an instance of MethodBase for each method in which an aspect is applied. a0 is a reference to an instance of our DemoAspect. Feel free to navigate around using ILSpy.</p>
+
+<p>At the start of our method a call to InMemoryDataStore.&lt;&gt;z__Aspects.a0.OnEntry(null) is made. This is our OnEntry point, before the rest of our method body. Next is a new declaration of our return type called, ‘result’. Our original code didn’t contain a result variable. PostSharp added it because you cannot do a return from a try/catch block in MSIL. This is the same behavior as the C# compiler.</p>
+
+<p>Inside of the try block is our original method body with only a minor change of setting the result variable with our query results. At the end of the try block is a call to InMemoryDataStore.&lt;&gt;z__Aspects.a0.OnSuccess(null) because at this point, all of our code has executed without throwing an error which means it was successful. </p>
+
+<p>The catch block makes a call to InMemoryDataStore.&lt;&gt;z__Aspects.a0.OnException(null) for what should be an obvious reason. An exception has occurred and we wanted to handle that event in our aspect. After our call, the exception is rethrown.</p>
+
+<p>The finally block makes a call to InMemoryDataStore.&lt;&gt;z__Aspects.a0.OnExit(null) because OnExit must always be called even if the method exited with an exception.</p>
+
+<p>At last, the results are returned to the caller. </p>
+
+<h3>Adjustments</h3>
+
+<p>Let’s make some changes to our aspect. Update the code to the following</p>
+
+<pre>[Serializable]
+public class DemoAspect : OnMethodBoundaryAspect
+{
+    public override void OnException(MethodExecutionArgs args)
+    {
+        Console.WriteLine(&quot;OnException&quot;);
+        args.FlowBehavior = FlowBehavior.Continue;
+    }
+}</pre>
+
+<p>Now we’re only implementing OnException and we’ve changed it to set the FlowBehavior. When an exception occurs, we don’t want to rethrow, just continue on. Rebuild the project and refresh ILSpy.</p>
+
+<p><a href="/assets/2011-07-04-day_6_your_code_after_postsharp/image_13.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-04-day_6_your_code_after_postsharp/image_thumb_13.png" width="628" height="425" /></a></p>
+
+<p>We have a try/catch now instead of a try/catch/finally, but now the catch method is much larger. So what’s going on? Starting our catch block is an instantiation of MethodExecutionArgs and then a call to InMemoryDataStore.&lt;&gt;z__Aspects.a0.OnException(methodExecutionArgs). The reason why there is now a declaration for MethodExecutionArgs is because we need to have access to the properties whereas before, we did not. </p>
+
+<p>Now we come to a switch construct which checks the F<a name="_GoBack"></a>lowBehavior property of our MethodExecutionArgs instance. FlowBehavior.Default and FlowBehavior .RethrowException will rethrow while FlowBehavior.Continue (which is what we wanted to do) will return result as it is while FlowBehavior.Return will set the value of result to the value of MethodExecutionArgs.ReturnValue. At the bottom is a catch all jump to the IL_A1 label which will rethrow. This is incase FlowBehavior was set to an unrecognized value.</p>
+
+<p>Play around with different implementations and logic to see how PostSharp changes the resulting code.</p>
+
+<p>As you can see, PostSharp analyzes the code of the aspect and generates only the code that supports the feature actually used by the aspect. This feature is called the aspect optimizer. <i></i></p>
+
+<p><i>Keep in mind that the Starter edition (formerly known as the Community edition) does not include the aspect optimizer, so it may produce much more code for the same aspect.</i></p>
+
+<h3>Conclusion</h3>
+
+<p>It is important to know what is happening to your code when you apply aspects. Today we saw an example of OnMethodBoundaryAspect and how the method body is modified to allow the aspect to work. As we continue the series, we’ll look under the hood to see what is going on when dealing with other aspect types and when applying multiple aspects to a single target.</p>
+
+<p>&#160;</p>
+
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-04-day_6_your_code_after_postsharp/self573.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573" border="0" alt="self573" align="left" src="/assets/2011-07-04-day_6_your_code_after_postsharp/self573_thumb.jpg" width="66" height="66" /></a>Dustin Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

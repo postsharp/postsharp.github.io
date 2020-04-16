@@ -1,0 +1,42 @@
+---
+layout: post
+title: "[Recording] Under the Hood of a Post-Compiler + Q&A"
+date: 2013-05-28 07:02:00 +02:00
+categories: [Webinars]
+permalink: /post/recording-under-the-hood-of-a-post-compiler-2b-qa.html
+---
+<p>Tools like PostSharp, that manipulate the IL, can seem like black magic at first. However, the simple act of opening a decompiler changes all that. In this episode, Matt Groves shows how to decompile a .NET assembly and view code with/without a PostSharp aspect using Reflector to see exactly what&rsquo;s being manipulated.</p>
+<p><iframe src="https://player.vimeo.com/video/66891143?title=0&amp;byline=0&amp;portrait=0&amp;loop=1" frameborder="0" width="640" height="460"></iframe></p>
+<h2>Q&amp;A</h2>
+<p><strong>Q: In your previous session, you used aspect boundaries to do something that could also be accomplished by method interception. What factors help to decide which way you should implement?</strong></p>
+<p><strong>A:</strong> The OnMethodBoundaryAspect offers higher performance because only a part of the calling context needs to be passed to the aspect. This is especially true with the aspect optimizer feature, included in PostSharp Pro and Ultimate, when the aspect does not consume a lot of context, for instance a transaction scope aspect. The benefit is reduced however if the aspect consumes a lot of context, for instance all argument values. The MethodInterceptionAspect is more powerful: you can invoke the intercepted method on a different thread, for instance. But it is slower because the whole calling context needs to be stored to the heap and passed to the aspect.</p>
+<p><strong>Q: How can I disable a PostSharp aspect temporarily?</strong></p>
+<p><strong>A:</strong> There are a number of ways to disable PostSharp from a specific project:</p>
+<ul>
+<li>
+<p>In Visual Studio, open the project properties dialog, select the right configuration, open the <span class="ui">PostSharp</span> tab page, and change the value of the <span class="ui">Disable PostSharp</span> option.</p>
+</li>
+<li>
+<p>In Visual Studio, open the project properties dialog, select the right configuration, open the <span class="ui">Build</span> tab page, and add the conditional compilation symbol <span class="literalValue">SkipPostSharp.</span></p>
+</li>
+<li>
+<p>Define the MSBuild property <span class="code">SkipPostSharp=True</span>, for instance using the command line msbuild /p:SkipPostSharp=True.</p>
+</li>
+</ul>
+<p><strong>Q: Which Aspects are serialized? </strong></p>
+<p><strong>A:</strong> Every aspect is serialized at compile time. You can <a href="http://doc.postsharp.net/postsharp-3.0/##PostSharp-3.0.chm/html/f711d5da-5696-443c-9b42-e67a3d8b7b36.htm">find out more on aspect serialization</a> in PostSharp documentation.</p>
+<p><strong>Q: Is there deserialization during run-time?</strong></p>
+<p><strong>A:</strong> Yes, by using a decompiler you will see that PostSharp stores serialized aspects as resources, for instance the aspect I applied to the DoSomething method in the video, and an internal class does the work of deserializing the resources into an object.</p>
+<p><strong>Q: Why are you using the objects (internal classes) instead of writing the code directly in the corresponding methods? Wouldn't that be more performant?</strong></p>
+<p><strong>A:</strong> This approach is named &ldquo;aspect inlining&rdquo;. It is more performant but more complex and less powerful (aspects code would need to be more limited).</p>
+<p><strong>Q: System.Diagnostics.Contracts also uses the post-compiler rewrite method to check state and assertions. Do PostSharp and Contracts work well together?</strong></p>
+<p><strong>A:</strong> Yes, they work well together. PostSharp runs after Code Contracts.</p>
+<p><strong>Q: It&rsquo;s evident that PostSharp is heavily dependent on using .NET's underlying support for discovering and calling methods using Reflection. Are there any significant trade-offs or compromises in using Reflection so heavily?</strong></p>
+<p><strong>A:</strong> PostSharp does not rely on reflection to discover and call methods. The analysis is done completely at build time, and PostSharp generates code to call exactly the right methods. Reflection is only used if the aspects themselves use reflection. Even then, any use of reflection is optimized and cached.</p>
+<p>Up next: <strong>Unit Testing &amp; Thin Aspects</strong></p>
+<p>The benefits of unit testing are numerous. When aspects are involved, Matt believes keeping them "thin" is key to keeping your code easy to unit test. Join us this Thursday as he explores some of the implications of unit testing when a post-compiler tool is involved.</p>
+<p>During this final episode in the AOP in .NET series, Matt will be joined by Gael Fraiteur, the creator of PostSharp, who has a differing opinion about the relevancy of "thin" aspects and will speak about a set of practices that can be used to create efficient tests of aspects.</p>
+<p>SPECIAL OFFER:</p>
+<p>The generous folks at Manning Publications are offering a 40% discount on Matt&rsquo;s new book to all live webinar attendees. So, if you want to learn what difference AOP and PostSharp can make in your projects, and take advantage of Manning&rsquo;s discount offer, be sure to join us for the last live webinar in this series.</p>
+<p><a href="https://www3.gotomeeting.com/register/189817950">Seats are limited and this head-to-head episode is sure to sell out so reserve your spot today.</a></p>
+<p>-Britt</p>

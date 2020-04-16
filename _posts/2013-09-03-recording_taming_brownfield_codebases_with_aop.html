@@ -1,0 +1,26 @@
+---
+layout: post
+title: "[Recording] Taming Brownfield Codebases with AOP + Q&A"
+date: 2013-09-03 15:42:00 +02:00
+categories: [Webinars]
+permalink: /post/recording-taming-brownfield-codebases-with-aop.html
+---
+<p>Last week, <a href="ca.linkedin.com/in/donaldbelcham" target="_blank"><strong>Donald Belcham</strong></a> joined Gael Fraiteur on the PostSharp Live Webinar to talk about one of the largest challenges faced on Brownfield projects: <strong>adding project-wide functionality to a codebase.</strong></p>
+<p>Attendees learned:</p>
+<ul>
+<li>Options for adding non-functional requirements</li>
+<li>Areas of risk when adding non-functional requirements</li>
+<li>Use of IL Weaving to add non-functional requirements</li>
+<li>IL Weaving granularity</li>
+</ul>
+<p>Watch the recording and learn the techniques and tools you can use to add functionality to brownfield codebases.</p>
+<p><iframe src="https://player.vimeo.com/video/73509542?title=0&amp;byline=0&amp;portrait=0&amp;loop=1" frameborder="0" width="640" height="460"></iframe></p>
+<h2>Q&amp;A</h2>
+<p><strong>Q: In a greenfield development scenario that is already using IoC, are there any advantages to using the existing container to implement AOP features vs. using IL weaving?</strong></p>
+<p><strong>A:</strong> The primary benefit of IL weaving is the types of aspects you can create. With Interception you can only wrap public virtual methods. IL weaving allows you to add aspects to events, field variables, property getters/setters, methods, etc.</p>
+<p><strong>Q: I have a brownfield project that's 20 years old and was developed using ASP, VB6.0, Windows Services and JavaScript. How do I migrate it to green field?</strong></p>
+<p><strong>A:</strong> A good place to start is the <a href="http://www.postsharp.net/case-study/mitchell"><strong>case study we wrote with the team at Mitchell International</strong></a>, who faced a similar scenario. It demonstrates how they used PostSharp to build several aspects to facilitate integration between their new and old applications. The project was daunting but by adding Activity Logging, Exception Handling, Performance Counters, Thread Dispatching and Data Sync functionality project-wide the team saved from having to write thousands of lines of code.</p>
+<p><strong>Q: I used PostSharp OnMethodBoundaryAspect and TransactionScope to replace transaction management in a very large brownfield data access project (SQL transactions). There was a lot of duplicate code removed and all done successfully now - it's much cleaner. The only issue was around code where a rollback transaction was forced (not rolled back implicitly as the result of an exception). Is there a more comprehensive example (beyond the basic TransactionScope enter, exit, dispose, complete) of how other people have gone about this?</strong></p>
+<p><strong>A:</strong> You could have a static method InvalidateTransaction that would set a thread-static boolean field. In the OnEntry advice, check that field to decide whether the transaction should be committed or rolled back.</p>
+<p><strong>Q: How will Roslyn change the AOP landscape in .NET languages like C# and VB?</strong></p>
+<p><strong>A:</strong> Good things would happen if the compilation pipeline could be made customizable. It could improve Intellisense and compiler support for aspects that introduce new interface implementations, methods, or even full types. Unfortunately, there's no indication this will happen any time soon. Except for these possibilities, Roslyn is not going to be a game changer.</p>

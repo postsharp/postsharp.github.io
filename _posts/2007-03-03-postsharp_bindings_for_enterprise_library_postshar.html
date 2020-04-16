@@ -1,0 +1,102 @@
+---
+layout: post
+title: "PostSharp Bindings for Enterprise Library (PostSharp4EntLib)"
+date: 2007-03-03 19:28:00 +01:00
+categories: [General]
+permalink: /post/postsharp-bindings-for-enterprise-library-postsharp4entlib.html
+---
+<span style="font-size:130%;"><span style="font-weight: bold;">About Enterprise Library</span></span>
+
+With the new release of the Enterprise Library of Microsoft patterns & practices team, it seems like AOP makes a great and sudden come back in the .NET community. The latest release comes indeed with the <a href="http://blogs.msdn.com/tomholl/archive/2007/02/28/just-released-enterprise-library-3-0-february-2007-ctp.aspx">Policy Injection Application Block</a>, which is a kind of AOP framework that allows to "inject" the other Enterprise Library application blocks (logging, exception handling, ...) into user code, and using a configuration file.
+
+The implementation use remoting proxies to intercept method calls and inject policies, which has the major drawbacks to:
+<ul><li>Be limited to methods derived from MarshalByRefObject or exposing their semantics on an interface.</li><li>Require instances to be created through a factory.
+</li></ul>This is a great opportunity to demonstrate how PostSharp can be used, not only to overcome these issues, but also to offer new benefits. Hopefully, the p&amp;p team had this in mind when they designed this application block: the framework can be used even if we choose not to go through factories.
+
+<span style="font-size:130%;"><span style="font-weight: bold;">About PostSharp</span></span>
+
+<a href="http://www.postsharp.org/">PostSharp</a> is a post-compiler for the .NET Framework. It modifies .NET assemblies after compilation. PostSharp works at MSIL level. PostSharp can be used as an Aspect Oriented Programming (AOP) framework, but it is only one possible use.
+
+<a href="http://www.postsharp.org/about/components/laos/">PostSharp Laos</a> is a true AOP framework that does not require any knowledge of MSIL. Developers can react to "event" that happens in the code and can use the standard System.Reflection API.
+
+<span style="font-size:130%;"><span style="font-weight: bold;">Introducing PostSharp4EntLib</span></span>
+
+The first release of <a href="http://www.postsharp.org/projects/PostSharp4EntLib">PostSharp4EntLib</a> provides three custom attributes that 'bind' Policy Injection to user code.
+
+<span style="font-weight: bold;">The InjectPoliciesFromConfiguration custom attribute</span>
+
+This attribute can be applied to an assembly. It means that the policy injection settings will be completely processed at compile time. Here is how it is used:
+
+<span style="font-size:85%;"><span style="font-family:courier new;">[assembly: InjectPoliciesFromConfiguration("CompileTimePolicyInjection.config")]</span></span>
+
+This custom attribute processes matching rules specified in the configuration file and changes the affected methods so that applied policies are effectively invoked at runtime.
+
+This custom attribute serves the scenarios where both matching rules and policies are known at compile time. Benefits are:
+<ul><li>Matching is performed at compile-time, so that runtime execution is faster.</li><li>Policy Injection configuration does not have to be deployed.
+</li><li>As with anything in PostSharp, remoting proxies and factories are not necessary.</li></ul><span style="font-weight: bold;">The InjectPolicy custom attribute</span>
+
+This attribute indicates that a given policy should be injected to a method. The name of this policy should be known at compile-time, but not the content.
+
+This custom attribute may be applied to methods:
+<span style="font-size:85%;">
+<span style="font-family:courier new;">[InjectPolicy("Exception Handling")]</span>
+<span style="font-family:courier new;">public void Close()</span>
+<span style="font-family:courier new;">{</span>
+<span style="font-family:courier new;">  ...</span>
+<span style="font-family:courier new;">}</span></span>
+
+The attribute may be multicasted to many methods using wildcards:
+
+<span style="font-size:85%;"><span style="font-family:courier new;">[assembly: InjectPolicy("Exception Handling", AttributeTargetTypes="MyProject.BusinessLayer.*")]</span>
+</span>
+Benefits of this attribute are:
+<ul><li>There is no CPU-expensive runtime matching.</li><li>In some scenarios, make it easier to specify which policies should apply to methods (more flexible than the 'Tag' approach of EntLib).</li><li>As with anything in PostSharp, remoting proxies and factories are not necessary.</li></ul><span style="font-weight: bold;">The Interceptable custom attribute</span>
+
+This custom attribute simply adds the code to make the method 'interceptable', i.e. to make it a possible target of policy injection, without the use of factories. Policies are matched and applied at runtime.
+
+Like the InjectPolicy attribute, this one can be applied to methods, either directly either using multicasting:
+
+<span style="font-size:85%;"><span style="font-family:courier new;">[assembly: Interceptable("Exception Handling", AttributeTargetTypes="MyProject.BusinessLayer.*")]
+
+</span></span>The benefit is of course that <span style="font-weight: bold;">policies can be injected on unchanged existing code</span>:
+<ul><li>no need for factories,</li><li>not limited to MarshalByRefObject,</li><li>works also with static methods.</li></ul><span style="font-weight: bold;font-size:130%;" >How does it work?</span>
+
+As I said in the beginning, PostSharp achieves this result by modifying the assembly after compilation. The best way to see how the code is modified is to use look at the modified code using Roeder's Reflector.
+
+Say we have the following user code (in C#):
+
+<span style="font-size:85%;"><span style="font-family:courier new;">public static void Transfer(BankAccount origin, BankAccount destination, decimal amount)</span>
+<span style="font-family:courier new;">{</span>
+<span style="font-family:courier new;">    origin.Withdraw(amount);</span>
+<span style="font-family:courier new;">    destination.Deposit(amount);</span>
+<span style="font-family:courier new;">}</span>
+</span>
+We make this method interceptable by one of the three custom attributes described above. After compilation and post-processing by PostSharp, the method looks like that:
+
+<span style="font-size:85%;"><span style="font-family:courier new;">[DebuggerNonUserCode]</span>
+<span style="font-family:courier new;">public static void Transfer(BankAccount origin, BankAccount destination, decimal amount)</span>
+<span style="font-family:courier new;">{</span>
+<span style="font-family:courier new;">    Delegate delegate2 = new ~PostSharp~Laos~Implementation.~delegate~3(BankAccountProcess.~Transfer);</span>
+<span style="font-family:courier new;">    object[] arguments = new object[] { origin, destination, amount };</span>
+<span style="font-family:courier new;">    MethodInvocationEventArgs eventArgs = new MethodInvocationEventArgs(delegate2, arguments);</span>
+<span style="font-family:courier new;">    ~PostSharp~Laos~Implementation.~aspect~9.OnInvocation(eventArgs);</span>
+<span style="font-family:courier new;">}</span></span>
+
+The old method body has been moved to a new (private) method called <span style="font-family:courier new;">~Transfer</span>.
+
+The new implementation basically creates a delegate to the old implementation, create event arguments and call a <span style="font-family:courier new;">OnInvocation</span> method. This is where the PostSharp4EntLib code lays. Basically, this method invokes the EntLib pipeline of handlers.
+
+The implementation of PostSharp4EntLib has two parts:
+<ul><li>A <span style="font-weight: bold;">compile-time</span> part whose principal role is to detect which methods needs to be 'interceptable', and adds kinds of 'event handlers' (OnMethodInvocation in our case) on these methods.
+</li><li>A <span style="font-weight: bold;">runtime</span> part which is basically the implementation of the event handlers.</li></ul>I repeat, PostSharp4EntLib does not generate MSIL instructions itself. It relies on PostSharp Laos, which defines this system of "code-driven event handlers" whose OnMethodInvocation is the only used here. Other "handlers" (called <span style="font-style: italic;">aspects</span> or <span style="font-style: italic;">advices</span>) are OnMethodBoundary, OnFieldAccess or OnException. They are not currently used but may be in the future of this project.
+
+<span style="font-weight: bold;"><span style="font-size:130%;">Waiting for a CodePlex project...</span>
+
+</span>I would like to release this project on CodePlex but I am still waiting for Microsoft to upgrade their servers. Would you have any influence on the acceptance on my project... ;-)
+
+Before I get the CodePlex space, you can access the project from the <a href="http://www.postsharp.org/projects/PostSharp4EntLib">PostSharp4EntLib Project Dashboard</a>.
+
+Many thanks to Olaf Conijn for its online support.
+
+
+<span style="font-weight: bold;"></span>

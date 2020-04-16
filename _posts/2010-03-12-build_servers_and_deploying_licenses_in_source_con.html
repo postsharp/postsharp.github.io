@@ -1,0 +1,38 @@
+---
+layout: post
+title: "Build Servers and Deploying Licenses in Source Control"
+date: 2010-03-12 15:49:05 +01:00
+categories: []
+permalink: /post/build-servers-and-deploying-licenses-in-source-control.html
+---
+<p>I got many questions last weeks about deploying PostSharp 2.0 to a build server and deploying licenses in the source control repository. Since these issues are somehow related, I answer them in a single post.</p>  <p>The updated CTP 4 (build 1009) contains two improvements that are good to know about.</p>  <h2>1. Running PostSharp in an unattended session</h2>  <p><a href="http://www.ISerializable.com">Roy Osherove</a> reported a problem when PostSharp 2.0 runs in a GUI-less build server. The cause of the issue was the tray icon of the pipe server. The new build will <em>not</em> attempt to open the tray icon if PostSharp detects that it runs in unattended mode. </p>  <p>PostSharp uses the property <a href="http://msdn.microsoft.com/en-us/library/system.environment.userinteractive.aspx">Environment.UserInteractive</a> to determine whether the process is attended or not. If, for some reason, this detection gives unsuccessful, you can forbid the pipe server to open the tray icon by setting the following machine-level registry setting: </p>  <p>Windows 64-bit: </p>  <pre>[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\SharpCrafters\PostSharp 2.0]
+&quot;TrayIconDisabled&quot;=dword:00000001&gt;</pre>
+
+<p>Windows 32-bit: </p>
+
+<pre>[HKEY_LOCAL_MACHINE\SOFTWARE\SharpCrafters\PostSharp 2.0]
+&quot;TrayIconDisabled&quot;=dword:00000001</pre>
+
+<h2>2. Installing a license in the source control repository</h2>
+
+<p>PostSharp makes it very easy to deploy license keys: you can include it in your source control repository. First, paste the license key in a text file. Then, you need to tell PostSharp where the license key lies. This can be done by setting the MSBuild property named <strong>PostSharpLicenseFile</strong> to the full path of the license file.</p>
+
+<p>One of the way of setting an MSBuild property is to edit the project file using a text editor and include the following before importing PostSharp targets:</p>
+
+<pre>&lt;PropertyGroup&gt;<br /> &lt;!-- There should probably be line break in the property --&gt;<br /> &lt;PostSharpLicenseFile&gt;<br />   $(MSBuildProjectDirectory)\..\..\MyPath\PostSharp.license&lt;/PostSharpLicenseFile&gt;<br />&lt;/PropertyGroup&gt;</pre>
+
+<p>There are other ways to deploy the license key. For instance, you can put it on a network share and use group policies to set the <strong>PostSharpLicenseFile</strong> environment variable to the location on the share.</p>
+
+<p>Note that sharing a license key is only legal if you have a company license key (Commercial License, Site License, Global License). Since other licenses (community and personal) are bound to a specific person, they cannot be shared.</p>
+
+<h2>3. Licensing of build servers</h2>
+
+<p>Build servers don’t need their own license. PostSharp will not attempt to enforce licensing if it detects that it runs in unattended mode. Again, it uses the property <strong>Environment.UserInteractive</strong>. The <strong>TrayIconDisabled</strong> registry setting has no effect on license check.</p>
+
+<p>Now, this check does not work for any reason, you may use the license key of any licensed user for the build server. This will not be consider a license infringement.</p>
+
+<p>As you can see, we try to make our licensing system as no-nonsense as possible. Our philosophy is that paying customers should not be handicapped by overly restrictive license enforcement. Something that not every software (or media) publisher understands…</p>
+
+<p>Happy PostSharping!</p>
+
+<p>-gael</p>

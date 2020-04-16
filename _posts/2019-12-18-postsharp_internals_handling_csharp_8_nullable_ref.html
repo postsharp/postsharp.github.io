@@ -1,0 +1,117 @@
+---
+layout: post
+title: "PostSharp internals: Handling C# 8.0 nullable reference types"
+date: 2019-12-18 14:00:00 +01:00
+categories: []
+permalink: /post/postsharp-internals-handling-csharp-8-nullable-reference-types.html
+---
+<p>C# 8.0 introduces <a href="https://docs.microsoft.com/en-us/dotnet/csharp/nullable-references" target="_blank"> nullable reference types</a>. These are yet another way to specify that a given parameter, variable or return value can be null or not. But, unlike attribute libraries such as <a href="https://www.jetbrains.com/help/rider/Reference__Code_Annotation_Attributes.html" target="_blank"> JetBrains.Annotations</a>, <a href="https://github.com/Microsoft/CodeContracts" target="_blank">Microsoft Code Contracts</a> or <a href="https://doc.postsharp.net/contracts" target="_blank">PostSharp Contracts</a>, nullable reference types have built-in compiler support and so we can hope for a much wider adoption.</p>
+<p>In PostSharp 6.4, we added full support for C# 8.0 and that includes nullable reference types. In this article, I discuss what we needed to do to implement this feature.</p>
+<h2>PostSharp as a code weaver</h2>
+<p>PostSharp is primarily a code weaver: it modifies the assembly produced by the C# compiler. As such, it works on your own code, and you may already be using nullable reference types. Did PostSharp need to do anything to keep working well in such scenarios?</p>
+<p>It turns out that no, not really. Everything just works. Of course, C# doesn't have an up-to-date specification anymore, so it's hard to say for certain. But based on our tests and the information we collected from the web (especially the <a href="https://github.com/dotnet/roslyn/blob/master/docs/features/nullable-metadata.md" target="_blank"> nullable-metadata.md</a>&nbsp;file and the <a href="https://docs.microsoft.com/en-us/dotnet/csharp/nullable-attributes#attributes-extend-type-annotations" target="_blank"> description of the new nullable-related attributes</a>), PostSharp would continue working fine even had we done nothing. And we did a lot of testing, in fact, most of the time I spent implementing C# 8.0 support was spent on manual and automated testing.</p>
+<p>The reason everything sort-of just works is that at the IL level, at which PostSharp operates, nullability annotations are represented as hidden attributes.</p>
+<h2>The hidden nullability attributes of C# 8</h2>
+<p>When you type <code>string? myField</code> in C#, compile it and then decompile with a pre-C# 8 decompiler, you will get <code>[System.Runtime.CompilerServices.NullableAttribute(2)] string myField;</code>. The NullableAttribute is one of two new "hidden" attributes. Its parameter determines the nullable state of the type:</p>
+<ul>
+<li>0 means null-oblivious (pre-C# 8 or outside a <a href="https://docs.microsoft.com/en-us/dotnet/csharp/nullable-references#nullable-annotation-context" target="_blank"> nullable annotation context</a>),</li>
+<li>1 means non-nullable (e.g. "string"), and</li>
+<li>2 means "may be null" (e.g. "string?").</li>
+</ul>
+<p>The use of attributes in this way means that old code created before C# 8 can use C# 8 code. For us, it also meant a lot less work. After all, PostSharp is all about attributes so we're well equipped to handle those.</p>
+<p>That said, there were a couple of corner cases that we wanted to solve. They may seem a little convoluted. Certainly most of our users will never encounter them. But they existed and we never want to ship a product with known defects. We've been burned by that before when it forced us to make backwards-incompatible changes later to fix the defects.</p>
+<p>So here's one such edge case:</p>
+<h2>Edge case 1: Nullability of methods introduced with <em>[IntroduceMember]</em></h2>
+<p>PostSharp has an attribute called <a href="https://doc.postsharp.net/t_postsharp_aspects_advices_introducememberattribute" target="_blank">[IntroduceMember]</a>&nbsp;which you can use to insert a property or a method into another class, like this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 2; toolbar: false; ">[SelfDescribing]
+public class Creature
+{
+  public string? Description { get; set; }
+  public int? MaximumAge { get; set; }
+} 
+[Serializable]
+public class SelfDescribingAttribute : InstanceLevelAspect
+{  
+  [ImportMember(nameof(Creature.Description))]
+  public string ImportedDescription;
+  
+  [IntroduceMember]
+  public string DescribeSelf()
+  {
+      return "I am " + ImportedDescription;
+  }
+}
+</pre>
+<p>In the example above, the <code>SelfDescribingAttribute</code> adds the method <code>DescribeSelf</code> to the target class <code>Creature</code>.</p>
+<p>Now, PostSharp modifies the binary, not the source code, so you won't actually be able to use the method in this project or in projects in the same solution (because project references refer to source code, not the binary). That is why this feature is used mostly to add methods expected by frameworks (the most notable case being XAML/PropertyChanged).</p>
+<p>However, if somebody else imports your projects as a DLL library (either by referencing the .dll file itself, or as a NuGet package), they will see the introduced method. From their perspective, the class would look like this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 2; toolbar: false; ">public class Creature
+{
+  public string? Description { get; set; }
+  public int? MaximumAge { get; set; }
+  public string DescribeSelf();
+} 
+</pre>
+<p>But what then is the nullability of the return type of the method&nbsp;<em>DescribeSelf</em> &mdash; is it non-nullable (<em>string</em>) or nullable (<em>string?</em>). By the principle of least surprise, we felt the correct answer is "the same as in the template method", which here means non-nullable, so that's what we do &mdash; we make sure the metadata on the introduced member reflects that.</p>
+<p>But if we did nothing (by not copying any attributes from the template method onto the target method), then in this case, the answer would be nullable. Why? Because the C# compiler doesn't just use <em>NullableAttribute </em>to mark which values are nullable, it also saves up on the assembly size by compacting several <em>NullableAttribute</em>s into a single <em>NullableContextAttribute</em>.</p>
+<p>The exact algorithm is described in the <a href="https://github.com/dotnet/roslyn/blob/master/docs/features/nullable-metadata.md" target="_blank"> nullable-metadata.md</a>&nbsp;file but it's along the lines of "if a class has more nullable members than non-nullable members, annotate only the non-nullable members with NullableAttribute and mark the class itself as nullable using NullableContextAttribute". The class would look like this:&nbsp;</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 2; toolbar: false; ">[Nullable(0)] // Class itself doesn&rsquo;t have a nullability
+[NullableContext(2)] // Members are nullable.
+public class Creature
+{
+  public string Description { get; set; } // Inherits nullability from class
+  public int MaximumAge { get; set; } // Inherits nullability from class
+  public string DescribeSelf(); // Oops, this was supposed to be non-nullable.
+} 
+</pre>
+<p>Now you may already see the problem. The target class was considered entirely nullable, but now we're introducing a method with a non-nullable return type to it. Therefore, we must take care to copy (or create, if necessary) proper attributes on any introduced methods (and the methods' parameters and return values) and on any introduced properties and events.</p>
+<p>That's why the final class, as modified by PostSharp, would look like this if decompiled:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 2; toolbar: false; ">[Nullable(0)]
+[NullableContext(2)]
+public class Creature
+{
+  public string Description { get; set; }
+  public int MaximumAge { get; set; }
+  [NullableContext(1)] // The method&rsquo;s return value and any parameters are non-nullable
+  public string DescribeSelf();
+} 
+</pre>
+<h2>Edge case 2: New attributes on fields</h2>
+<p>Let's move to another edge case, one that occurs when you add one of the new <a href="https://docs.microsoft.com/en-us/dotnet/csharp/nullable-attributes#attributes-extend-type-annotations" target="_blank"> nullability custom attributes</a>&nbsp;(<em>AllowNull</em>, <em>DisallowNull</em>, <em>MaybeNull</em>, &hellip;) to a field or property.</p>
+<p>These attributes allow you to express the nullability semantics of properties and methods that are more complex than "always may be null" or "is never null". For example, you may put the new <a href="https://docs.microsoft.com/en-us/dotnet/api/system.diagnostics.codeanalysis.allownullattribute?view=netcore-3.0" target="_blank">[AllowNull]</a>&nbsp;attribute on a property which is otherwise non-nullable. That is a note to the compiler that "null is <strong>allowed</strong> to be put into this property, but, since this is a non-nullable property, it will never return null".</p>
+<p>Here's how you might use such an attribute:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[AllowNull, // &lt;- a C# 8 attribute
+UseRandomNameIfNull] // &lt;- an example LocationInterceptionAspect, explained further down
+public string Name { get; set; }
+</pre>
+<p>The AllowNullAttribute combined with the fact that the property type (string) is non-nullable in C# 8, means that this property's nullable status can be explained in English like this: "I never return null, but feel free to assign null to me. I'll handle it."</p>
+<p>In vanilla C#, you could handle it by implementing the property's getter to return something instead of null, or by implementing its setter to assign something to a backing field. With PostSharp, you can do the same thing with <a href="https://doc.postsharp.net/location-interception" target="_blank"> a LocationInterceptionAspect</a>:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 2; toolbar: false; ">[Serializable]
+public class UseRandomNameIfNullAttribute : LocationInterceptionAspect
+{
+  private string name;
+  public override void OnGetValue(LocationInterceptionArgs args) 
+  {
+    args.ProceedGetValue();
+    if (args.Value == null) {
+      if (name == null) {
+        name = R.GenerateRandomString();
+      }
+      args.Value = name;
+    } 
+  }
+}
+</pre>
+<p>But with PostSharp, you can also apply location interception aspects to fields, like this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[AllowNull, UseRandomNameIfNull]
+public string Name;
+</pre>
+<p>When I did that while testing PostSharp with C# 8, everything seemed fine &mdash; until I loaded the PostSharp-modified assembly in another project, at which point Visual Studio started complaining that I'm assigning a null to a non-nullable property. But why? Did I not use the <code>AllowNull</code> attribute properly?</p>
+<p>Well, the way PostSharp makes location interception aspects work for fields is by transforming them into auto-implemented properties. That means that the IL code, decompiled, would look more like this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[AllowNull, UseRandomNameIfNull]
+public string Name { get; set; }</pre>
+<p>That seems just like the previous declaration, which works without a hitch. The problem is that the C# 8 compiler, when it sees <code>[AllowNull]</code> or <code>[DisallowNull]</code> on a property, <em>silently moves those attributes</em> to the property setter's parameter (the keyword "value"). A similar thing happens for <code>[MaybeNull]</code> and <code>[NotNull]</code>: those attributes get moved by the C# compiler onto the getter's return value.</p>
+<p>This was a surprise to me. There being no specification, I looked in GitHub history but found little. I do remember that I found a single comment about this on some related issue (I lost it) and I know that this <a href="https://github.com/dotnet/csharplang/blob/master/meetings/2019/LDM-2019-05-15.md" target="_blank">wasn't yet decided in May 2019</a>, but that's it. Either way, emulating Roslyn helped, so PostSharp now does what the C# compiler does and moves these attributes onto their appropriate places if you declare them on a field.</p>
+<h2>Conclusion</h2>
+<p>As you can see, implementing support for C# 8.0 was not completely obvious, but we managed to address the corner cases anyway. But wow, do I miss the days that C# had a complete specification :). I completely empathize with <a href="https://github.com/dotnet/csharplang/issues/64#issuecomment-457923658" target="_blank"> the commenter at issue 64</a>.</p>
+<p>And there's still work to be done. PostSharp is not only a code weaver, but also a collection of libraries (such as&nbsp;<a href="https://www.postsharp.net/logging" target="_blank">PostSharp Logging</a> or <a href="https://www.postsharp.net/caching" target="_blank">PostSharp Caching</a>). As a library producer, we will eventually want to annotate our public API with question marks and <a href="https://docs.microsoft.com/en-us/dotnet/csharp/nullable-attributes#attributes-extend-type-annotations" target="_blank"> the new attributes</a>. I'm actually looking forward to this: going through all public types and methods and investigating their nullability sounds fun. Until then, even though our API remains null-oblivious, our code weaver handles code with nullable reference types well.</p>

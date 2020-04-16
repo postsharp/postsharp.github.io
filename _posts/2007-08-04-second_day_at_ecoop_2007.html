@@ -1,0 +1,18 @@
+---
+layout: post
+title: "Second Day at ECOOP 2007"
+date: 2007-08-04 19:25:00 +02:00
+categories: [General]
+permalink: /post/second-day-at-ecoop-2007.html
+---
+<div><font xmlns="">
+<p>One of the only thoughts I captured this Tuesday (at least in the subset of thoughts implementable using PostSharp): a graphical language to express matching patterns in source.
+</p>
+<p>Second day at ECOOP 2007 and still the unpleasant feeling I am a dumb. Oh my god, where are the times, six years ago when I finished university, where I was as brilliant as them? Is this collapse the result of six years in industry? Or just of the last months spent in drawing TIBCO business processes?
+</p>
+<p>Anyway, I understood enough to catch a good idea: a graphical way to express "matching rules". Matching rules are expressions that identify points in code where aspects should be applied. In the AspectJ world, one say that matching rules are <em>pointcuts</em> and matched points are <em>join points</em>. While designing PostSharp Laos, I have chosen not to refer to these concepts and I am happy to see that Microsoft did actually the same. There are actually matching rules in PostSharp Laos, but you do not see them. They are hidden behind the "attribute multicasting" mechanism: actually, when you define a filter on a multicast attribute, you define a matching rule.
+</p>
+<p>Of course, the expressiveness of matching rules of multicast attributes is limited. Microsoft Enterprise Library has a richer model for that, even if its usability is questionable.
+</p>
+<p>The idea is to use the same graphical language to express matching rules (or patterns) than to express the model. That means that we could use a similar language than UML. Suppose we want to match all classes having a method <em>Dispose()</em>. We would draw a class and add a <em>Dispose()</em> method to this. And if we want to restrict the classes to belong to a given namespace, we would for instance specify the name of the class with wildcards. That is, what we specify in UML elements become constraints. What we don't specify are free variables that do not play any role in the pattern matching mechanism.
+</p></font></div>

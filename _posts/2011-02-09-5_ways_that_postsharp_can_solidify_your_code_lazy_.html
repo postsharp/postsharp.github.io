@@ -1,0 +1,153 @@
+---
+layout: post
+title: "5 Ways That Postsharp Can SOLIDify Your Code: Lazy Loading of Dependencies"
+date: 2011-02-09 11:58:00 +01:00
+categories: [Tutorial]
+permalink: /post/5-ways-that-postsharp-can-solidify-your-code-lazy-loading-of-dependencies.html
+---
+<p><em>Source code used in these blog posts is <a href="https://github.com/mgroves/PostSharp5">available on GitHub</a></em></p>
+
+<p>How many times have you written something like this:</p>
+
+<pre>
+private IProductRepository _productRepository;
+private IProductRepository ProductRepository
+{
+    get
+    {
+        if(_productRepository == null)
+        {
+            _productRepository = new ProductRepository();
+        }
+        return _productRepository;
+    }
+}
+</pre>
+
+<p>This is a piece of code that you might write dozens or more times to be able to use a repository to return some data to use in your application.  If you're in a hurry, it's a quick way to get something that works, and also an easy way to get some lazy loading in place so that the repository doesn't instantiate until you need it to.  Unfortunately, this piece of code incurs technical debt.  And the more you use this boilerplate elsewhere in your code, the more technical debt  you incur.</p>
+
+<p>There are two things in this code that are incurring the debt: hardwired dependencies and boilerplate code.</p>
+
+<p>Generally, I prefer to use an IoC container to wire up these sort of dependencies for me, but that isn't always possible or easy to do, especially when I'm programming within a framework that doesn't have dependency injection in mind (WinForms/WebForms, etc).  It's not impossible to do DI on those frameworks without PostSharp, but it's certainly a lot more work.</p>
+
+<p>While the property itself is of type IProductRepository, the getter of that property is still hard-wired to ProductRepository.  If you need to change "new ProductRepository()" to "new RevisedProductRepository()" or even "new ProductRepository(2011)", you must go through each instance of your boilerplate and update the code.  Sure, you could try a find & replace, but each other programmer on your team could be making changes, tweaks, adjustments, and now a find & replace might break something, or might not even work.  Wouldn't it be better to have those dependencies configured in one central place, instead of scattered throughout your entire app?  Using a service locator from an IoC framework, for instance, you could get this:</p>
+
+<pre>
+private IProductRepository _productRepository;
+private IProductRepository ProductRepository
+{
+    get
+    {
+        if(_productRepository == null)
+        {
+            _productRepository = ObjectFactory.GetInstance&lt;IProductRepository&gt;();
+        }
+        return _productRepository;
+    }
+}
+</pre>
+
+<p>And now the ObjectFactory will take care of the instantiations.  If you want to plug in a new concrete implementation, wrap the existing implementation, add constructor parameters, etc, now you can do it all in once place.  (Note that "ObjectFactory" is a static class in StructureMap , but you could use any IoC container that you like).  Now the code looks much better, and the development team doesn't have to worry about the implementation: only the interface.  It's still a true dependency inversion, because now the class only depends on the interface, not the implementation.</p>
+
+<p>The code is now much cleaner, but we still have a bunch of null checking and lazy loading scattered all over the app.  If you decide to change to a different IoC container, you still have to make changes throughout your app.  And if you get to the point where the simple null-checking strategy isn't good enough, then you have to change that everywhere too.  Let's use PostSharp to centralize this logic, so you can save time and DRY  up your code while you're at it.</p>
+
+<pre>
+[LoadDependency] private IProductRepository _productRepository;
+
+[Serializable]
+public sealed class LoadDependencyAttribute : LocationInterceptionAspect
+{
+    public override void OnGetValue(LocationInterceptionArgs args)
+    {
+        args.ProceedGetValue(); // fetches the field and populates the args.Value
+        if (args.Value == null)
+        {
+            var locationType = args.Location.LocationType;
+            var instantiation = ObjectFactory.GetInstance(locationType);
+
+            if (instantiation != null)
+            {
+                args.SetNewValue(instantiation);
+            }
+            args.ProceedGetValue();
+        }
+    }
+}
+</pre>
+
+<p>Now you have a very declarative way of using dependencies.  You simply tag any field with the "LoadDependency" attribute, and it will be instantiated by your IoC container the first time you use it.  You save yourself from having to write the same boilerplate properties over and over again, and the null-checking/lazy loading itself is now centralized into a single class (LoadDependencyAttribute).</p>
+
+<p>With just a simple PostSharp aspect, we've compressed a 12-line lazy-loading property into a one-line field, with no hard-wired dependencies or boilerplate code.  We've removed a lot of pointless repetition from the code (DRY ).  We've replaced hard-wired dependencies with pure interfaces (DIP ).  We've moved the lazy-loading into its own class, and dependency resolution into its own class (SRP ).  Since PostSharp won't try to use the service locator if the field isn't null, you can easily use constructor injection as part of your testing instead of letting PostSharp load the real dependency.  Our app is on the fast track to being a maintainable, easy to configure, and easy to test masterpiece.</p>
+
+<p>This is a very helpful, and very simple example of how to use PostSharp to make your life easier.</p>
+
+<p>Now suppose that the dependency mappings (like IProductRepository <-> ProductRepository in the above example) is already known at compile time.  That is, the dependency will not change during runtime.  In this case, you don't need to use a service locator at all.  You can instead override the CompileTimeInitialize method in LocationInterceptionAspect to resolve the dependency at compile time (hence the name), and just store the type as a field.  Then, at run time, you can use Activator.CreateInstance to do the instantiation.</p>
+
+<pre>
+[Serializable]
+public sealed class LoadDependencyAttribute : LocationInterceptionAspect
+{
+    private Type _type;
+
+    public override bool CompileTimeValidate(PostSharp.Reflection.LocationInfo locationInfo)
+    {
+        _type = DependencyMap.GetConcreteType(locationInfo.LocationType);
+        if(_type == null)
+        {
+            Message.Write(SeverityType.Error, "002",
+					"A concrete type was not found for {0}.{1}",
+					locationInfo.DeclaringType, locationInfo.Name);
+            return false;
+        }
+        return true;
+    }
+
+    public override void OnGetValue(LocationInterceptionArgs args)
+    {
+        args.ProceedGetValue();
+        if (args.Value == null)
+        {
+            form.LogListBox.Items.Add("Instantiating UserService");
+            args.SetNewValue(Activator.CreateInstance(_type));
+            args.ProceedGetValue();
+        }
+    }
+}
+</pre>
+
+<p>If there isn't a type configured, then you will get a build time error instead of a runtime error.  You are hopefully starting to see that PostSharp can be a very powerful tool.  I'm not too keen on using this method to totally replace a runtime service locator, but I can certainly see where it would be useful in some select circumstances.</p>
+
+<p>Another way to improve either of the above aspects is to do a compile-time check to validate that the aspect is being used correctly.  For instance, using the LoadDependency attribute usually doesn't make sense if you apply it to a field that isn't an interface.  Indeed, this would be a bad design, as it would make our dependencies hard coded again!  So let's put some code into place to prevent this sort of code from even getting compiled.  Just add one more check to the CompileTimeValidate method:</p>
+
+<pre>
+public override bool CompileTimeValidate(PostSharp.Reflection.LocationInfo locationInfo)
+{
+    if(!locationInfo.LocationType.IsInterface)
+    {
+        Message.Write(SeverityType.Error, "001",
+			"LoadDependency can only be used on Interfaces in {0}.{1}",
+			locationInfo.DeclaringType, locationInfo.Name);
+        return false;
+    }
+
+    _type = DependencyMap.GetConcreteType(locationInfo.LocationType);
+    if(_type == null)
+    {
+        Message.Write(SeverityType.Error, "002",
+			"A concrete type was not found for {0}.{1}",
+			locationInfo.DeclaringType, locationInfo.Name);
+        return false;
+    }
+    return true;
+}
+</pre>
+
+<p>Go ahead and put LoadDependency on a non-interface field, compile, and this is what you'll see:</p>
+
+<p><img src="/assets/2011-02-09-5_ways_that_postsharp_can_solidify_your_code_lazy_/post1_picture1.png" alt="Visual Studio build error" /></p>
+
+<p>And you'd get a similar message if you forgot to put a interface<->concrete mapping in the DependencyMap class too.  This is such a great feature, because if you make a mistake, you will fail much faster in your testing, get a clear message of what exactly went wrong, and ultimately save a lot of time and frustration.  Make sure to put as much information as you can in the error message, to make the error easy to find in the code, since you won't have line numbers to fall back on.</p>
+
+<p>With just a simple aspect, we've turned our hard-coded dependencies and repetitive boilerplate code into a maintainable, testable, easy-to-read app that follows SOLID principles.  More importantly, you will save a lot of time, not just in the development and testing phases of your project, but also in the (usually much longer) maintanence phase.</p>
+
+<p><em>Matthew D. Groves is a software development engineer with <a href="http://telligent.com">Telligent</a>, and blogs at <a href="http://mgroves.com">mgroves.com</a>.</em></p>

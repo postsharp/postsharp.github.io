@@ -1,0 +1,54 @@
+---
+layout: post
+title: "Announcing PostSharp 6.5 RC: Performance, Docker Support and More"
+date: 2020-02-17 16:59:00 +01:00
+categories: [Announcement]
+permalink: /post/announcing-postsharp-65-rc.html
+---
+<p>We're happy to announce the release of PostSharp 6.5 RC, available for <a href="https://www.postsharp.net/downloads/postsharp-6.5">download</a> on our website.</p>
+<p>Most of our efforts with PostSharp 6.5 went into improving the build-time and design-time experience of PostSharp. We also now proudly and officially support Docker, after we have successfully tested our product with all Docker images of .NET Core provided by Microsoft.</p>
+<p>This release contains the following improvements:</p>
+<ul>
+<li>Performance enhancements</li>
+<li>Installer improvements</li>
+<li>Docker support</li>
+<li>Platform updates</li>
+</ul>
+<p>&nbsp;</p>
+<h2>Performance enhancements</h2>
+<p><strong>The startup time of PostSharp on .NET Core has decreased significantly.</strong></p>
+<p>The decrease is from 1,100 ms to 400 ms. That is a 2.5 times improvement. Building a lot of small projects should now be significantly faster. To achieve this improvement, we generate <em>ReadyToRun</em> images of PostSharp on the fly on each build machine. This feature can be disabled by setting the <em>PostSharpReadyToRunDisabled</em> MSBuild property to True.</p>
+<p>Therefore we are glad to announce that PostSharp performance on .NET Core is now on a par with the one on .NET Framework!</p>
+<p>&nbsp;</p>
+<p><strong>Emitting errors and warnings is now significantly faster.</strong></p>
+<p>We removed an overhead of approximately another 400 ms on the first message and further improved the time to emit subsequent messages. The expensive part of emitting a message was to determine in which file and on which line the message should be anchored, and this is what we worked on.</p>
+<p>Previously, on the first message, PostSharp loaded Roslyn to parse the source file and tried to locate the line and column of the offending code element. Loading Roslyn was a significant one-time overhead unless native images were present, and even then the cost of parsing was linear to the number of offending files - which could grow high if there was a lot of warnings. Now, we are using a Roslyn analyzer to export the location of all code elements (you will find a new pspdb file in your output directory). This analyzer resides in the Roslyn process itself and uses the already-parsed Roslyn code model, therefore it is very fast. This approach also allows us to find the source code of types with no method body at all, such as interfaces or enums, which previously we were not able to do. The new strategy causes a performance loss when there is no warning at all, but usage data shows that only a minority of projects would be negatively affected.</p>
+<p>The analyzer can be disabled by setting the PostSharpRoslynAnalyzerDisabled property to True, but in this case errors and warnings will not be resolved to a source code location.</p>
+<p>&nbsp;</p>
+<p><strong>PostSharp Tools for Visual Studio is now even smoother.</strong></p>
+<p>PostSharp tools for VS is significantly better, since we continued to apply the async pattern everywhere. We also optimized memory usage so you should get a better experience with large solutions.</p>
+<p>&nbsp;</p>
+<h2>Installer improvements</h2>
+<p>The installer now lets you:</p>
+<ul>
+<li>choose which instances of Visual Studio PostSharp should be installed into,</li>
+<li>kill blocking processes, and</li>
+<li>easily see the installation log in case of failure of VsixInstaller.exe.&nbsp;</li>
+</ul>
+<h2>&nbsp;</h2>
+<h2>Docker support</h2>
+<p>We've tested PostSharp on Docker thoroughly and fixed a few issues with thin Windows images.</p>
+<p>&nbsp;</p>
+<h2>Platform updates</h2>
+<ul>
+<li>We added support for the modern Microsoft.Extensions.Caching.Memory.IMemoryCache interface of .NET Core and Microsoft.Azure.ServiceBus, the new API for Azure Service Bus.</li>
+<li>Visual Studio 2017 RTM (15.0) is no longer supported. It is replaced by Visual Studio 2017 Update 1 (15.9, LTS).</li>
+</ul>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<h2>Summary</h2>
+<p>In PostSharp 6.5 we focused on two areas:&nbsp;improving the build-time and design-time experience of PostSharp.&nbsp;</p>
+<p>We are happy to say that, in line with our previous announcements about support for .NET Core, PostSharp performance on .NET Core is now on a par with the one on .NET Framework.</p>
+<p>As always, it is a good time to&nbsp;update your VS extension and NuGet packages, and report any problem via our <a href="https://www.postsharp.net/support">support forum</a>.&nbsp;</p>
+<p>&nbsp;</p>
+<p>Happy PostSharping!</p>

@@ -1,0 +1,101 @@
+---
+layout: post
+title: "Dependency Injection Naturally"
+date: 2008-01-30 20:28:00 +01:00
+categories: [General]
+permalink: /post/dependency-injection-naturally.html
+---
+<p><em>This article summarizes some thoughts about the <strong>potentials</strong>
+of PostSharp with Dependency Injection frameworks. The aim is to support some
+ongoing or future discussions about loose integration of PostSharp into major DI
+frameworks. It does not describe something that already exist "off-the-shelf" as
+a downloadable plug-in.</em></p>
+<h3>Container or Service Locator</h3>
+<p>Most dependency injection (DI) frameworks today require instances to be
+constructed using a "factory", "object builder" or "container". </p>
+<p>This approach also uses a lot of System.Reflection to set up properties. And
+eventually "bad" reflection: the one that breaks the object encapsulation and
+accesses private members. You may care or not. I do.</p>
+<p>Another major drawback of the "factory" approach is that you cannot use the
+standard constructors. </p>
+<p>This may be just annoying, but can become really blocking if your constructor
+is called from a part of the program that you don't have control on. For
+instance, what is you want to inject dependencies into a WinForms user
+object? When the user object will be added into a form, Visual Studio will
+instantiate it using the default constructor.</p>
+<p>Anyway, why does the consumer of an object need to know that a special
+factory method should be used? Is our abstraction so shiny?</p>
+<p>Of course, there is a solution: inside the constructor, initialize each
+dependency by a call to a <strong>service locator</strong>. It is not
+literally an "injection" of dependencies: dependencies are created from
+outside.</p>
+<h3>Container or Context</h3>
+<p>How does the service locator know how to create the dependency? Where does it
+take the configuration from, since the object got no reference to its
+container? Well, actually, the object has no container! The service locator
+has simply context-sensitive configuration. Each thread has its own context
+from which the service locator know how to create the dependency. Even better
+than contexts, <em>stacks</em> of contexts allow to have nested contexts just
+like we have nested transactions.</p>
+<p>An elegant solution is to distinguish between <em>global contexts</em>
+(static ones) and <em>local contexts</em> (thread-specific). When a
+dependency is resolved, the service locator always looks for a match from the
+top of the context stack to the bottom. The stack of local contexts is always
+on the top of the stack of global contexts.</p>
+<p>The use of local contexts makes it possible to execute unit tests in multiple
+threads while using different mocking implementations of dependencies.</p>
+<p>For instance, the configuration of a local context may look like this:</p>
+<pre>using ( new LocalContext("Test") )
+{
+    Context.CurrentContext.Bind&lt;ICustomerProcesses&gt;().To&lt;CustomerProcesses&gt;();
+    Context.CurrentContext.Bind&lt;IRentalProcesses&gt;().To&lt;RentalProcesses&gt;();
+
+    TestRental test = new TestRental();
+    test.Go();
+}</pre>
+<h3>Et PostSharp dans tout <span lang="fr-be">ça</span>?</h3>
+<p>The drawback of the Service Locator pattern is that you need to write
+boiler-plate code. For each field, you have to call the service locator.</p>
+<p>This is true for those who don't know PostSharp. But friends of
+aspect-oriented programming surely noticed an opportunity to let the machine
+generate code for you!</p>
+<p>Wouldn't it be nice to be able to declare a dependency just like this:</p>
+<pre>class CustomerProcesses : ICustomerProcesses
+{
+    [Inject]
+    private IRentalProcesses rentalProcesses;
+}</pre>
+<p>Wouldn't it be nice to have a custom attribute that adds in all constructors
+calls to the service locator?</p>
+<p>Well, for those who are comfortable with PostSharp Core, it is a matter of
+hours to develop it. Users of PostSharp Laos will unfortunately have to wait
+until they get an off-the-shelf implementation. But, promised, it will come
+soon!</p>
+<h3>What it means for Dependency Injection frameworks?</h3>
+<p>What does it mean for DI frameworks to be compatible with this approach?</p>
+<ul>
+<li>First, they should provide an entry point for "service location", i.e. a
+method like this:
+<pre>T GetDependency&lt;T&gt;( RuntimeFieldHandle field,
+                          object declaringInstance )</pre>
+</li>
+<li>Second, their concept of <em>container</em> should be compatible with the idea of
+<em>context</em>. Ideally, they should support <em>nesting</em> and <em>
+default/implicit container</em> for the current thread (or globally).</li>
+<li>They should have a reasonable API for the aspect weaver to understand
+their semantics. That is, given a <em>FieldInfo</em>, the DI framework should
+be able to tell the weaver if the field is a dependency, and if yes of what
+kind, so that the weaver can decide (at compile-time) if a service location
+method should be called at runtime, and which. Or better: given a <em>Type</em>,
+return a list of fields and properties that should be initialized, methods to
+be called, events to be published or subscribed to...</li>
+</ul>
+
+
+<p>Apart from these relatively small side requirements (only container nesting
+is a little extravagant, but it's a <em>nice-to-have</em> both for the
+container- and the context- based approach), the use of an aspect weaver does
+not interfere too much with the design of the DI framework. So it is
+perfectly possible to have to have a DI framework that is AOP-enabled, but
+still excellent without AOP.</p>
+<p></p>

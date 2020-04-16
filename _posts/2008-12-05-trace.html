@@ -1,0 +1,8 @@
+---
+layout: post
+title: "Trace"
+date: 2008-12-05 20:41:09 +01:00
+categories: [General]
+permalink: /post/trace.html
+---
+<h6>Custom Attribute That Traces </h6><p style="line-height: 18px; font-family: Consolas; color: #646464; font-size: 10pt; font-weight: normal" class="Apple-style-span"><span style="color: #0000ff">public</span> <font color="#0000ff">class</font> <font color="#2b91af">TraceAttribute</font> : <font color="#2b91af">OnMethodBoundaryAspect <br /><span style="color: #646464" class="Apple-style-span">{<font color="#0000ff"> <br /><span style="color: #646464" class="Apple-style-span"><font color="#0000ff">  public</font> <font color="#0000ff">override</font> <font color="#0000ff">void</font> OnEntry( <font color="#2b91af">MethodExecutionEventArgs</font> eventArgs)<font size="3"> <br /><span style="font-size: 12px" class="Apple-style-span">  {<font color="#2b91af"> <span style="color: #646464" class="Apple-style-span"><font color="#2b91af">Trace</font>.TraceInformation(<font color="#a31515">"Entering {0}."</font>, eventArgs.Method);<font color="#2b91af"> <span style="color: #646464" class="Apple-style-span"> } </span></font></span></font></span></font></span></font></span></font></p><p style="line-height: 18px; font-family: Consolas; color: #646464; font-size: 12px" class="Apple-style-span"><font color="#0000ff">  public</font> <font color="#0000ff">override</font> <font color="#0000ff">void</font> OnExit( <font color="#2b91af">MethodExecutionEventArgs</font> eventArgs) <br />  {<font color="#2b91af"> </font><font color="#2b91af">Trace</font>.TraceInformation(<font color="#a31515">"Leaving {0}."</font>, eventArgs.Method);   } <br />}</p>

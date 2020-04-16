@@ -1,0 +1,31 @@
+---
+layout: post
+title: "Announcing PostSharp 6.4: Support for .NET Core 3.0 - 3.1 and more"
+date: 2019-12-02 14:56:00 +01:00
+categories: [Announcements]
+permalink: /post/announcing-postsharp-64-support-for-net-core.html
+---
+<p>PostSharp 6.4 is out and there are many features and improvements that we are excited about. You can <a href="https://www.postsharp.net/downloads/postsharp-6.4">download</a> it from our website or from the <a href="https://www.nuget.org/profiles/PostSharp">NuGet gallery</a>.</p>
+<p>Staying true to our promises to enhance a developer&rsquo;s experience by eradicating boilerplate and allowing for more clarity, PostSharp now fully supports <strong>.NET Core 3.0 - 3.1</strong>, .<strong>NET Standard 2.1</strong>,<strong> C# 8.0</strong> and more.&nbsp;</p>
+<p>What does that mean exactly?&nbsp;</p>
+<ol>
+<li>If you have a .NET Framework application that uses PostSharp, you can now start migrating to .NET Core.</li>
+<li>PostSharp has been tested and fixed for all new features of C# 8.0.&nbsp;</li>
+</ol>
+<p>So, if there was a time to get excited, it is now :)&nbsp;&nbsp;</p>
+<p>&nbsp;</p>
+<p>Here is the summary of all great features in PostSharp 6.4:</p>
+<ul>
+<li><strong>Support for .NET Core 3.0-3.1 and .NET Standard 2.1</strong> &ndash; yes, we've said it already. We've also updated our package PostSharp.Patterns.Xaml to make sure it works with WPF on .NET Core.</li>
+<li><strong>Support for C# 8.0</strong> &ndash; default interface methods, nullable reference types and read-only struct members &ndash; all fixed and tested in PostSharp 6.4. Go on and try it :)&nbsp;</li>
+<li><strong>Support for field/property initializers (breaking change!)</strong> &ndash; initialization of static fields and properties is now intercepted by the LocationInterceptionAspect.</li>
+<li><strong>Free ordering of MethodBoundaryAspect and MethodInterceptionAspect on iterators</strong> - it is now possible to freely order an OnMethodBoundaryAspect before or after a MethodInterceptionAspect on iterator methods.</li>
+</ul>
+<p>For detailed description, go back and read the<a href="https://www.postsharp.net/blog/post/announcing-postsharp-64-rc"> RC announcement</a>.&nbsp;</p>
+<h2>Summary</h2>
+<p>We are happy to stay on the path of delivering superb support for modern .NET desktop and server-side development to all PostSharp users and allowing them to develop more reliable applications. We have proven that we do keep up the pace with the new generation of .NET technologies and we are planning on continuing that way.&nbsp;</p>
+<p>Don&rsquo;t forget to <a href="https://www.postsharp.net/downloads/postsharp-6.4">download the new release</a> and enjoy all the new features and improvements. We will be happy to hear your feedback.</p>
+<p>P.S. If you run into any issues, do let us know via <a href="https://www.postsharp.net/support">Support</a>.</p>
+<p>Happy PostSharping!</p>
+<p>&nbsp;</p>
+<p><strong>EDIT:</strong> December 11th, 2019 - PostSharp 6.4 now supports .NET Core 3.1, not just 3.0.</p>

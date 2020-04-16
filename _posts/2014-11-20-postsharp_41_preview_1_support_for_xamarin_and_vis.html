@@ -1,0 +1,39 @@
+---
+layout: post
+title: "PostSharp 4.1 Preview 1: Support for Xamarin & Visual Studio 2015"
+date: 2014-11-20 16:50:00 +01:00
+categories: []
+permalink: /post/postsharp-41-preview-1-support-for-xamarin-and-visual-studio-2015.html
+---
+<p>Just one month after we published PostSharp 4.0 RTM and one week after Visual Studio 2015 Preview went out, we’re excited to release PostSharp 4.1 Preview 1 today, introducing support for Xamarin and Visual Studio 2015. PostSharp 4.1 is all about adding support for new platforms. We want to make PostSharp the number-one extension for pattern-driven programming – not only for desktop and server applications, but also for mobile devices.</p>
+<p>PostSharp 4.1 Preview 1 is available for download from <a href="http://www.postsharp.net/download">our web site</a> and from NuGet as a pre-release package. Note that this is still an early preview, and needless to say PostSharp Tools for Visual Studio 2015 are particularly experimental.</p>
+<h1>Support for Xamarin</h1>
+<p>A few years ago, PostSharp had an ambiguous relationship with Mono. Technically, it was possible to run PostSharp on Mono, and there were even a few classes written specifically for this use case. However, we didn’t have any significant testing with Mono. So&nbsp; even if we said we “supported” it, the idea was really just: use PostSharp with Mono at your own risks.</p>
+<p>Starting with PostSharp 3, we decided to take the term <em>support</em> more seriously. If we said PostSharp would support a platform, it means that we had automated tests for it, that we would have a development and testing lab, and that we would answer support requests. To <em>support</em> a platform is much more than merely hoping for eventual compatibility. So, we decided to remove Mono support in PostSharp 3. This was not a bad decision; we could not afford another anyway.</p>
+<p>But since last week, things are different. Microsoft announced an enhanced partnership with Xamarin to make .NET the most productive development platform for all devices, from wearable to cloud . Through its potential to reduce the size and complexity of .NET code by 20%, PostSharp is a natural fit in this effort to increase developer productivity. Today, we’re announcing that PostSharp 4.1 embraces the cross-platform vision.</p>
+<h3>Limitations in PostSharp 4.1 Preview 1</h3>
+<p>This early release is an important milestone but there’s still much work to do:</p>
+<ul>
+<li>We only added support for Xamarin into the <em>PostSharp</em> package, but not to the pattern libraries. That is, you can create your own aspects for Xamarin, but you cannot use the pre-built ones yet. Pattern libraries will be ported in a later release.</li>
+<li>We only support a few Xamarin profiles. More will be supported later.</li>
+<li>You can build only from Visual Studio. The Mac compilation server is supported but your main build machine must be Windows. Mac as a main developer workstation will not be supported in PostSharp 4.1.</li>
+</ul>
+<h1>Support for Visual Studio 2015</h1>
+<p>From our point of view, Visual Studio 2015 is the most significant release since Visual Studio 2005, when PostSharp started to integrate with the IDE. We had to rewrite significant portions of our software to take advantage of the new version. The new code is not only simpler, it is also faster and allows for more features and better integration.</p>
+<p>When using PostSharp 4.1 with Visual Studio 2015, you will see the following differences:</p>
+<ul>
+<li><strong>Integrate with the light bulb </strong>instead of the smart tag. It’s a small difference but it will provide a more consistent experience. Smart tags didn’t scale well with multiple vendors (Microsoft, PostSharp and CodeRush for instance), but the light bulb has been designed for this.</li>
+<li><strong>Real-time detection of some errors</strong>. For instance, when making a class recordable or thread-safe, you know in real time that a field must be annotated with [<em>Child</em>] or [<em>Reference</em>].</li>
+<li><strong>Advanced code fixes. </strong>When making a class recordable or thread-safe, collection child fields have to be changed from <em>List</em> to <em>AdvisableCollection</em>. There’s now a code fix to do this change automatically, and it even updates field assignments where possible.</li>
+</ul>
+<h1>What’s Next in PostSharp 4.1?</h1>
+<p>In the next weeks, we’ll be working on the following improvements:</p>
+<ul>
+<li>PostSharp Threading Pattern Library: support for Windows Phone, Windows Store and Xamarin.</li>
+<li>PostSharp Model Pattern Library: support for Xamarin (Windows Phone and Windows Store are already implemented in 4.0).</li>
+<li>Xamarin: support for all profiles.</li>
+<li>Visual Studio 2015: tuning of the user experience.</li>
+</ul>
+<p>You should now see a new release every 3rd week.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

@@ -1,0 +1,176 @@
+---
+layout: post
+title: "[Guest Post] Improve Exception Handling and Caching using PostSharp"
+date: 2011-01-26 16:18:00 +01:00
+categories: [Tutorial]
+permalink: /post/improve-exception-handling-and-caching-using-postsharp.html
+---
+<p><em>Marcus King recently released <a href="http://www.sharpcrafters.com/media/tutorials" target="_blank">3 screencasts</a> showing how to address exception handling and caching.       <br />We asked him to introduce his work in this guest post.</em></p>  <p>How often do I have to keep solving the same problem?&#160; As developers we’ve all been there, each project we work on we have to do the same ole’ thing we’ve done a thousand times before.&#160; Luckily in most cases there are good native features built into the language or third party frameworks that are available to reduce the tedious chore of writing basic code yet again.&#160; However, there are a lot of times when OOP doesn’t provide us with a good way to solve a recurring problem.&#160; I’m guessing since your reading the SharpCrafter’s Blog you see that this is the point where AOP steps in and fills the gap left by OOP.&#160; I recently did a video tutorial on improving exception handing&#160; using AOP via PostSharp.&#160; Traditionally in applications we need to catch when certain exceptions are thrown and do something with the exception by either logging it, calling another workflow, wrapping the exception inside of another one, or simply swallowing the exception, or some combination of all.&#160; Let’s say for example we have a class we use to call a remote web service to retrieve data for our application.</p>  <pre>public class StockService
+{
+    public StockDetails GetStockDetails( string symbol )
+    {
+        try
+        {
+            //.... call to service
+        }
+        catch ( SoapException ex )
+        {
+            throw new StockServiceException( &quot;Error Getting Details&quot;, ex );
+        }
+    }
+
+    public decimal GetHistoricalPrice( string symbol )
+    {
+        try
+        {
+            //.... call to service
+        }
+        catch ( SoapException ex )
+        {
+            throw new StockServiceException( &quot;Error Getting Historical Price&quot;, ex );
+        }
+    }
+
+    public void AddToPortfolio( string symbol, int shares )
+    {
+        try
+        {
+            //.... call to service
+        }
+
+        catch ( SoapException ex )
+        {
+            throw new StockServiceException( &quot;Error Adding to portfolio&quot;, ex );
+        }
+    }
+}</pre>
+
+<p>Look how often we are repeating the same basic pattern.&#160; We’re making our service call and wrapping any SoapException that is thrown in a custom StockServiceException.&#160; Using PostSharp we are able to modularize our code and make the business logic of the StockService class look so much cleaner.</p>
+
+<pre>public class StockService
+{
+    [HandleException( SoapException, StockServiceException, <br />                      &quot;Error Getting Details&quot; )]
+    public StockDetails GetStockDetails( string symbol )
+    {
+        //.... call to service
+    }
+
+    [HandleException( SoapException, StockServiceException, <br />                      &quot;Error Getting Historical Price&quot; )]
+    public decimal GetHistoricalPrice( string symbol )
+    {
+        //.... call to service
+    }
+
+    [HandleException( SoapException, StockServiceException, <br />                      &quot;Error Adding To Portfolio&quot; )]
+    public void AddToPortfolio( string symbol, int shares )
+    {
+        //.... call to service
+    }
+}</pre>
+
+<p>All we need to do is create an attribute that derives from OnMethodBoundaryAspect that accepts three parameters in the constructor;&#160; the type of exception to handle, the type of exception to wrap the caught exception in, and a message to give to the wrapped exception.</p>
+
+<pre>[Serializable]
+public class HandleExceptionAttribute : OnExceptionAspect
+{
+    private Type _expectedException;
+    private Type _wrapInException;
+    private string _message;
+
+    // Constructor that takes in variable parameters when the attribute is applied
+    public HandleExceptionAttribute( Type expectedExeptionType, Type wrapInExceptionType, <br />                                     string message )
+    {
+        _expectedException = expectedExceptionType;
+        _wrapInException = wrapInExceptionType;
+        _message = message;
+    }
+
+    // This method checks to see if the exception that was thrown from the method the 
+    // attribute was applied on matches the expected exception type we passed into the <br />    // constructor of the attribute
+    public override Type GetExceptionType( MethodBase targetMethod )
+    {
+        return _expectedException;
+    }
+
+    // This method is called when we have guaranteed the exception type thrown matches the
+    // expected exception type passed in the constructor.  It wraps the thrown exception <br />    // into a new exception and adds the custom message that was passed into the constructor
+    public override void OnException( MethodExecutionArgs args )
+    {
+        args.FlowBehavior = FlowBehavior.Continue;
+        Exception newException = (Exception) Activator.CreateInstance(<br />                _wrapInException, new object[] {_message, _expectedException} );
+
+        throw newException;
+    }
+}</pre>
+
+<p>Another common problem set I solve with PostSharp is caching expensive method calls. I find myself repeating the same basic pattern in projects when I need to implement caching. I’m sure you’re familiar with it.</p>
+
+<pre>public Account GetAccount( int accountId )
+{
+    string cacheKey = string.Format( &quot;GetAccount_{0}&quot;, accountId );
+
+    Account account = Cache.Get<account>( cacheKey );
+
+    if ( account == null )
+    {
+        account = accountRepository.GetAccount( accountId );
+
+        Cache.Add( cacheKey, account );
+    }
+
+    return account;
+}</pre>
+
+<p>We build our cache key and check to see if the item is present if the cache. If it is we return the value pulled from the cache, otherwise we do the necessary work to retrieve/build the item to return and save it in the cache with the cache key we built so that the next time this method is called we can successfully pull the item from the cache. I’ve repeated this pattern over and over again, typically in a business layer when I need to retrieve data from an expensive resource like a database or a web service call or when I do complex logic to construct the object that I need to return. Luckily PostSharp provides a way to centralize all of the caching logic for me so I can concentrate on the business logic. The same method now looks like this</p>
+
+<pre>[Cache]
+public Account GetAccount(int accountId)
+{
+    return accountRepository.GetAccount(accountId);
+}</pre>
+
+<p>Once again I simply adorn the method with an attribute and it handles a lot of the repitive code. Here is what the Cache Attribute/Aspect code looks like.</p>
+
+<pre>public class CacheAttribute : OnMethodBoundaryAspect
+{
+    public override void OnEntry( MethodExecutionArgs args )
+    {
+        string key = args.Method.Name + &quot;_&quot; + Cache.GenerateKey( args.Arguments );
+
+        object value = Cache.Get( key );
+
+        if ( value == null )
+        {
+            args.MethodExecutionTag = key;
+        }
+
+        else
+        {
+            args.ReturnValue = value;
+
+            args.FlowBehavior = FlowBehavior.Return;
+        }
+    }
+
+    public override void OnSuccess( MethodExecutionArgs args )
+    {
+        string key = args.MethodExecutionTag.ToString();
+
+        Cache.Add( key, args.ReturnValue );
+    }
+}</pre>
+
+<p>In the OnEntry method I’m building the cache key and checking to see if the item exists in the cache and if so I’m not letting the target method complete and I’m returning the value pulled from cache. If no item was found in the cache, the execution of the target method proceeds and when the target method successfully executes the OnSuccess override is fired and the item is stored in the cache.</p>
+
+<p>There are a lot more interesting things to do with the two areas of caching and exception handling so I would encourage you to check out my screen casts to learn more.</p>
+
+<p><strong>Exception Handling</strong>: <a href="http://www.sharpcrafters.com/media/tutorials/exception-handling">http://www.sharpcrafters.com/media/tutorials/exception-handling</a></p>
+
+<p><strong>Caching</strong>:&#160; <a href="http://www.sharpcrafters.com/media/tutorials/caching-1">http://www.sharpcrafters.com/media/tutorials/caching-1</a></p>
+
+<p><strong>Going Further with Caching</strong>:&#160; <a href="http://www.sharpcrafters.com/media/tutorials/caching-2">http://www.sharpcrafters.com/media/tutorials/caching-2</a></p>
+
+<p>&#160;</p>
+<img style="background-image: none; border-bottom: 0px; border-left: 0px; margin: 0px 10px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top: 0px; border-right: 0px; padding-top: 0px" title="marcus_king_image" border="0" alt="marcus_king_image" align="left" src="/assets/2011-01-26-improve_exception_handling_and_caching_using_posts/marcus_king_image_1.jpg" width="135" height="135" /> 
+
+<p><em><strong>Marcus King</strong> is a Software Engineer based in Louisville, KY. He has a broad IT background ranging from infrastructure security to software development, with years of experience working for many different sized companies, from Fortune 100 to small web startups. Marcus is passionate about performance tuning applications, developing solutions for highly scalable applications, plus is heavily involved in discovering and setting standards and best practices for software development. An Aspect-Oriented Programming (AOP) champion, Marcus regularly gives presentations on the topic. In his free time he writes applications for iPhone and Android and is on the executive committee of the </em><a href="http://www.codepalousa.com/"><em>codepaLOUsa</em></a><em> developer conference in Louisville, KY.</em></p>

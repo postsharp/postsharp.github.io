@@ -1,0 +1,26 @@
+---
+layout: post
+title: "Redesign of PostSharp Laos"
+date: 2007-01-02 23:22:00 +01:00
+categories: [General]
+permalink: /post/redesign-of-postsharp-laos.html
+---
+I took the last opportunity to c<a href="http://www.postsharp.org/about/news/development/new-rc-of-beta-1/view">hange the public interface of PostSharp Laos</a>. Hopefully, for most of you, the changes will be trivial and a find-and-replace will do the job.
+
+The <span style="font-style: italic;">old</span> design was to pass a lot of parameter to each method like <span style="font-style: italic;">OnEntry</span> or <span style="font-style: italic;">OnExit</span>, for instance. Each piece of context (object instance, array of arguments, arrays of generic arguments, ...) was passed as a standalone parameter.
+
+This kind of design had serious drawbacks. The main is flexibility, i.e. forward compatibility. If I want to add a new information to the context, I have to add a new parameter... and break the public interface.
+
+Conversely, the <span style="font-style: italic;">new</span> design often passes a single parameter, an object containing all information about the context. This makes Laos much event oriented. A join point is like an 'event' in the code and an advice is like an 'event handler'. For instance, the <span style="font-style: italic;">OnEntry</span> method now looks like this:
+
+<span style="font-family:courier new;">public override void OnEntry(MethodExecutionEventArgs eventArgs)</span>
+
+It is really similar to event handlers written in the derived class, according to the design pattern recommended by Microsoft.
+
+I came to this idea when talking when <a href="http://bloggingabout.net/blogs/olaf/">Olaf</a>. Aspect-oriented programming can really be seen as common event-oriented programming. It is 'just' another way to define 'events' in the code and to define event handlers. PostSharp Laos currently forces you to add the 'event handlers' at compile time, but one easily imagine extending it so that 'event handlers' can be added at runtime. What does that mean? That we get something very close to 'dynamic weaving'. But with a big difference: while event handlers can effectively be added at runtime, the events in themselves (i.e. the join points) have to be defined at compile time or at load time.
+
+That's for another time, but the current design of PostSharp Laos makes it very easy.
+
+Enjoy... and forgive the change in the public interface :-)
+
+Gael

@@ -1,0 +1,186 @@
+---
+layout: post
+title: "Introducing PostSharp 2.0: #3 - Aspect Dependencies"
+date: 2009-10-08 07:12:13 +02:00
+categories: [General]
+permalink: /post/introducing-postsharp-2-0-3-aspect-dependencies.html
+---
+<p>We in the Microsoft .NET community are lucky: at critical moments, we are a few steps 
+behind the Java community. So we got C# and .NET after them, but we learned from 
+their mistakes, and got better language and platform. The same with AOP. AspectJ is widely used 
+over there, there is 
+plently of feedback, and PostSharp has been designed accordingly. </p>
+<p>One of the questions engineers face when applying aspects to large software 
+is: how do you ensure aspects don&#39;t collide? This was a key design concern for 
+PostSharp 2.0; here I&#39;ll show how it&#39;s addressed.&nbsp; Be confident that this 
+feature puts PostSharp at the peek of all industrial aspect weavers, without 
+distinction of language.</p>
+<h2>Ordering Aspects</h2>
+<p>Let assume the following. We have two aspects: caching and authorization. 
+Obviously, we want authorization to be performed before caching.</p>
+<p>I skip the code of the aspects. It&#39;s not the point here. But let see how we 
+define dependencies between aspects:</p>
+<pre>[Serializable]
+[ProvideAspectRole(StandardRoles.Caching)]
+public class CacheAttribute : OnMethodBoundaryAspect
+{
+   // Implementation omitted.
+}</pre>
+<pre> [Serializable]
+[ProvideAspectRole(StandardRoles.Security)]
+[AspectRoleDependency(AspectDependencyAction.Order, AspectDependencyPosition.Before, StandardRoles.Caching)]
+public class AuthorizationAttribute : OnMethodBoundaryAspect
+{
+   // Implementation omitted.
+}</pre>
+<p>It&#39;s fairly simple. There are only two concepts:</p>
+<ol>
+<li><strong>Aspects can provide a role</strong>. A role describes the 
+function of the aspect; represented as a unique string. The class <em>
+StandardRoles</em> is a list of the most common aspect roles you would find 
+in business applications. To name a few of them: caching, security, 
+persistence, validation, observabiltity, exception handling, transaction 
+handling, and so on. We specify this using the custom attribute <em>
+ProvideAspectRole</em>.</li>
+<li><strong>Aspects can define relationships to other aspects</strong>. 
+Here, the custom attribute <em>AspectRoleDependency</em> specify a depedency 
+to other aspects that provide a given role. The custom attribute on <em>
+AuthorizationAspect</em> just means: this aspect should be before any aspect 
+providing caching.</li>
+</ol>
+<p>Now, if you apply two aspects on the same method, they will be ordered as you 
+expect:</p>
+<pre> [Authorization("SalesManager")]
+[Cache]
+public string GetQuoteDetailsHtml()
+{
+  // Pretend we retrieve something large and confidential
+  // from database.
+}</pre>
+<p>There are other ways than roles to match dependent aspects. For instance, <em>
+AspectTypeDependency</em> allows you to specify an aspect type explicitely. All 
+dependency attributes are in namespace <em>PostSharp.Aspects.Dependencies</em>.</p>
+<h2>Expressing Aspect Conflicts</h2>
+<p>Let&#39;s take another scenario. I have a method, say <em>ISecurable.IsUserInRole</em>, 
+and I want to avoid at any price that this method gets cached.</p>
+<p>Easy: we create an aspect <em>NotCacheableAttribute</em> with no logic at all 
+(the aspect does strictly nothing), and add a dependency:</p>
+<pre>[AspectRoleDependency(AspectDependencyAction.Conflict, StandardRoles.Caching)]
+class NotCacheableAttribute : MethodLevelAspect
+{
+}</pre>
+<p>Now apply it to our interface method. We use aspect inheritance to ensure 
+than the aspect dependency applies to all methods implementing this interface 
+method:</p>
+<pre>public interface ISecurable
+{
+    [NotCacheable(AttributeInheritance = MulticastInheritance.Strict)]
+    bool IsUserInRole( IPrincipal principal, string role );
+}</pre>
+<p>Try to put a caching aspect on an implementation of this interface method:</p>
+<pre> class Organization : ISecurable
+{
+     // Details omitted.
+
+     [Cache]
+     public bool IsUserInRole( IPrincipal principal, string role )
+     {
+         return accessList.IsUserInRole(principal, role);
+     }
+}</pre>
+<p>Build the project; you&#39;ll get this error message:</p>
+<p><em>Conflicting aspects on 
+"Dependencies.Entities.Organization/IsUserInRole([mscorlib]System.Security.Principal.IPrincipal 
+principal, string role) : bool": &#39;Dependencies.Aspects.NotCacheableAttribute&#39; 
+cannot be used together with &#39;Before Dependencies.Aspects.CacheAttribute (3)&#39; 
+because the second provides the role &#39;Caching&#39;.&nbsp;</em></p>
+<p>And this is exactly what we wanted!</p>
+<h2>Aspect Commutativity</h2>
+<p>You maybe remember commutativity from school. Multiplication is commutative 
+because <em>5*4 = 4*5</em>; division is not. And you maybe even remember 
+function composition, which combines two functions in one: <em>(f o g)(x) = 
+f(g(x))</em>. Functions <em>f</em> and <em>g</em> are mutually commutative if
+<em>f o g = g o f</em>. If you have done a little more maths, you know that 
+commutativity applies to differential operators, so we have (in good cases): <em>
+d/dx o d/dy = d/dy o d/dx</em>. And if you have done much more maths, you are 
+even maybe an ace in <a href="http://en.wikipedia.org/wiki/Lie_algebra">Lie 
+algrebra</a>, which I never understood.</p>
+<p>Just as with functions and differential operators, if makes sense to talk of 
+commutativity with aspects.</p>
+<p>Say we have two aspects on the same method: tracing and exception handling. 
+Does it matter if one aspect executes after the other? If you don&#39;t care, then 
+these aspects are said to commute (in other words, they are mutually 
+commutative). If not, you have to specify their ordering specifically.</p>
+<p>If two aspects are not commutative but are <em>not </em>strongly ordered 
+(because you did not specify an ordering dependency), you will get a nice 
+warning at buid time:</p>
+<p><em>Conflicting aspects on "Dependencies.Entities.Quote/GetQuoteDetailsHtml() 
+: string": transformations "Dependencies.Aspects.TraceAttribute" and 
+"Dependencies.Aspects.AuthorizationAttribute" are not commutative, but they are 
+not strongly ordered. Their order of execution is undeterministic.</em></p>
+<p>You have two ways to get rid of this warning: either your order them strongly 
+by aspecifying an order dependency (see above), either you specify that both 
+aspects commute:</p>
+<pre>[AspectTypeDependency(AspectDependencyAction.Commute, typeof(CacheAttribute))]
+class TraceAttribute : OnMethodBoundaryAspect
+{
+   // Details omitted.
+}</pre>
+<p>You may ask -- why to bother, anyway? Well, because every professional knows 
+how hard it is to troubleshoot non-deterministic issues, PostSharp 2.0 carefully 
+detects these situations and warns about them. You can specify that your aspect 
+has no effect at all (therefore you would lie, since it does not make sense to 
+write an aspect that has no effect) and, therefore, it&#39;s like the function <em>
+f(x)=x</em>, it 
+commutes with any other aspect. But then you are supposed to have made an 
+educated choice (use the custom attribute <em>WaiveAspectEffectAttribute</em> 
+for this purpose).</p>
+<h2>Some Theory Behind</h2>
+<p>The theory behind shows that, while PostSharp Laos became popular quite 
+accidentally (PostSharp Core was well designed, but PostSharp Laos started as an 
+experiment), PostSharp 2.0 is really engineered to scale well in complexity and 
+to assume the burden of this popularity (be certain it is something we carry 
+both with pleasure and honor).</p>
+<p>Before starting to execute transformations on a code element (say a method), 
+PostSharp gathers all transformations upfront. At this point, they form an 
+unstructured set of nodes. When this is done, PostSharp evaluates dependencies 
+between all transformations in the set. Ordering dependencies become edges in a
+<a href="http://en.wikipedia.org/wiki/Digraph_(mathematics)">directed graph/a> 
+and form a <a href="http://en.wikipedia.org/wiki/Partial_order">partially 
+ordered set</a>. Then, it performs a
+<a href="http://en.wikipedia.org/wiki/Topological_sorting">topological sorting</a> 
+on the graph to find out in which order transformations should be executed. A 
+part of this algorithm is to detect cycles, so you will get a build-time error 
+if two aspects have contradictory ordering requirements. Then, PostSharp checks 
+if it finds clusters of elements that are not strongly ordered. If it finds 
+some, it checks that all nodes in the cluster commute with all other nodes. 
+Finally, it checks if other dependency constraints (conflicts and requirements) 
+are fulfilled. </p>
+<p>This complex algorithm is executed for every method, type, field, property, 
+or event that is the target of more than one aspect. Fortunately, the number of 
+aspects on a code element is typically small, so the performance cost is not 
+daunting in practice. Good news is that it scales in complexity.</p>
+<h2>Old Good Aspect Priority</h2>
+<p>"Where is my old <em>AspectPriority</em> property?" It&#39;s still there. You can 
+still specify a priority manually. The priority will be translated into a 
+dependency and will be merged with dependencies.</p>
+<p>While using an aspect, you can always refind the dependencies provided by the 
+aspect developer. But you cannot break them. If you intend to do so, you will 
+introduce a circular reference in dependencies:</p>
+<pre> [Authorization("SalesManager", AspectPriority = 2)]
+[Cache(AspectPriority = 1)]   </pre>
+<p><em>Conficting aspects on "Dependencies.Entities.Quote/GetQuoteDetailsHtml() 
+: string": according to aspect dependencies, transformation "Before 
+Dependencies.Aspects.AuthorizationAttribute (4)" should be located both before 
+and after transformation "Before Dependencies.Aspects.CacheAttribute (3)".</em></p>
+<p>Thanks to the topological sort algorithm, PostSharp is able to detect longer 
+dependency cycles and to enforce ordering even in complex situations.</p>
+<h2>Summary</h2>
+<p>I have shown how PostSharp 2.0 copes with mutliple aspects when they are 
+applied to the same code element. One word qualifies the approach: robustness. 
+Now you can safely use aspects in larger teams and projects. PostSharp is 
+engineered for.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+
+

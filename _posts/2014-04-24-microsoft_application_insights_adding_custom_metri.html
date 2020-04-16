@@ -1,0 +1,127 @@
+---
+layout: post
+title: "Microsoft Application Insights: going deep without polluting your source code"
+date: 2014-04-24 22:24:00 +02:00
+categories: []
+permalink: /post/microsoft-application-insights-adding-custom-metrics-without-modifying-your-source-code.html
+---
+<p>Microsoft is rarely the first to jump on a train, but when they do jump, they make sure it is very simple for everybody to get on their wagon. And they did it again with <a href="http://blogs.msdn.com/b/visualstudioalm/archive/2013/11/13/announcing-application-insights-preview.aspx" target="_blank">Application Insights</a>, a feature of Visual Studio Online that monitors the performance of web sites, web services, and mobile apps.&nbsp; They are perhaps not as feature-complete as early players (special thoughts to our friends and partners at <a href="http://www.gibraltarsoftware.com/loupe/intro" target="_blank">Gibraltar Software</a>), but their simplicity is stunning.</p>
+<h2>Adding Application Insights to Your App</h2>
+<p>Judge by yourself. You need just two simple steps to add monitoring to your app:</p>
+<ol>
+<li>Install the Visual Studio extension &ldquo;Application Insights Tools for Visual Studio&rdquo;.</li>
+<li>Open your project and click on menu Tools / Add Application Insights.</li>
+</ol>
+<p>You&rsquo;re done. No joke.</p>
+<p>Application Insights provides several monitors right out of the box, among which page load time and Windows performance counters. It also has a (still modest) API that allows you to push your own data. Perhaps the top use case you would like to implement is to measure the execution time of a method, and perhaps include the method arguments in the trace data.</p>
+<h2>Measuring Method Execution Time</h2>
+<p><strong>Wouldn&rsquo;t it be nice if you could add your own metric to Application Insights using a custom attribute?</strong> This is almost trivial with PostSharp. And since it&rsquo;s so trivial, it&rsquo;s also possible with the free PostSharp Express. Let&rsquo;s see how.</p>
+<ol>
+<li>Add the Visual Studio extension &ldquo;PostSharp&rdquo;.</li>
+<li>Right-click on your project and select &ldquo;Add PostSharp to project&rdquo;.</li>
+<li>Add a class <strong>ApplicationInsightsTimedEventAttribute</strong> to the project. For now, just copy the code from <a href="https://github.com/sharpcrafters/ApplicationInsightsExample/blob/master/ApplicationInsightsExample/ApplicationInsightsTimedEventAttribute.cs" target="_blank">this file</a>. I&rsquo;ll explain what it does in a minute.</li>
+<li>Go to the method you want to instrument and add the <strong>[ApplicationInsightsTimedEvent]</strong> custom attribute.</li>
+</ol>
+<p>You&rsquo;re done.</p>
+<p>Run your application and cause the instrumented to execute. Then go back to Visual Studio, and click on menu Tools / Open Application Insights Portal. You&rsquo;ll see custom timed events triggered by the execution of the method.</p>
+<p><img src="/assets/2014-04-24-microsoft_application_insights_adding_custom_metri/applicationinsights2.png" alt="" /></p>
+<h2>A Closer Look At the Aspect</h2>
+<p>Let&rsquo;s now have a look at the <strong>ApplicationInsightsTimedEventAttribute</strong> class itself.</p>
+<pre>[PSerializable] // Use [Serializable] with the free PostSharp Express.
+public class ApplicationInsightsTimedEventAttribute : OnMethodBoundaryAspect
+{
+    // Fields and properties will be serialized at build-time and deserialized at run-time.
+
+    string eventPath;
+    string[] parameterNames;
+
+    public bool IncludeArguments { get; private set; }
+
+    public ApplicationInsightsTimedEventAttribute(bool includeArguments = true)
+    {
+        this.IncludeArguments = includeArguments;
+
+        // Make sure it works as expected with async methods.
+        this.ApplyToStateMachine = true;
+    }
+
+    public override void CompileTimeInitialize(MethodBase method, AspectInfo aspectInfo)
+    {
+        // Computing the event name at build time since it won't change.
+        this.eventPath = method.DeclaringType.FullName
+                            .Replace('.', '/').Replace('+', '/')
+                            + "/" + method.Name;
+
+        // Collecting parameter names at build time prevents from using Reflection at runtime.
+        if (this.IncludeArguments)
+        {
+            this.parameterNames = method.GetParameters().Select(p =&gt; p.Name).ToArray();
+        }
+    }
+
+    // This code will be executed BEFORE the method to which the custom attribute is applied.
+    public override void OnEntry(MethodExecutionArgs args)
+    {
+        IAnalyticsRequest request = ServerAnalytics.CurrentRequest;
+
+        if (request != null)
+        {
+            ITimedAnalyticsEvent timedEvent;
+
+            if (this.IncludeArguments)
+            {
+                // Build a list of properties based on method arguments.
+                List&lt;KeyValuePair&lt;string, object&gt;&gt; arguments = new List&lt;KeyValuePair&lt;string, object&gt;&gt;();
+                for (int i = 0; i &lt; this.parameterNames.Length; i++)
+                {
+                    arguments.Add(new KeyValuePair&lt;string,object&gt;( this.parameterNames[i], args.Arguments[i]));
+                }
+
+                // Start the event with arguments.
+                timedEvent = request.StartTimedEvent(this.eventPath, arguments);
+            }
+            else
+            {
+                // Start the event without arguments.
+                timedEvent = request.StartTimedEvent(this.eventPath);
+            }
+
+            // Store the event in MethodExecutionTag so we can retrieve it in OnExit.
+            args.MethodExecutionTag = timedEvent;
+        }
+    }
+
+    // This code will be executed AFTER the method to which the custom attribute is applied,
+    // both upon failure or success.
+    public override void OnExit(MethodExecutionArgs args)
+    {
+        // Retrieve the event. It's possible that there's no event if there was no current request.
+        ITimedAnalyticsEvent timedEvent = (ITimedAnalyticsEvent) args.MethodExecutionTag;
+
+        if ( timedEvent != null )
+        {
+            // End the event.
+            timedEvent.End();
+        }
+    }
+
+}
+
+</pre>
+<p>A specificity of PostSharp is that the aspect is instantiated at build time. This allows for some performance optimizations. Since the event name is fully determined by metadata, it is a good idea to compute it at build time. This is why we have the <em>CompileTimeInitialize</em> method. After the aspect has been initialized, it is serialized and stored as a managed resource in the assembly. At run-time, the aspect is deserialized and is ready to be executed. (Note that the performance optimizations are more significant with a commercial edition of PostSharp; the free edition generates un-optimized instructions).</p>
+<p>The <em>OnEntry</em> method is executed at the beginning of any method to which the custom attribute is added. The <em>OnExit</em> method is executed in a <em>finally</em> block after the target method. Their argument<em> MethodExectionArgs</em> contains information about the current context. Here, we&rsquo;re interested by the method arguments.</p>
+<h2>Adding the Aspect to Code</h2>
+<p>Since <strong>ApplicationInsightsTimedEventAttribute</strong> is a custom attribute, you can add it to any method you want to instrument. Now, what if you want to instrument really a lot of them? You may not want to annotate all of them individually. There are many ways you can do that with PostSharp, but to avoid making this article a PostSharp tutorial, I will just gently <a href="http://doc.postsharp.net/##applying-aspects" target="_blank">send you to the documentation</a> for this point.</p>
+<h2>Even More Logging</h2>
+<p>So far, I&rsquo;ve shown how to add timed events to Application Insights using a very simple custom aspect.</p>
+<p>You may want more features for real production-ready logging. For instance, it is important to be able to enable or disable logging dynamically or through a configuration file. Otherwise, the log would just be too huge, so you may want to prepare logging to your complete codebase but disable it by default. Would a problem occur in your app, the operation team would just update the configuration file and enable tracing for a specific class or namespace.</p>
+<p>PostSharp has a solution for this: the <a href="http://doc.postsharp.net/##diagnostics-library" target="_blank">Diagnostics Pattern Library</a>. It includes a production-ready logging aspect. The bad news is that Application Insights is not directly supported as a back-end. The good news is that we can emit data to NLog, Log4Net or TraceListener, and Application Insights is able to read from all of these frameworks. So, the gap is easily bridged.</p>
+<p><img src="/assets/2014-04-24-microsoft_application_insights_adding_custom_metri/detailedtracing3.png" alt="" /></p>
+<p>&nbsp;</p>
+<h2>Feature Tracking</h2>
+<p>Nobody said that the concept of &ldquo;event&rdquo; must just map to the concept of &ldquo;logging&rdquo;. You can use events to model feature tracking too. You could build your own aspect, starting from the code aspect, to implement your own definition of feature tracking and encapsulate it as a custom attribute.</p>
+<h2>Summary</h2>
+<p>Microsoft Application Insights is stunningly simple to use, but it lacks some features of its competitors. One of them is the ability to instrument your application &ldquo;from the inside&rdquo; without requiring you to modify your source code. Fortunately, the feature is very easy to implement with PostSharp.</p>
+<p>In the future, we at PostSharp may think of supporting Application Insights directly from the <a href="http://doc.postsharp.net/##diagnostics-library" target="_blank">Diagnostics Pattern Library</a>. But before, we&rsquo;d love to hear your opinion. How do <em>you</em> think we should integrate with Application Insights? What are the top use cases you would like to be solved with the highest level of quality and performance? We&rsquo;re looking forward to your feedback.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

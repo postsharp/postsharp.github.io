@@ -1,0 +1,83 @@
+---
+layout: post
+title: "Announcing PostSharp 4.2 RC"
+date: 2015-10-22 14:18:00 +02:00
+categories: [Announcements]
+permalink: /post/announcing-postsharp-42-rc.html
+---
+<p>We are done! After 10 months of development, the team is happy to announce that PostSharp 4.2 is now fully finished, tested and documented, and since we reached a zero-known-bug status, we&rsquo;re more than relieved to say that the RC quality level has been reached. <a href="https://www.postsharp.net/support/policies">We don&rsquo;t make a difference between RC and RTM quality level</a>, which means that we consider PostSharp 4.2 to be ready, just needing more end-customer testing.</p>
+<p>You can download PostSharp 4.2 from <a href="https://www.postsharp.net/downloads/postsharp-4.2">our website</a> or from NuGet (make sure to enable the pre-release option as usually). The documentation is <a href="https://www.postsharp.net/downloads/documentation">available for download</a> but not yet for online browsing.</p>
+<div class="buttons">
+<a class="button green"  href="https://www.postsharp.net/downloads/postsharp-4.2">download PostSharp 4.2</a>
+</div>
+<h2>What&rsquo;s New in PostSharp 4.2?</h2>
+<p>In the previous blog posts (see <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-1">Preview 1</a>, <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-3">Preview 3</a> and <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-4-Code-Saving-Metrics">Preview 4</a> announcements), we announced the following features:</p>
+<ul>
+<li>Full support for Visual Basic;</li>
+<li>Ready-made patterns: amazing performance improvements;</li>
+<li>Ready-made patterns: support for System.Collections.Immutable;</li>
+<li>Ready-made patterns: support for programmatic rules;</li>
+<li>Thread-safety policy;</li>
+<li>INotifyPropertyChanged: support for INotifyPropertyChanging;</li>
+<li>Module initializers;</li>
+<li>OnAspectsInitialized advice;</li>
+<li>Code metrics: hand-written code and code saved by PostSharp;</li>
+<li>Customizable advice descriptions.</li>
+</ul>
+<p>Today, we are announcing the following new features:</p>
+<ul>
+<li>Support for ASP.NET v5;</li>
+<li>NotifyPropertyChanged: support for Elvis operator and conditional branches;</li>
+<li>NotifyPropertyChanged: method to manual raise OnPropertyChanged / OnPropertyChanging;</li>
+<li>NotifyPropertyChanged: basic support for dependencies on collections;</li>
+<li>Code Contracts: check output values;</li>
+<li>Fixed debugging experience in async methods;</li>
+<li>Actor: support non-async methods returning a value.</li>
+</ul>
+<h2>Experimental Support for ASP.NET v5</h2>
+<p>Even if ASP.NET v5 is still preview, we are already providing some experimental support for it. Given the high fragility of ASP.NET v5 public APIs, we are shipping the ASP.NET v5 connector in a separate open-source project named <a href="https://github.com/postsharp/PostSharp.Dnx">PostSharp.Dnx,</a> hosted on GitHub. Please look at the <a href="https://github.com/postsharp/PostSharp.Dnx">project home page</a> for instructions.</p>
+<p>This experimental connector only supports the .NET Framework, i.e. neither CoreCLR nor Mono is supported.</p>
+<p>Note that our plan is to merge PostSharp.Dnx into our main PostSharp package when ASP.NET v5 and the PostSharp connector will be more stable.</p>
+<p>To make it possible to open-source the DNX connector, we had to publish a new NuGet package named <a href="https://www.nuget.org/packages/PostSharp.Compiler.Client/">PostSharp.Compiler.Client</a>, which defines an API to invoke PostSharp. The MSBuild connector now also uses PostSharp.Compiler.Client.</p>
+<h2>Improvements to NotifyPropertyChanged</h2>
+<h3>Support for Elvis operator, conditional expressions and more</h3>
+<p>Since the beginning, our NotifyPropertyChanged aspect has supported chained dependencies (when a property depends on a property of a property). With PostSharp 4.2, we will not only support the dot operator, but also the Elvis operator. Consider the example below:</p>
+<pre>[NotifyPropertyChanged]
+class CustomerViewModel
+{
+    public CustomerModel Model { get; set; }
+
+    public string FullName <br />    { <br />       get <br />       {
+         return string.Format("{0} {1} from {2}", this.Model?.FirstName, this.Model?.LastName, <br />                              this.Model?.Address?.City);
+       } <br />    }
+}
+</pre>
+<p>Note how the <em>FullName</em> property depends on the <em>this.Model?.Address?.City</em> chain. This is a very common scenario in MVVM applications, but it is generally very cumbersome to implement INotifyPropertyChanged in this situation. This is why PostSharp is so useful here. Unfortunately, this was not possible in PostSharp 4.1 because of the Elvis operator. We fixed that in PostSharp 4.2.</p>
+<p>It apparently seems like a small change, but because we are analyzing MSIL and not C#, we actually had to add support for conditional branches and local variables. I will skip the full technical details, but basically we support the following kind of constructs:</p>
+<pre>[NotifyPropertyChanged]
+class AddressFallback
+{
+    public Address Address1 { get; set; }<br />    public Address Address2 { get; set; }
+
+    public string City <br />    { <br />       get <br />       {
+         return (this.Address1 ?? this.Address2)?.City;
+       } <br />    }
+}
+</pre>
+<p>In the example above, PostSharp would detect a dependency from <em>AddressFallback.City</em> to both <em>Address1.City</em> and <em>Address2.City</em>. If we would have expressed the same logic with <em>?:</em> or an <em>if-else</em>, PostSharp would have detected the same dependencies as well.</p>
+<h3>Raise OnPropertyChanged and OnPropertyChanging</h3>
+<p>These methods are named <em>SignalPropertyChanged</em> and <em>SignalPropertyChanging</em> and they are exposed on the <em>NotifyPropertyChangedServices</em> class.</p>
+<h3>Dependencies to collections</h3>
+<p>When you add the <em>[AggregateAllChanges]</em> attribute to a field or automatic property, any change to a property of the object assigned to this field/property will be interpreted as a change to the field/property itself. The attribute now works only for collections.</p>
+<h1>Code Contracts: output parameters and return values</h1>
+<p>You can now add a code contract to the return value of a method or to its out/ref parameters. The code contract will be verified when the method returns (not on exception).</p>
+<p>For instance, you can do this:</p>
+<pre>public interface IFoo<br />{<br />   [return:Required]<br />   string GetName();<br /><br />   void GetName([Required] out string name);<br />}</pre>
+<h2>Actor: support for non-async methods returning a value</h2>
+<p>We are now allowing non-async non-void methods on actors. The method will be executed on the actor&rsquo;s message queue but the caller will wait synchronously for the method execution to complete. Exceptions are dispatched to the caller.</p>
+<p>This introduces an ambiguity with the behavior of non-async void methods, because the previous behavior was to execute them asynchronously, without requiring the caller to wait for the result. To resolve the ambiguity, we now require non-async void methods to be explicitly annotated with the [Dispatched] custom attribute. In the next major version, we will remove this requirement and non-async void methods will be called synchronously (but executed on the actor queue).</p>
+<h1>Summary</h1>
+<p>PostSharp 4.2 is a huge release, with major usability and performance improvements in many existing features. We&rsquo;ve put the quality bar very high for this RC and we are pretty confident that the roll up will be smooth.</p>
+<p>As with any RC, we suggest that customers test the new release in a separate branch of their source repository, run the build and the tests, and report any problem found. The whole point of publishing an RC is to gather customer feedback, and by reporting issues you are contributing to make the RTM better.</p>
+<p>Thank you, and Happy PostSharping!</p>
+<p>-gael</p>

@@ -1,0 +1,217 @@
+---
+layout: post
+title: "New in PostSharp 4.0: Undo/Redo"
+date: 2014-03-06 10:44:38 +01:00
+categories: []
+permalink: /post/new-in-postsharp-32-undoredo.html
+---
+<p>
+We live in a paradoxical world: all office applications support undo/redo, but very few business applications include this feature. Is this because
+    undo/redo seems so difficult to implement? This is a problem we decided to address in <strong>PostSharp 4.0</strong> with the Recordable pattern.
+</p><p><em>This article is part of a series of 5 about undo/redo:</em></p><ol><li><em><strong>Announcement and introduction</strong></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-2">Getting started – tutorial</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-3">Logical operations, scopes, naming</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-4">Recorders, recorder providers, callbacks</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/VisualDesigner-or-how-to-build-your-own-domain-specific-PowerPoint">Case study: Visual Designer</a></em></li></ol>
+<p>
+    <em>
+        NOTE: This blog post is about an available pre-release of PostSharp. You can install PostSharp 4.0 only using NuGet by enabling the “Include
+        pre-release” option. Undo/Redo is implemented in the package PostSharp.Patterns.Model.
+    </em>
+</p>
+<h1>
+    Recordable Pattern
+</h1>
+<p>
+There are several approaches to the undo/redo problem. The design patterns literature recommends the    <a href="http://en.wikipedia.org/wiki/Memento_pattern">Memento pattern</a>, which basically relies on a snapshotting mechanism: you take a snapshot before
+    an operation, and restore the object model to that snapshot if the operation needs to be undone. An alternative approach is to record changes to the object
+    model and to undo/redo these changes. This is the approach we chose.
+</p>
+<p>
+    The two principal parts of the Recordable pattern is the <em>[Recordable]</em> aspect, which injects into an class the ability to record changes, and the Recorder
+    class, which stores these changes and expose the undo/redo semantics.
+</p>
+<p>
+    Let’s show how this works on a simple example:
+</p>
+<pre>[Recordable]
+class TableBooking
+{
+    public string CustomerName { get; set; }
+    public DateTime StartTime { get; set; }
+    public DateTime EndTime { get; set; }
+    public int NumberOfPersons { get; set; }
+    public string TableId { get; set; }
+
+    public void Postpone(TimeSpan time)
+    {
+        this.StartTime += time;
+        this.EndTime += time;
+    }
+}
+</pre>
+<p>
+    The <em>[Recordable]</em> custom attribute causes changes in all <em>TableBooking</em> objects to be recorded. These objects can be bound directly to the UI using XAML
+    bindings or can be modified using C#.
+</p>
+<p>
+    By default, all changes are stored in a global recorder available from the <em>RecordingServices.DefaultRecorder </em>property. This property is provided for
+    convenience; there are more options to assign different recorders if you need more flexibility. We’ll cover these advanced feature in later posts or in our
+    final documentation.
+</p>
+<p>
+    As you would expect, the <em>Recorder</em> class gives you the methods <em>Undo</em> and <em>Redo</em>:
+</p>
+<pre>booking.NumberOfPersons = 2;
+booking.NumberOfPersons = 4;
+RecordingServices.DefaultRecorder.Undo();
+// At this point, booking.NumberOfPersons == 2;
+RecordingServices.DefaultRecorder.Redo();
+// At this point, booking.NumberOfPersons == 4;
+</pre>
+
+<h1>
+    How it works
+</h1>
+<p>
+    Under the cover, our implementation of the Recordable pattern records changes in all fields of the target class. When calling the Undo or Redo methods,
+    fields are simply set to their previous value. This has the effect to restore the object to their previous state. Note that you can use the <em>[NotRecorded]</em>
+    attribute to prevent a field or automatic property to be recorded.
+</p>
+<p>
+    Taking this approach naively could cause some issues with atomicity. Consider the Postpone method in the code above. This method changes two properties in
+    such a way that the total duration of the table booking is unaffected. Now suppose that the user hits the <em>Undo</em> button just after having postponed the
+    booking. We don’t want the undo operation to affect just <em>EndTime</em> but not <em>StartTime</em>. The user would expect all operations performed by the <em>Postpone</em> method
+    to be undone.
+</p>
+<p>
+    PostSharp solves this problem by introducing the concept of recording scope. By default, all public methods of an object define an atomic scope. That is,
+    all changes performed by the <em>Postpone</em> method are going to be undone atomically. This default behavior can be overridden by the <em>[RecordingScope]</em> attribute,
+    which I will cover in a future article.
+</p>
+<h1>
+    Explicit scopes
+</h1>
+<p>
+    There are situations where you will want to programmatically control the recording scope. Suppose for instance that you bind the <em>NumberOfPersons</em> property
+    to a slider control. While the user moves the slider, the value of the <em>NumberOfPersons</em> property is subsequently set to all values ranging from 1 to 10 and
+    then back to 5, as the user releases the mouse button. While the user perceives this as a single operation, it actually results in 15 operations in the
+    undo/redo list. This unpleasant experience can be improved by defining the recording scope programmatically, using the <em>OpenScope</em> method of the
+<em>    Recorder</em> class.
+</p>
+<p>
+    The following code snippet shows how to define a recording scope that matches a scope of source code.
+</p>
+<pre>using (RecordingServices.DefaultRecorder.OpenScope())
+{
+    booking.NumberOfPersons = 4;
+    booking.NumberOfPersons = 5;
+    booking.NumberOfPersons = 6;
+    booking.NumberOfPersons = 7;
+}
+
+</pre>
+
+<p>
+    To open a scope when the user starts manipulating a <em>Slider</em> and close the scope when the user stops, we would need to call <em>OpenScope</em> from the
+<em>    GotFocus</em> event and call Dispose from <em>LostFocus</em>.
+</p>
+<h1>
+    Object Graphs and Collections
+</h1>
+<p>
+    Up to now, we’ve only tracked changes to fields of an intrinsic type. But what if the fields are of more complex types, such as other objects and
+    collections? The solution is simple: all classes that need to be involved in an undo/redo operation need to be made <em>[Recordable]</em>. Of course, we would not
+    want to ask you to develop your own recordable collections. We don’t even want to have specific collection classes that implement the Recordable behavior.
+</p>
+<p>
+    Do you remember our <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-Aggregation-and-Composition-Patterns">Aggregatable pattern</a>? We
+    faced the problem of providing collections that implement the parent-child relationship. Instead of providing specific classes, we develop collections to
+    which the Aggregatable behavior can be dynamically injected. We’ve done exactly the same with Recordable. Our Recordable pattern relies on the Aggregatable
+    patterns. All children collections will be automatically made recordable.
+</p>
+
+<pre>[Recordable]
+public class Invoice
+{
+    [Child]
+    public readonly AdvisableCollection&lt;InvoiceLine&gt; Lines = new AdvisableCollection&lt;InvoiceLine&gt;();
+
+    [Child]
+    public readonly AdvisableCollection&lt;InvoiceDiscount&gt; Discounts = new AdvisableCollection&lt;InvoiceDiscount&gt;();
+
+    [Reference]
+    public Customer Customer;
+}
+
+[Recordable]
+public class InvoiceLine
+{
+    public decimal Quantity;
+
+    [Reference]
+    public Product Product;
+
+    [Parent]
+    public Invoice ParentInvoice { get; private set; }
+}
+
+
+[Recordable]
+public class Customer
+{
+    public string Name { get; set; }
+}
+
+[Recordable]
+public class InvoiceDiscount
+{
+    public decimal Percent;
+    public string Reason;
+
+    [Parent]
+    public Invoice ParentInvoice { get; private set; }
+}
+</pre>
+
+
+<h1>
+    Other features
+</h1>
+<p>
+    In this article, I just wanted to introduce the basic features of our Recordable pattern implementation. There are many more features I will describe in a
+    later post:
+</p>
+<ul>
+    <li>
+        <p>
+            Multiple recorders: You can have several recorders in your application instead of the default single global one.
+        </p>
+    </li>
+    <li>
+        <p>
+Callback methods that make your objects aware of undo/redo operations.&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; </p></li>
+    
+    <li>
+        <p>
+            Fully customizable operation naming so you can display the list of undoable operations to the user.
+        </p>
+    </li>
+    <li>
+        <p>
+            History trimming.
+        </p>
+    </li>
+</ul>
+<h1>
+    Summary
+</h1>
+<p>
+    PostSharp 3.2 makes it much easier to implement the undo/redo in your Windows or Windows Phone application. You can try it yourself today by downloading
+    the <em>PostSharp.Patterns.Model</em> pre-release package from NuGet and playing with the [Recordable] attribute and the Recorder class.
+</p>
+<p>
+    What do you think? Would you have implemented your current project differently if this feature was available? How much code would you have saved?
+</p>
+<p>
+    Happy PostSharping!
+</p>
+<p>
+    -gael
+</p><p><em>UPDATE: Change product version from PostSharp 3.2 to PostSharp 4.0.</em></p>

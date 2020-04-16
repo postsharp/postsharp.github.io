@@ -1,0 +1,65 @@
+---
+layout: post
+title: "Announcing PostSharp 6.4 RC: Support for .NET Core 3.0, .NET Standard 2.1, C# 8.0, and more"
+date: 2019-11-11 11:14:00 +01:00
+categories: []
+permalink: /post/announcing-postsharp-64-rc.html
+---
+<p>It has been just 3 weeks since we've released PostSharp 6.3 RC with build-time support for Linux and MacOs. Today we're proud to announce the availability of PostSharp 6.4 RC.</p>
+<p>Adding support for .NET Core 3.0 and C# 8.0 only 7 weeks after they have been released by Microsoft, PostSharp 6.4 shows our commitment to the new generation of .NET technologies.</p>
+<p>Additionally, PostSharp 6.4 fills a few gaps in the aspect framework, including support for field or property initializers, and better support for iterators.</p>
+<p>You can <a href="https://www.postsharp.net/downloads/postsharp-6.4">download PostSharp 6.4 from our website</a> or from the NuGet gallery (make sure to enable the pre-release option).</p>
+<h1>Support for .NET Core 3.0 and .NET Standard 2.1</h1>
+<p>PostSharp now fully supports .NET Core 3.0 (including ASP.NET Core 3.0) and .NET Standard 2.1. We've also updated our package <em>PostSharp.Patterns.Xaml</em> to make sure it works with WPF on .NET Core 3.0.</p>
+<p>That means that if you have a .NET Framework application that uses PostSharp, you can now start migrating to .NET Core.</p>
+<div id="ID0RBSection" class="collapsibleSection">
+<p><span style="text-decoration: line-through;">Note that ReadyToRun is not fully supported yet. There are a few bugs whose fixing could be destabilizing and that will be addressed in the next release (6.5).</span> We've also tested and fixed support for ReadyToRun between the RC and the release and we're glad to say it works like a charm.</p>
+</div>
+<h1>Support for C# 8.0</h1>
+<div id="ID1RBSection" class="collapsibleSection">
+<p>Several new features of C# 8.0 affected PostSharp: default interface methods, nullable reference types, async streams, and read-only struct members. We have tested and fixed PostSharp for all these features.</p>
+<p>Note that async streams are not yet idiomatically supported in PostSharp Aspect Framework, i.e. PostSharp will not be able to apply semantic advising to methods returning an async stream. PostSharp will treat them as plain methods returning an <span class="code">object</span>. The caching aspect also does not support methods returning an async stream.</p>
+</div>
+<h1>Support for field/property initializers (breaking change!)</h1>
+<div id="ID2RBSection" class="collapsibleSection">
+<p>In previous versions of PostSharp, a LocationInterceptionAspect could not properly intercept field and property initializers. That is, you could not react to the situation where the field or property was assigned on the same line as the declaration. Initializers were simply ignored.</p>
+<p>This has been fixed in PostSharp 6.4, and this is a breaking change.</p>
+<p>Initialization of <em><span class="term">static</span> </em>fields and properties is now intercepted by the LocationInterceptionAspect<span id="LST44832A03_0">. </span> OnSetValue(LocationInterceptionArgs) advice just as any other assignment:</p>
+<pre>// Intercepted by OnSetValue.
+[MyLocationInterceptionAspect]
+static int MyStaticProperty { get; set; } = 10;</pre>
+<p>However, initialization of <em><span class="term">instance</span></em> fields cannot be intercepted because LocationInterceptionAspect expects the current object to be already initialized (and the <em>this</em> reference to be usable), which is not the case until the base constructor has been called. Therefore, we defined a new advice method <span class="nolink">OnInstanceLocationInitialized<span id="LST44832A03_1">() </span> </span> that is being called as soon as the base constructor has completed.</p>
+<pre>// Handled by OnInstanceLocationInitialized.
+[MyLocationInterceptionAspect]
+int MyInstanceProperty { get; set; } = 10;</pre>
+</div>
+<p>We have also fixed the [DependencyProperty] aspect so that it now accepts initializers. Note that DependencyProperty.DefaultMetadata.DefaultValue is not affected by the initializer value (that's because the default value in metadata needs to be a constant, while the initializer value can differ for each instance).</p>
+<pre>// Metadata.DefaultValue *not* set.
+[DependencyProperty]
+public int MyDependencyProperty1 { get; set; } = 10;</pre>
+<p>If you want to define the metadata default value, you have to define a property in the custom attribute, e.g. [DependencyProperty( DefaultValue = 10 )]:</p>
+<pre>// Metadata.DefaultValue set.
+[DependencyProperty( DefaultValue = 10 )]
+public int MyDependencyProperty2 { get; set; }</pre>
+<h1>Free ordering of MethodBoundaryAspect and MethodInterceptionAspect on iterators</h1>
+<div id="ID3RBSection" class="collapsibleSection">
+<p>It is now possible to freely order an OnMethodBoundaryAspect before or after a MethodInterceptionAspect on iterator methods. That was the last limitation that applied on aspect ordering, except the one on async method when OnYield or OnResume are defined (which still make sense).</p>
+<p>Previously, on iterator methods, aspects of type OnMethodBoundaryAspect had to be ordered after any MethodInterceptionAspect. It is also possible to apply an aspect semantically to a method returning an IEnumerable even if it is not an iterator.</p>
+<p>Concretely, the following code now works, although it did not with previous versions of PostSharp:</p>
+<pre>[Cache]
+[Log]
+IEnumerable&lt;int&gt; MyEnumerator()
+{
+   yield return 1;
+   yield return 2;
+   yield return 3;
+}
+</pre>
+<p>&nbsp;</p>
+<h1>Summary</h1>
+<p>With PostSharp 6.4, we demonstrate we're now again able to support mainstream desktop technologies of Microsoft within months after their general availability. As for each version, the RC milestone means that 6.4 release branch has reached the same maturity as the previous RTM branch, and that we're now waiting for more customer feedback before uploading it to the stable release channels. It's a good time to test it against your projects and report any problem to our <a href="https://www.postsharp.net/downloads/postsharp-6.4">support forum</a>.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+<p>&nbsp;</p>
+<p>EDIT: Support for ReadyToRun was completed between the RC and the release.</p>
+</div>

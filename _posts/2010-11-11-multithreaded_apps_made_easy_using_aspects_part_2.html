@@ -1,0 +1,227 @@
+---
+layout: post
+title: "Multithreaded Apps Made Easy Using Aspects - Part 2"
+date: 2010-11-11 11:45:13 +01:00
+categories: []
+permalink: /post/multithreaded-apps-made-easy-using-aspects-part-2.html
+---
+<p><em>In the </em><a href="http://www.sharpcrafters.com/blog/post/Multithreaded-Apps-Made-Easy-Using-Aspects-Part-1.aspx" target="_blank"><em>first part</em></a><em> of this article, I’ve shown how to use aspects to force method run on a specific type of thread – background or GUI. But putting operations on threads is only one side of the equation, and arguably the easiest one. What is much more difficult, is to avoid conflicts when accessing shared resources from different threads. </em></p>  <div class="tip">To get the source code of this article, install PostSharp, and go to directory:    <br /><font size="3"><code>C:\Program Files\PostSharp 2.0\Samples\.NET Framework 3.5\CSharp\Threading</code></font>.</div>  <p>Because of this, we need to address the following issues:</p>  <ul>   <li>How do I ensure that an object is in a consistent state when a thread reads it? How can I be sure that another thread is not modifying it at that particular moment? </li>    <li>How do I avoid two threads concurrently modifying the same object and breaking its consistency? </li>    <li>How do I prevent deadlocks? </li> </ul>  <p>In object-oriented programming, it often occurs that a significant part of the object model is a shared resource. This is typically the case with model objects in a Model-View-Controller. If the controller is allowed to modify the model from different threads, proper thread synchronization is necessary.</p>  <h2>The Design Pattern</h2>  <p>The first and most important thing to do when coping with thread synchronization is to identify good design patterns – there is no alternative to good design. </p>  <p>The design pattern I chose here is based on reader-writer locks (see the class <b>ReaderWriterLockSlim</b>). These locks allow concurrent reader threads, but the writer must have exclusive access. That is, a writer must wait for other readers, or other writers, to finish before starting, and will prevent them from starting until the writer finishes. Using these locks results in minimal thread contention (i.e. threads wait only minimally for each other) and deadlocks. Alas, they also result in an extensive amount of plumbing code.</p>  <p>Our design pattern possibly associates a lock with each object instance. However, if instance-level consistency is not enough, many instances can share the same lock. This is typically the case when one object is aggregated into another one. For instance, one may want an order and its order lines to always be consistent. In that case, all instances forming together in the same order would share the same lock.</p>  <p>As part of the design pattern, we decided that all synchronized objects should implement the <b>IReaderWriterSynchronized</b> interface:</p>  <pre>public interface IReaderWriterSynchronized
+{
+    ReaderWriterLockSlim Lock { get; }
+}</pre>
+
+<p>This interface will be useful when implementing the aspects. </p>
+
+<p>Additionally, since implementing <b>IReaderWriterSynchronized</b> is still writing plumbing code, we would prefer a custom attribute to do it for us. Let’s call it <b>ReaderWriterSynchronizedAttribute</b>.</p>
+
+<p>We further define custom attributes that, when applied to methods or property accessors, determine which kind of access to the object is required: <b>ReaderAttribute</b>, <b>WriterAttribute</b> or <b>ObserverAttribute</b>. </p>
+
+<p>Any method that modifies the object, should be annotated with the <b>[Writer]</b> custom attribute. Methods that read more than one field of the object should also be annotated with the <b>[Reader]</b> custom attribute (it is useless to synchronize methods or property getters performing a single read access, because the operation is always consistent). </p>
+
+<p>Let’s set aside the observer lock for the moment. The next piece of code illustrates a synchronized class: all its public members are guaranteed to perform consistently in a multithreaded environment.</p>
+
+<pre>[ReaderWriterSynchronized]
+public class Person 
+{
+  public string FirstName { get; [Writer] set; }
+
+  public string LastName { get; [Writer] set; }
+
+  public string FullName
+  {
+      [Reader]
+      get { return this.FirstName + &quot; &quot; + this.LastName; }
+  }
+}</pre>
+
+<h2>Observer Locks</h2>
+
+<p>In an MVC design, the view is bound to model objects. Model objects expose events that are raised when they are updated (typically the <b>PropertyChanged</b> event of the <b>INotifyPropertyChanged</b> interface). The view (for instance, a data-bound WPF control) subscribes to this event. </p>
+
+<p>In certain cases, it is crucial that the object does not get modified between the time the event is fired and the time it is processed by the view. One example is with observable collections in WPF (<b>INotifyCollectionChanged</b> interface). Since the <b>NotifyCollectionChangedEventArgs</b> object contains item indices, it is essential that these indices still refer to the same items when the event is processed.</p>
+
+<p>So at first sight, it seems that we need to invoke events inside the writer lock, doesn’t it? Wrong; this would cause a deadlock. Indeed, remember that the view is bound to the GUI thread. Therefore, the <b>PropertyChanged</b> event handler is dispatched to the GUI thread:</p>
+
+<pre>[GuiThread]
+private void person_PropertyChanged(object sender, PropertyChangedEventArgs e)
+{
+  this.label.Text = ((Person)e).FullName;
+}</pre>
+
+<p>When you bind a control to a domain object using WPF Data Binding, the thread dispatching is completed transparently.</p>
+
+<p>When evaluating the <b>FullName</b> property, the GUI thread will require a read lock on the model object. However, the object is already locked by the writer! The GUI thread would therefore be required to wait for the worker thread to release the writer lock, but the worker thread has to wait until the GUI thread finishes the processing of the <b>PropertyChanged</b> event: we clearly would have a deadlock.</p>
+
+<p>Therefore, we need a locking level that would prevent any other writer, but would allow concurrent readers. </p>
+
+<p>This needed lock is called an upgradable reader lock: a reader lock that can be upgraded to a writer lock, then downgraded back to a reader lock. Upgradable readers allow concurrent readers, but forbid concurrent writers or upgradable readers. This is exactly what we need.</p>
+
+<p>Instead of acquiring a writer lock, <b>WriterAttribute </b>will always acquire an upgradeable read lock and upgrade it to a write lock. As a result, it will be possible to downgrade it into an <b>ObserverAttribute</b>,</p>
+
+<p>The following listing demonstrates how the <b>Person</b> class can be made observable, while ensuring multi-thread safety and avoiding deadlocks:</p>
+
+<pre>[ReaderWriterSynchronized]
+public class Person : INotifyPropertyChanged
+{
+  private string firstName;
+  private string lastName;
+
+  public string FirstName
+  {
+      get { return this.firstName; }
+
+      [Writer]
+      set
+      {
+          this.firstName = value;
+          this.OnPropertyChanged(&quot;FirstName&quot;);
+      }
+
+  }
+
+  public string LastName
+  {
+      get { return this.lastName; } 
+
+      [Writer]
+      set
+      {
+          this.lastName = value;
+          this.OnPropertyChanged(&quot;LastName&quot;);
+      }
+  }
+
+  public string FullName
+  {
+      [Reader]
+      get { return this.firstName + &quot; &quot; + this.lastName; }
+  }
+
+
+  [Observer]
+  protected virtual void OnPropertyChanged(string propertyName)
+  {
+      if (this.PropertyChanged != null)
+          this.PropertyChanged(this, 
+      new PropertyChangedEventArgs(propertyName));
+  }
+
+  public event PropertyChangedEventHandler PropertyChanged;
+}</pre>
+
+<div class="tip">You can also implement the interface INotifyPropertyChanged using PostSharp. This article is just about multithreading, so we won’t cover it. </div>
+
+<h2>Check List</h2>
+
+<h2></h2>
+
+<p>We are now complete with our design pattern and need to distribute the following instructions to our team:</p>
+
+<ul>
+  <li>During analysis, identify which groups of objects should share locks. Most of the time, objects sharing the same lock form a tree. </li>
+
+  <li>Annotate synchronized objects with the <b>[ReaderWriterSynchronized]</b> custom attribute, or implement the <b>IReaderWriterSynchronized</b> interface manually. </li>
+
+  <li>Annotate with the <b>[Reader]</b> custom attribute all public read-only methods that perform more than one read operation. </li>
+
+  <li>Annotate with the <b>[Writer]</b> custom attribute all public methods modifying the object. </li>
+
+  <li>Implement events according to the standard design guidelines, but annotate the event-handling method (for instance <b>OnPropertyChanged</b>) with the <b>[Observer]</b> custom attribute. </li>
+</ul>
+
+<p>Now, let’s look at the implementation of these custom attributes.</p>
+
+<h4>Implementing the ReaderWriterSynchronizedAttribute</h4>
+
+<p>This aspect must introduce a new interface into the target type and implement this interface. This can be realized easily by deriving the <b>IntroduceInterface</b> advice (an <em>advice</em>, in AOP jargon, is any code transformation).</p>
+
+<pre>[Serializable]
+[IntroduceInterface(typeof(IReaderWriterSynchronized))]
+public class ReaderWriterSynchronizedAttribute : InstanceLevelAspect, IReaderWriterSynchronized
+{
+  public override void RuntimeInitializeInstance(AspectArgs args)
+  {
+    base.RuntimeInitializeInstance( args );
+    this.Lock = new ReaderWriterLockSlim();
+  }
+
+  [IntroduceMember]
+  public ReaderWriterLockSlim Lock { get; private set; }
+}</pre>
+
+<p>Because we derive our class from <strong>InstanceLevelAspect</strong>, our aspect will have the same lifetime as the instances of the classes to which it applies. In other words, we’ll have one instance of our aspect per instance of the target class. So fields of our aspects are actually “equivalent” to fields of the target class. The <strong>RuntimeInitializeInstance</strong> method is invoked from the constructor of the target classes; this is where we have to create the instance of the lock object. The <strong>IntroduceMember</strong> custom attribute instructs PostSharp to add the <strong>Lock</strong> property to the target class. The <strong>IntroduceInterface</strong> custom attribute does the same with the interface.</p>
+
+<h2>Implementing ReaderAttribute, WriterAttribute and ObserverAttribute</h2>
+
+<p>Before implementing an aspect, it’s good to ask oneself: how would we do it <i>without</i> aspects? What would the expanded code look like? To answer these questions, we would first have to determine if we already hold the lock and, if not, acquire it. We would have to enclose the whole method body in a <b>try</b> block and release the lock, if it was acquired, in the <b>finally</b> block. So our methods would look like this:</p>
+
+<pre>void MyMethod()
+{
+    bool acquire = !(this.myLock.IsWriteLockHeld || 
+                     this.myLock.IsReadLockHeld ||
+                     this.myLock.IsWriteLockHeld);
+
+    if ( acquire )
+        this.myLock.EnterReadLock();
+
+    try
+    {
+        // Original method body.
+    }
+    finally
+    {
+        if ( acquire )
+            this.myLock.ExitReadLock();
+    }
+}</pre>
+
+<p>PostSharp provides an appropriate kind of aspect for this transformation: <b>OnMethodBoundaryAspect</b>. It wraps the original method body inside a <b>try…catch…finally</b> block and gives us the opportunity to execute code before the method, upon successful execution, upon exception, and in the <b>finally</b> block. This is exactly what we need.</p>
+
+<p>The following is the code for the Reader attribute. Note that the Writer and Observer attributes are similar.</p>
+
+<pre>[Serializable]
+[MulticastAttributeUsage(MulticastTargets.Method, 
+                        TargetMemberAttributes = MulticastAttributes.Instance)]
+public class ReadLockAttribute : OnMethodBoundaryAspect
+{
+  public override void OnEntry(MethodExecutionArgs args)
+  {
+    ReaderWriterLockSlim @lock = ((IReaderWriterSynchronized) args.Instance).Lock;
+
+    if (!@lock.IsReadLockHeld &amp;&amp; 
+        !@lock.IsUpgradeableReadLockHeld &amp;&amp;
+        !@lock.IsWriteLockHeld)
+    {
+        args.MethodExecutionTag = true;
+        @lock.EnterReadLock();
+    }
+    else
+    {
+        args.MethodExecutionTag = false;
+    }
+  }
+
+  public override void OnExit(MethodExecutionArgs args)
+  {
+    if ((bool) args.MethodExecutionTag)
+    {
+      ((IReaderWriterSynchronized) args.Instance).Lock.ExitReadLock();
+    }
+  }
+}</pre>
+
+<p>In the preceding code, we implemented two handlers: <b>OnEntry</b> and <b>OnExit</b>. In order to obtain access to the <b>ReaderWriterLockSlim</b> object, we need to cast the target instance (available on the <b>args.Instance</b> property) to the <b>IReaderWriterSynchronized</b> interface and retrieve the <b>Lock</b> property. </p>
+
+<p>The <b>OnEntry </b>method needs to store the information somewhere, whether the lock was acquired by us or not. Indeed, this information will be required by the <b>OnExit</b> method. For this purpose, we can use the <b>args.MethodExecutionTag</b> property. Whatever a handler stores in this property will be available to the other handlers.</p>
+
+<p>Note the presence of the <b>MulticastAttributeUsage</b> custom attribute on the top of our class. It means that the aspect is to be used on instance methods only, so it is not to be used on constructors or on static methods.</p>
+
+<h2>Conclusions</h2>
+
+<p>Multithreaded programming can be simplified by adequately raising the level of abstraction. But why should every programmer care about synchronization primitives? In an ideal world, it should be enough if he or she annotates methods with a custom attribute determining the thread affinity or the locking level required by the method.</p>
+
+<p>This is what we have demonstrated in this article by using six aspects: <b>OnWorkerThread</b> and <b>OnGuiThread</b> for thread affinity, and <b>ReaderWriterSynchronized</b>, <b>Reader</b>, <b>Writer</b> and <b>Observer</b> for the locking level.</p>
+
+<p>However, multithreading is just one possible field of application of aspect-oriented programming. Caching, transaction management, exception handling, performance monitoring, and data validation are other concerns where aspect-oriented programming can advantageously be applied.</p>
+
+<p>By providing a new way to encapsulate complexity, aspect-oriented programming results in shorter, simpler and more readable code, therefore being less expensive to write and maintain.</p>

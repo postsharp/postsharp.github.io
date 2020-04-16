@@ -1,0 +1,26 @@
+---
+layout: post
+title: "Announcing PostSharp 6.0 RC"
+date: 2018-06-11 10:55:00 +02:00
+categories: []
+permalink: /post/announcing-postsharp-60-rc.html
+---
+<p>Hot from the oven! Today we&rsquo;re thrilled to announce that PostSharp 6.0 RC (previously numbered 5.1) is finally out after months and months of preparation and baking. PostSharp 6.0 is available for download from <a href="https://www.postsharp.net/downloads/postsharp-6.0">our website</a> and from NuGet Gallery (remember to enable pre-releases).</p>
+<p>PostSharp 6.0 is the biggest refactoring since the 2.0 version released in July 2010. For a good cause: PostSharp 6.0 now runs natively in .NET Core 2.0. Previous versions of PostSharp executed only under .NET Framework at build time and the support for .NET Core was achieved by using a load of hacks that ended up being unmaintainable, warranting this big refactoring.</p>
+<p>Let&rsquo;s have a look at the <a href="http://doc.postsharp.net/6.0/whats-new-60"> new features of PostSharp 6.0 </a> :</p>
+<ul>
+<li>Support for .NET Core 2.0-2.1 and .NET Standard 2.0.</li>
+<li>Support for Portable PDB.</li>
+<li>Support for C# 7.2.</li>
+<li>Ending the PostSharp versioning hell side-by-side: backward compatibility within the same major version.</li>
+<li>Logging: robustness to faults in the logging subsystem.</li>
+<li>Logging: no need to initialize before the first logged method is hit.</li>
+<li>Caching: preventing concurrent execution (locking).</li>
+<li>Visual Studio tooling: support for the new CPS-based project systems.</li>
+<li>GDPR compliance: we no longer collect your name and email for trial, nor use unsecure HTTP, nor use non-resettable user id hashes.</li>
+</ul>
+<p>For a detailed description of all new features, see <a href="http://doc.postsharp.net/6.0/whats-new-60"> What&rsquo;s New in PostSharp 6.0 </a> in the reference documentation.</p>
+<p>Additionally, we have updated our <a href="https://www.postsharp.net/support/policies"> Support and Lifecycle Policies </a> to put them in line with the modern Microsoft policies. We also updated our list of <a href="http://doc.postsharp.net/6.0/requirements">Supported Platforms</a> and removed support for Visual Studio 2012 and old operating systems.</p>
+<p>As the RC maturity level means all known bugs have been fixed, it&rsquo;s a good time for you to try to update your projects to PostSharp 6.0, commit the changes in a separate branch, and report any issue you may encounter.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

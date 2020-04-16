@@ -1,0 +1,20 @@
+---
+layout: post
+title: "Phased Execution"
+date: 2006-11-26 11:57:00 +01:00
+categories: [General]
+permalink: /post/phased-execution.html
+---
+There is a lot of new things to tell today. To make it simpler I will make a post for each of them. Let me start with the first: phased execution.
+
+You probably know that PostSharp projects are composed of tasks. Indexing types is a task, weaving is a task, and even compiling back the code is a task. What you maybe don't know if that tasks are grouped in phase. PostSharp defines four standard phases: load, analyze, transform and generate.
+
+When you execute a <span style="font-style: italic;">single</span> project, i.e. when you transform a <span style="font-style: italic;">single</span> module, the situation is trivial: we execute one phase after the other.
+
+However, when you transform <span style="font-style: italic;">multiple </span>modules in a single invocation of PostSharp, then you have the question: should I analyse all module, then transform them all, then compile them all, or should I process one module completely, then go to the next one.
+
+You have now the choice. PostSharp can do <span style="font-style: italic;">both</span>: the <span style="font-style: italic;">phases</span> and the <span style="font-style: italic;">sequential</span> execution.
+
+I have defined a new property <span style="font-weight: bold;">ProjectExecutionOrder</span> on the <span style="font-weight: bold;">PostSharpObjectSettings</span> object so you can choose. If you host PostSharp yourself, of course! If you don't, anyway, each invocation of PostSharp processes only one module and this discussion is useless.
+
+But if you do host PostSharp, you have the possibility to execute custom code <span style="font-style: italic;">between</span> phases. If you really need this (and think twice if it cannot be implemented as a normal task), look at the events <span style="font-weight: bold;">PhaseExecuting</span> and <span style="font-weight: bold;">PhaseExecuted</span> of the <span style="font-weight: bold;">PostSharpObject</span> event. How would you get a chance to register your own event handlers? Good question, you have to implement a <span style="font-style: italic;">local host</span>. I explain it in my next post.

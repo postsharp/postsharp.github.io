@@ -1,0 +1,165 @@
+---
+layout: post
+title: "5 Ways That Postsharp Can SOLIDify Your Code: Caching"
+date: 2011-02-16 14:25:00 +01:00
+categories: [Tutorial]
+permalink: /post/solid-caching.html
+---
+<p><em>Source code used in these blog posts is <a href="https://github.com/mgroves/PostSharp5">available on GitHub</a></em></p>  <p>Sometimes there's just no way to speed up an operation. Maybe it's dependent on a service that's on some external web server, or maybe it's a very processor intensive operation, or maybe it's fast by itself, but a bunch of concurrent requests would suck up all your resources. There are lots of reasons to use caching. PostSharp itself doesn't provide a caching framework for you (again, PostSharp isn't reinventing the wheel, it's just making it easier to use), but it does provide you with a way to (surprise) reduce boilerplate code, stop repeating yourself, and separate concerns into their own classes.</p>  <p>Suppose I run a car dealership, and I need to see how much my cars are worth. I'll use an application that looks up the blue book value given a make &amp; model, and year. However, the blue book value (for the purposes of this demonstration) changes often, so I decide to use a web service to look up the blue book value. But, the web service is slow, and I have a lot of cars on the lot and being traded in all the time. Since I can't make the web service any faster, let's cache the data that it returns, so I can reduce the number of web service calls.</p>  <p>Since a main feature of PostSharp is intercepting a method before it is actually invoked, it should be clear that we'd start by writing a MethodInterceptionAspect:</p>  <pre>[Serializable]
+public class CacheAttribute : MethodInterceptionAspect
+{
+	[NonSerialized]
+	private static readonly ICache _cache;
+	private string _methodName;
+
+	static CacheAttribute()
+	{
+		if(!PostSharpEnvironment.IsPostSharpRunning)
+		{
+			// one minute cache
+			_cache = new StaticMemoryCache(new TimeSpan(0, 1, 0));
+			// use an IoC container/service locator here in practice
+		}
+	}
+
+	public override void CompileTimeInitialize(MethodBase method, AspectInfo aspectInfo)
+	{
+		_methodName = method.Name;
+	}
+
+	public override void OnInvoke(MethodInterceptionArgs args)
+	{
+		var key = BuildCacheKey(args.Arguments);
+		if (_cache[key] != null)
+		{
+			args.ReturnValue = _cache[key];
+		}
+		else
+		{
+			var returnVal = args.Invoke(args.Arguments);
+			args.ReturnValue = returnVal;
+			_cache[key] = returnVal;
+		}
+	}
+
+	private string BuildCacheKey(Arguments arguments)
+	{
+		var sb = new StringBuilder();
+		sb.Append(_methodName);
+		foreach (var argument in arguments.ToArray())
+		{
+			sb.Append(argument == null ? &quot;_&quot; : argument.ToString());
+		}
+		return sb.ToString();
+	}
+}</pre>
+
+<p>I store the method name at compile time, and I initialize the cache service at runtime. As a cache key, I'm just appending the method name with all the arguments (see: BuildCacheKey method), so it will be unique for each method and each set of parameters. OnInvoke I check to see if there's already a value in the cache, and use that value if there is. Otherwise, I just Invoke the method as normal (you could also use &quot;Proceed&quot; if you prefer) and cache the value for the next time.</p>
+
+<p>In my sample CarDealership app, I have a service method called GetCarValue that is meant to simulate a call to a web service to get car value information. It has a random component so that it returns a different value every time it's called (only where there is a cache miss in this example).</p>
+
+<pre>[Cache]
+public decimal GetCarValue(int year, CarMakeAndModel carType)
+{
+	// simulate web service time
+	Thread.Sleep(_msToSleep);
+
+	int yearsOld = Math.Abs(DateTime.Now.Year - year);
+	int randomAmount = (new Random()).Next(0, 1000);
+	int calculatedValue = baselineValue - (yearDiscount*yearsOld) + randomAmount;
+	return calculatedValue;
+}</pre>
+
+<p>A few notes about this aspect:</p>
+
+<ul>
+  <li>I could have also used OnMethodBoundaryAspect instead of MethodInterceptionAspect--either approach is fine. In this case, using MethodInterceptionAspect was the simpler choice to meet the requirements, so that's why I chose it. </li>
+
+  <li>Note that the ICache dependency is being loaded in the static constructor. There's no sense loading this dependency when PostSharp is running, so that's why that check is in place. You could also load that dependency in RuntimeInitialize. </li>
+
+  <li>This aspect doesn't take into account possible 'out' or 'ref' parameters that might need cached. It's possible to do, of course, but generally I believe that 'out' and 'ref' parameters shouldn't be used much at all (if ever), and if you believe the same then it's a waste of time to write out/ref caching into your aspect. If you really want to do it, leave a comment below, but chances are that I'll put the screws to you about using out/ref in the first place :) </li>
+</ul>
+
+<h2>Build-Time Validation</h2>
+
+<p>There are times when caching is not a good idea. For instance, if a method returns a Stream, IEnumerable, IQueryable, etc, these values should usually not be cached. The way to enforce this is to override the CompileTimeValidate method like so:</p>
+
+<pre>public override bool CompileTimeValidate(MethodBase method)
+{
+	var methodInfo = method as MethodInfo;
+	if(methodInfo != null)
+	{
+		var returnType = methodInfo.ReturnType;
+		if(IsDisallowedCacheReturnType(returnType))
+		{
+			Message.Write(SeverityType.Error, &quot;998&quot;,
+			  &quot;Methods with return type {0} cannot be cached in {1}.{2}&quot;,
+			  returnType.Name, _className, _methodName);
+			return false;
+		}
+	}
+	return true;
+}
+
+private static readonly IList DisallowedTypes = new List
+			  {
+				  typeof (Stream),
+				  typeof (IEnumerable),
+				  typeof (IQueryable)
+			  };
+private static bool IsDisallowedCacheReturnType(Type returnType)
+{
+	return DisallowedTypes.Any(t =&gt; t.IsAssignableFrom(returnType));
+}</pre>
+
+<p>So if any developer tries to put caching on a method that definitely shouldn't be cached, it will result in a build error. And note that by using IsAssignableFrom, you also cover cases like FileStream, IEnumerable&lt;T&gt;, etc.</p>
+
+<h2>Multithreading</h2>
+
+<p>Okay, so we've got super-easy caching that we can add to any method that needs it. However, did you spot a potential problem with this cache aspect? In a multi-threaded app (such as a web site), a cache is great because after the &quot;first&quot; user pays the cache &quot;toll&quot;, every subsequent user will reap the cache's speed benefits. But what if two users request the same information concurrently? In the cache aspect above, it might be possible that <em>both</em> users pay the cache toll, and neither reap the benefits. For a car dealership app, this isn't very likely, but suppose you have a web application with potentially hundreds or thousands (or more!) users who request the same data at the same time. If they all put their requests in between the time it takes to check for a cache hit and the time it takes to actually fetch the value, hundreds of users could incur the &quot;toll&quot; needlessly.</p>
+
+<p>A simple solution to this concurrency problem would just be to &quot;lock&quot; the cache every time it's used. However, locking can be an expensive, slow process. It would be better if we check if there's a cache miss <em>first</em>, and <em>then</em> lock. But in between the checking and locking, there's still an opportunity for another thread to sneak in there and put a value in cache. So, once inside the lock, you should double-check to make sure the cache is still not returning anything. This optimization pattern is called &quot;<a href="http://en.wikipedia.org/wiki/Double-checked_locking">double-checked locking</a>&quot;. Here's the updated aspect using double-checked locking:</p>
+
+<pre>[Serializable]
+public class CacheAttribute : MethodInterceptionAspect
+{
+	[NonSerialized] private object syncRoot;
+
+	public override void RuntimeInitialize(MethodBase method)
+	{
+		syncRoot = new object();
+	}
+
+	public override void OnInvoke(MethodInterceptionArgs args)
+	{
+		var key = BuildCacheKey(args.Arguments);
+		if (_cache[key] != null)
+		{
+			args.ReturnValue = _cache[key];
+		}
+		else
+		{
+			lock (syncRoot)
+			{
+				if (_cache[key] == null)
+				{
+					var returnVal = args.Invoke(args.Arguments);
+					args.ReturnValue = returnVal;
+					_cache[key] = returnVal;
+				}
+				else
+				{
+					args.ReturnValue = _cache[key];
+				}
+			}
+		}
+	}
+}</pre>
+
+<p>It's a little repetitive, but in this case, the repetition is a good trade-off for performance in a highly-concurrent environment. Instead of locking the cache, I'm locking a private object that's specific to the method that the aspect is being applied to. All of this keeps the locking to a minimum, while maximizing the usage of the cache. Note that there's nothing magical about the name &quot;syncRoot&quot;; it's simply a common convention, and you can use whatever name you'd like.</p>
+
+<p>So, confused yet? Concurrency problems and race conditions <em>are</em> confusing, but in many apps they are a reality. Armed with this PostSharp aspect, you don't have to worry about junior developers or new team members or the guy with 30 years COBOL experience using C# for the first time introducing hard-to-debug race conditions when they use the cache. In fact, all they really need to know is how to decorate methods with the &quot;Cache&quot; aspect when caching is appropriate. They don't need to know what cache technology is being used. They don't need to worry about making the method thread-safe. They can focus on making a method do one thing, making it do one thing only, and making it do one thing well.</p>
+
+<p><img alt="" src="/assets/2011-02-16-solid_caching/mgroves.jpg" /></p>
+
+<p><em>Matthew D. Groves is a software development engineer with <a href="http://telligent.com">Telligent</a>, and blogs at <a href="http://mgroves.com">mgroves.com</a>.</em></p>

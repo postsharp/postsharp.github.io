@@ -1,0 +1,41 @@
+---
+layout: post
+title: "Experimental Support for Mono in PostSharp 1.1"
+date: 2007-10-07 19:14:00 +02:00
+categories: [General]
+permalink: /post/experimental-support-for-mono-in-postsharp-1-1.html
+---
+<span xmlns="">
+<p>If you use Mono to run your .NET applications on other platforms, this is likely to interest you: PostSharp 1.1 will include experimental support for Mono. You can already download a first snapshot today!
+</p>
+<p>It has been a hard week of work but now the first bits are working: PostSharp now runs on Mono!
+</p>
+<p>Look at PostSharp Explorer, a Reflector-like sample based on PostSharp, running in openSuse 10.2:
+</p>
+<p>
+</p>
+<p>A new NAnt task has been developed, since XBuild is still not yet sufficiently functional.
+</p>
+<p>You can download Mono-enabled PostSharp from our <a href="http://download.postsharp.org/builds/1.1"><span style="TEXT-DECORATION: underline;color:blue;" >daily builds</span></a> section! Download the source package, unzip it, go to the directory <em>Core/PostSharp.NAntTasks</em> and type <em>nant</em>, and you can start!
+</p>
+<p>Gentlemen, porting such an application to Mono is a real pain, and there is still a lot of work to fix issues, so I would appreciate your feedback on this question: Does it worth the effort? Does anyone use Mono and would use PostSharp together? I have no other mean than your feedback to evaluate the user base of PostSharp under Mono.
+</p>
+<p>Here are the limitations you should be aware of:
+</p>
+<ul>
+<li>In order to use PostSharp under Mono, you should compile it for Mono (using nant, not msbuild). Do not try to use Windows binaries under Mono! Conversely, using Mono binaries under Windows should work, but you will have a degraded experience.
+</li>
+<li>There is no support for debugging symbols.
+</li>
+<li>Binding with <em>System.Reflection</em> has some problems as far as generics are concerned, probably due to subtle differences between Mono and .NET.
+</li>
+<li>If you post-compile an assembly under Windows using Laos, it will maybe not work under Mono, and conversely (because of differing implementation of <em>MethodBase.ToString</em>, on which PostSharp currently relies).
+</li>
+<li>There seems to be problems in the Mono runtime with some instructions like <em>ldtoken</em> with generics.
+</li></ul>
+<p>So it you don't mix generics with PostSharp, it should work correctly. For generics, I will try to find some cooperation from Novell guys to diagnose and fix the bugs.
+</p>
+<p>Note that I suppose PostSharp will not read assemblies on big-endian machines, which would not a bug or 'feature' of Mono but one of PostSharp :-).
+</p>
+<p>Enjoy!
+</p></span>

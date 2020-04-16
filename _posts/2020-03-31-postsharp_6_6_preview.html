@@ -1,0 +1,58 @@
+---
+layout: post
+title: "PostSharp 6.6 Preview: Build low-level add-ins with PostSharp SDK – for free"
+date: 2020-03-31 15:13:00 +02:00
+categories: [Announcement]
+permalink: /post/postsharp-6-6-preview.html
+---
+<p>Starting from PostSharp 6.6, we&rsquo;re giving our users the keys to a secret chamber that we&rsquo;ve previously kept for ourselves: the realm of low-level MSIL development using PostSharp SDK, the layer on which high-level components such as PostSharp Aspect Framework are built.</p>
+<p>Best of all: this is going to be free. We are launching a new edition called PostSharp Community that will surpass the old PostSharp Essentials in terms of free features. Not only will it give you access to the lowest layers of PostSharp SDK for free, but also to OnMethodBoundaryAspect, MethodInterceptionAspect and NotifyPropertyChanged for simple cases &ndash; and to Contracts.</p>
+<h2>Our commercial approach: high quality &amp; high abstraction</h2>
+<p>Since PostSharp 2.0, our mission has been focused on two points: high quality, and aspect-oriented programming.</p>
+<ul>
+<li>Our emphasis on high quality meant that we spent much effort on engineering (at the risk of over-engineering, sometimes), testing, backward compatibility, robustness, documentation, or continuous delivery. High quality came at a high cost and lower agility. High quality is a win-win: customers are more productive (our ultimate mission), and we can spend less time on support. The proof: we&rsquo;ve always been able to keep our support time under 20 hours a week in average to support thousands of customers.</li>
+</ul>
+<ul>
+<li>Our second mission, aspect-oriented programming, meant that we only required our users to have a standard knowledge of .NET. We designed our APIs in such a way that a developer would write correct code &ldquo;by default&rdquo; even without reading the documentation. We used abstractions that were similar to the ones most .NET developers were already exposed to, and we considered it our job to bridge the abstraction gap between human thought and MSIL. Since our ultimate vocation is to bridge the gap between human thought and C#, we found it counter-productive to cause even lower-level thinking. In a nutshell, PostSharp was not designed for hackers.</li>
+</ul>
+<p>This strategy has been tremendously positive in the last years. Startups and corporates relied on PostSharp to reduce boilerplate, compress development costs and improve long-term maintainability. But it had a cost, too, and we had to reflect this cost in our price list.</p>
+<h2>Our community approach: lower friction &amp; low abstraction</h2>
+<p>On the other side, the success of some open-source projects showed that there was a need in the community for a free and low-abstraction solution even at the cost of a lower level of support, testing, and documentation. With PostSharp 6.6, we would like to address this need by opening a community initiative to build add-ins based on PostSharp SDK, our platform for MSIL manipulation.</p>
+<p>These community add-ins will be developed on GitHub under a MIT open-source license. They will not be subject to our commercial standards of quality and standard processes, therefore they will also cause less friction. The downside of this strategy is that we expect their quality to be lower than that of PostSharp itself, and therefore we will not provide commercial support for the community add-ins.</p>
+<p>To make sure these add-ins are available for free for the community, we are providing free access to the lowest layers of PostSharp SDK. Access to this platform is provided AS IS, without support (even to commercial customers), and with a much lower documentation standard than our commercial products. That said, PostSharp has been publicly available since 2005, and PostSharp SDK is exactly the platform we&rsquo;re relying on for the upper layers of our product, so we trust its reliability is very high.</p>
+<h2>PostSharp community add-ins</h2>
+<p>We have been already working on a couple add-ins. We&rsquo;ve borrowed them from three sources:</p>
+<ul>
+<li>adding our own add-ins, written from scratch;</li>
+<li>releasing existing but internal works;</li>
+<li>porting open-source add-ins developed for other MSIL stacks such as Fody.</li>
+</ul>
+<p>You can find the work in progress at <a href="https://github.com/postsharp">https://github.com/postsharp</a>:</p>
+<ul>
+<li><a href="https://github.com/postsharp/PostSharp.Community.UnsafeMemoryChecker">PostSharp.Community.UnsafeMemoryChecker</a>: prevents memory corruption due to unsafe memory access.</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.DeepSerializable">PostSharp.Community.DeepSerializable</a>: applies the [Serializable] attribute recursively to a whole type closure.</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.Virtuosity">PostSharp.Community.Virtuosity</a>: makes all methods virtual. Ported from Fody.</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.StructuralEquality">PostSharp.Community.StructuralEquality</a>: implements equality. Ported from Fody.</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.Packer">PostSharp.Community.Packer</a>: packs dependent assemblies into a single executable. Ported from Fody (Costura).</li>
+</ul>
+<h2>What else is free in PostSharp Community?</h2>
+<p>Let&rsquo;s face it, there were open-source alternatives for a few of the most basic but most useful features of PostSharp. We found it redundant to port these add-ins to PostSharp SDK where they&rsquo;re already supported with top quality and documentation, so we included the following features for free in PostSharp Community:</p>
+<ul>
+<li><a href="https://doc.postsharp.net/method-decorator">OnMethodBoundaryAspect</a> (decorators) and <a href="https://doc.postsharp.net/method-interception">MethodInterceptionAspect</a> (interceptors): limited to non-async methods (or non-semantic advising of async methods). Full support of async method remains a premium feature.</li>
+<li><a href="https://doc.postsharp.net/inotifypropertychanged">NotifyPropertyChanged</a>: limited to auto-implemented properties. Support for explicit properties remains a premium feature.</li>
+<li><a href="https://doc.postsharp.net/contracts">Contracts</a>: unlimited.</li>
+</ul>
+<p>Our objective is to make PostSharp your one-stop solution for assembly transformation. Since there are often incompatibilities between IL weavers, it&rsquo;s better if you can have just one. And we want it to be PostSharp. You can use the free features forever, or you can upgrade to a commercial edition.</p>
+<p>Additionally, with PostSharp Community you can use all premium features of PostSharp, but only on a limited project size. We&rsquo;ll blog later about this possibility.</p>
+<h2>How to create a PostSharp add-in?</h2>
+<p>The best way to get started is to look at <a href="https://github.com/postsharp/PostSharp.Community.HelloWorld">PostSharp.Community.HelloWorld</a>.</p>
+<p>Arguably, the documentation is still very basic, but you can find a few directions <a href="https://github.com/postsharp/Home/blob/master/addin.md">here</a> and in the HelloWorld readme file, and you may want to look at the PostSharp SDK class reference.</p>
+<p>If you plan to release your add-in as open-source, you&rsquo;re welcome to <a href="https://postsharp-addins.slack.com/join/shared_invite/zt-d5il7j68-LRfbUOKuP7Hn2Amzb_nnDQ">join our Slack community channel</a> and ask for help. Please note we don&rsquo;t have the capacity to provide support to PostSharp SDK to all users and will focus our help on open-source contributors.</p>
+<h2>Summary</h2>
+<p>At PostSharp we&rsquo;ve always focused on high-quality, high-abstraction and well-engineered and, let&rsquo;s face it, high-priced solutions &ndash; but we&rsquo;ve neglected the users who needed low-level access to assemblies, were more sensitive to financial costs, but less demanding in terms of quality.</p>
+<p>With PostSharp 6.6, we&rsquo;re introducing PostSharp Community, a free edition of PostSharp that gives access to community add-ins, simple features of PostSharp, as well as a limited usage of premium features. We&rsquo;re also releasing 5 community add-ins under the MIT license. We&rsquo;re grateful to the Fody open-source community for the possibility to port their add-ins to our platform.</p>
+<p>Our focus on quality and engineering remains, but we&rsquo;re opening the door to low-level and low-friction development.</p>
+<p>You too can now create your own add-ins with PostSharp SDK, and choose to release them as open source, or keep them private. Your choice.</p>
+<p>&nbsp;</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

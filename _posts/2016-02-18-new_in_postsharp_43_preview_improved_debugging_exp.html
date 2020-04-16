@@ -1,0 +1,41 @@
+---
+layout: post
+title: "New in PostSharp 4.3 Preview: Improved Debugging Experience"
+date: 2016-02-18 10:25:00 +01:00
+categories: []
+permalink: /post/new-in-postsharp-43-preview-improved-debugging-experience.html
+---
+<p>One of the most frequently questions asked by people who just learned about PostSharp is how the debugging experience is affected. Our usual answer was that debugging experience was unaffected, and indeed the debugger worked as usually. On some occasions we had some bugs, which we fixed when we discovered them. But in general, it worked as expected.</p>
+<p>However, debugging experience is so critical that we wanted to improve it even more in PostSharp 4.3. That&rsquo;s why we are proud to announce three features:</p>
+<ol>
+<li>Step Into Aspects</li>
+<li>Clean Call Stack</li>
+<li>Just My Code</li>
+</ol>
+<p>Note that in the current preview, these features are only available in Visual Studio 2015. It will be backported to Visual Studio 2013 but not 2012.</p>
+<h1>Step Into Aspects</h1>
+<p>Suppose you have a method <strong>Foo</strong> and an aspect <strong>Bar</strong> applied to it. What should happen when the caret is on an instruction calling <strong>Foo </strong>and you do F11-Step-Into?</p>
+<p>With previous versions of PostSharp, you would step into the aspect <strong>Bar</strong>. If you continue stepping, you would eventually get into <strong>Foo. </strong>This is the normal way the debugger works and nobody was surprised about that. However, this is annoying in the majority of cases. Most of the time, what you actually want is to get immediately into <strong>Foo</strong>. You want to step <em>over</em> the aspect and step directly into the target method. This is exactly what we implemented.&nbsp;</p>
+<p>By default, the debugger will not skip the aspect and step only into the business logic. To debug the aspect logic, go to the menu PostSharp / Options, then to the tab Debugging, and check the <strong>Step Into Aspects</strong> option.</p>
+<p>To see this in action, look at this video:</p>
+<p>(UPDATE: the video was recorded with a preview build of PostSharp 4.3 where the feature was named Step Over Aspects)</p>
+<p><iframe src="https://player.vimeo.com/video/155799877" frameborder="0" width="500" height="375"></iframe></p>
+<p><a href="https://vimeo.com/155799877">Demo: Step Over Aspects</a> from <a href="https://vimeo.com/postsharp">PostSharp</a> on <a href="https://vimeo.com">Vimeo</a>.</p>
+<h1>Clean Call Stack</h1>
+<p>Let&rsquo;s face it: PostSharp could create ugly call stacks. If your method was intercepted by two aspects, you could easily have four additional stack frames with weird names. This reflected the reality of which MSIL code was executed, but most of the time, this was not useful.</p>
+<p>Starting with PostSharp 4.3, we will clean the call stack by default. See by yourself.</p>
+<p>&nbsp;<img src="/assets/2016-02-18-new_in_postsharp_43_preview_improved_debugging_exp/prettify.png" alt="" /></p>
+<h1>Just My Code</h1>
+<p>Finally, we realized (although the problem has never been reported by customers) that Just My Code did not play nicely with PostSharp. I intentionally put the responsibility on Just My Code here and not on PostSharp. When Just My Code is enabled, it will automatically step over any non-user-code method, even if this method invokes a user-code method. In many situations, this leads to strange behaviors. For instance, when a non-user-code <strong>Foo</strong> method invokes a delegate bound to a user-code method <strong>Bar</strong>, the method <strong>Bar</strong> will never be stepped into. The same happens with PostSharp&rsquo;s interception aspects like LocationInterceptionAspect and MethodInterceptionAspect: you just could not step into methods that had interception aspects if Just My Code was enabled.</p>
+<p>We implemented a <em>brutal</em> workaround to this, and now Just My Code just works as you would expect.</p>
+<h1>Summary</h1>
+<p>PostSharp 4.3 makes the debugging experience much better. I would really appreciate if you could try the new debugging experience. Is that working as expected? Do you still encounter some awkward experience?</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+<p>&nbsp;</p>
+<p>P.S. This post is the second in a series dedicated to the new features of PostSharp 4.3:</p>
+<ol>
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-Preview-Command-Line-Interface">Command-Line Interface</a>;</li>
+<li>Improved Debugging Experience;</li>
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-An-alternative-to-NuGet">Alternative to NuGet deployment</a>.</li>
+</ol>

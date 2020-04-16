@@ -1,0 +1,127 @@
+---
+layout: post
+title: "Introducing PostSharp 2.0: #5 - Build Performance and Packaging"
+date: 2009-10-08 13:52:03 +02:00
+categories: [General]
+permalink: /post/introducing-postsharp-2-0-5-build-performance-and-packaging.html
+---
+
+<p>Let me finally discuss some changes in product packaging; they will are 
+important for performance and reliability.</p>
+<h2>Understanding the Build Performance Issue</h2>
+<p>Many people complained about PostSharp performance and wondered if the new 
+release would bring some improvement. The short answer is: yes.</p>
+<p>The computing cost of PostSharp can be broken down into the following items:</p>
+<ol>
+<li><strong>Initialization Time</strong>. It takes time to start a CLR 
+process, load assemblies in the AppDomain, JIT-compile code, and so on. For 
+long-running applications, you usually don&#39;t see the difference (we are talking of 
+tenths of seconds), but PostSharp is a process that is typically triggered 
+every couple of seconds, so this is really important.</li>
+<li><strong>Processing Time</strong>. It&#39;s the time PostSharp takes to 
+analyze and process your code and dependencies. Here, I want to be very 
+clear: the code is extremely fast and very difficult to further optimize. PostSharp 
+is designed from ground to be fast. For instance, some say that PostSharp 
+parses the output of ILDASM. This is a myth; it is plainly false. PostSharp has a 
+super-fast binary module reader written in unsafe C# code and doing a lot of 
+pointer arithmetic (something I learned 15+ years ago on Turbo C 2.0). </li>
+<li><strong>ILASM Time</strong>. Oh, yes. PostSharp relies on ILASM. This is 
+true. There are excellent reasons for that: it was much cheaper to implement 
+than a binary writer, has decent performance on Windows, makes it easier to 
+debug code generators, and provides an extra layer verifying generated code. 
+This was an excellent choice. </li>
+</ol>
+<p>Therefore, there are 3 things we <em>could</em> do to improve build 
+performance:</p>
+<ol>
+<li>Improve initialization time. That&#39;s what we did in PostSharp 2.0. I&#39;ll 
+explain how below.</li>
+<li>Parallelize PostSharp processing. Ough. That&#39;s maybe the more difficult 
+since all threads would access the same object model concurrently.</li>
+<li>Writing an binary module writer instead of MSIL. This is doable at a 
+much lower cost than parallelizing. But even if we write a binary writer 
+some time, we will never scrap the ILASM back-end.</li>
+</ol>
+<h2>Improvement in PostSharp 2.0: Initialization Time</h2>
+<p>With PostSharp 1.5, you had to install PostSharp and generate native images 
+(ngen) to get decent initialization time. Otherwise, PostSharp was continuously 
+JIT-compiled and your build time suffered. The problem is we can&#39;t just tell people to 
+install PostSharp globally: in many teams, all build tools are checked in source 
+control. </p>
+<p>PostSharp 2.0 addresses this problem efficiently. First, it runs as a pipe 
+server. When a project needs to be built, the pipe server is started, and it is 
+stopped only after a long period of inactivity. So we don&#39;t have to continuously 
+load and unload PostSharp.</p>
+<p align="center">
+<img src="/assets/2009-10-08-introducing_postsharp_2_0_5_build_performance_and_/pipeserver.png" alt="" />
+</p>
+<p>But we only won the half of the battle. Since PostSharp loads your executable 
+code and executes it (aspects are instantiated at build time), we need to create 
+a new application domain for each assembly being processed. So anyway assemblies 
+need to be loaded and JIT-compiled over and over again, unless... unless we host 
+the CLR and tell it that PostSharp assemblies, and all GAC assemblies, are 
+domain neutral. From this moment, they are loaded only once, and compiled only 
+once. Technically, hosting CLR means writing a half a dozen of COM classes in 
+C++ and somewhat tweaking an API that has been designed on-purpose for SQL 
+Server 2005, not for PostSharp.</p>
+<p>The results: I have a test suite of 135 micro-projects I run in MSBuild 
+(that&#39;s part of the way you do unit testing of a build tool). The average execution time of PostSharp is the following (release 
+build, no ngen):</p>
+<ul>
+<li>Without Pipe Server: 1.21 s per project</li>
+<li>With Pipe Server: 0.94 s per project</li>
+<li>Difference: 0.22 s per project</li>
+</ul>
+<p>So, theoretically, you should see some significant improvement if you have a 
+lot of small projects (to give you an idea, PostSharp still takes 10x more time 
+than the compiler itself).</p>
+<p>In order to disable the Pipe Server, use the MSBuild property <em>
+PostSharpUsePipeServer=False</em>.</p>
+<h2>Multi-Platform</h2>
+<p>PostSharp 2.0 finally solves the multi-platform problem. PostSharp 1.5 worked 
+fine with platform-neutral assemblies, but you had to tweak to support x86 or 
+x64 specific platforms. This is now addressed in PostSharp 2.0. The platform is 
+detected automatically, and the proper PostSharp process is started accordingly.</p>
+<p>The same mechanism will allow a single distribution of PostSharp to target 
+both the CLR 2.0 and 4.0. Unfortunately -- and I will disappoint more than one 
+-- .NET 4.0 will not be supported in the first CTP. There are sometimes hard 
+choices to be done, and we preferred to deliver higher quality than more 
+features. Be patient! It&#39;s the next feature on the list. (I do confirm here that 
+.NET 4.0 will be supported in PostSharp 2.0 -- but not in its first CTP).</p>
+<h2>Diagnostic Mode</h2>
+<p>Another area of improvement: PostSharp 2.0 is more supportable than previous 
+versions. The installer (now a single package for both x86 and x64 platforms) 
+will contain two builds: release and diagnostic. Release is fast, but is not 
+able to trace and has no precondition checking. It&#39;s the version you use when 
+everything is right. When something goes wrong, build your project in diagnostic 
+mode: detailed logging will be available.</p>
+<p>You can use the MSBuild property PostSharpBuild=Diag, or launch the PostSharp 
+Diagnostic Console:</p>
+
+
+<p align="center">
+<img src="/assets/2009-10-08-introducing_postsharp_2_0_5_build_performance_and_/diagnosticconsole.png" alt="" />
+</p>
+
+<p>We are working close with guys of <a href="http://www.gibraltarsoftware.com/">Gibraltar Software</a> 
+to make the support experience compelling. If you can&#39;t solve your problem 
+yourself (or if you think it&#39;s a PostSharp&#39;s bug), you can send us support 
+details, which we can then open using
+<a href="http://www.gibraltarsoftware.com/See/Gibraltar101.aspx">Gibraltar 
+Analyst</a>. Actually, PostSharp integrates with Gibraltar, and
+<a href="http://www.gibraltarsoftware.com/See/PostSharp.aspx">Gibraltar 
+integrates with PostSharp</a>. I have a long due post about that on my to-do 
+list. </p>
+<h2>Summary</h2>
+<p>The way PostSharp 2.0 is started is significantly different than previously 
+and has several advantages:</p>
+<ul>
+<li>Build time improvement</li>
+<li>Reliability of the assembly search algorithm</li>
+<li>Multi-platform</li>
+<li>Diagnostic mode with comprehensive logging and support for Gibraltar.</li>
+</ul>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+
+

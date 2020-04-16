@@ -1,0 +1,56 @@
+---
+layout: post
+title: "Announcing PostSharp 1.0 RC 2"
+date: 2008-02-20 18:49:00 +01:00
+categories: [General]
+permalink: /post/announcing-postsharp-1-0-rc-2.html
+---
+<p>I am pleased to announce the long awaited second release
+candidate of PostSharp 1.0 <a href="http://www.postsharp.org/download/">available for download</a>.</p>
+<p>This is a stability release solving all bugs discovered in the
+previous release, which has been downloaded over 6 thousand times.</p>
+<p>Additionally to <a href="http://www.postsharp.org/tracker/search.php?project_id=1&amp;sticky_issues=off&amp;fixed_in_version=1.0+RC2&amp;sortby=last_updated&amp;dir=DESC&amp;hide_status_id=-2">40 bug fixes</a>, this release brings important changes in licensing and minor
+improvement in the installer and packaging.</p>
+<h3>Relicensing</h3>
+<p>With this release (and from revision 287 exactly), the whole
+PostSharp code base has been relicensed from GPL/LGPL/MPL to a GPL 3 / LGPL 3
+scheme. Don't be afraid: this relicensing actually affects only a few of you.
+<strong>Run-time components are licensed under LGPL, compile-time components
+under GPL</strong>. So it is still free to use PostSharp and PostSharp Laos in
+your applications, but if you distribute an application that uses PostSharp to
+transform assemblies (like an O-R mapper), and don't want to release your work
+as open-source, then you are kindly requested to acquire a commercial license. </p>
+<p>This licensing scheme is really directed to have
+ISV making money on PostSharp contributing to the project.
+Commercial licenses will be available to "a selected few" under
+a partnership program. </p>
+<p>Don't be afraid: I have no plan to "lock"
+end-users in GPL licenses.</p>
+<p>You will find more about licensing <a href="http://www.postsharp.org/about/license/">on the website</a>. If you
+have any question, or if you think you will need a commercial license, do not
+hesitate to contact me.</p>
+<h3>Improved Distribution Packages</h3>
+<p>A minor improvement of the MSI package is that you can now
+choose <em>not</em> to install PostSharp in the GAC. PostSharp actually does not
+need to be in GAC; I put there to benefit from NGen. If you want to disable GAC
+installation and NGeneration, choose the custom installation mode and disable
+the option.</p>
+<p>Another improvement is that I now provide a package for <em>
+xcopy</em> deployment as well as instructions describing how to insert PostSharp
+in the MSBuild process at global or project level. </p>
+<h3>What's next?</h3>
+<p>I'm sometimes asked for a roadmap with dates...
+and when I give some I suddenly get in the incapacity to respect
+them! I acknowledge it took me to long to deliver this release.
+The reason is that I had to work on another project and I had to
+invest the remaining time in the website migration, which became
+really urgent. Now that the website is up and that I will have
+some time dedicated to the project (I will blog about it soon),
+things should go more smoothly. The idea is to deliver a release
+candidate every month and to declare the 1.0 branch as stable as
+soon as the number of reported bugs become acceptable. It's
+difficult to predict how many iterations it will take, but I
+still hope to have the stable release for Q2 of this year.</p>
+<p>Happy aspecting and keep on good work reporting
+bugs!</p>
+<p>Gael</p>

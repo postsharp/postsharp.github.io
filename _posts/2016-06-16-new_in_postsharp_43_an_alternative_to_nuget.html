@@ -1,0 +1,38 @@
+---
+layout: post
+title: "New in PostSharp 4.3 Preview – An alternative to NuGet"
+date: 2016-06-16 14:57:00 +02:00
+categories: []
+permalink: /post/new-in-postsharp-43-an-alternative-to-nuget.html
+---
+<p>We at PostSharp have always been in tension between being innovative and serving big development teams with a more conservative mindset. When we decided to fully embrace NuGet in May 2013 and deprecate our other deployment methods, we truly belonged to the believers. You know, this optimism whispering to you ear that the clouds will move away just before the party starts. Today, we acknowledge that we didn’t serve our enterprise customers well by trying to force them into NuGet, and want to provide an alternative. We’re bringing back our folder-based (zip) distribution, and are integrating it better with our Visual Studio tooling.</p>
+<h2>What’s still wrong with NuGet?</h2>
+<p>Clearly, the first version of NuGet was designed to make it easier to get started with new projects on the .NET platform. Get people create a prototype with the less possible friction, so they get addicted to the platform, and are then more likely to accept its limitations. There used to be a lot of criticism in the first years regarding the use of NuGet in the long term. Many limitations have been addressed in NuGet 3. But there are still a lot of good reasons why large teams are right to reject NuGet.</p>
+<h3>1. NuGet Versioning Hell</h3>
+<p>One of the main problems of NuGet is that packages are versioned at project-level. If you have several projects, each one can reference a different version of the same package, and it can be difficult to reconcile the conflicts. The problem was exacerbated by the fact that NuGet would select the latest version of a package by default when installed into a project, regardless of the version installed in other projects in the same solution.</p>
+<p>Fortunately, the problem was partially solved with NuGet 3. You can now select versioning policies, and it became easier to consolidate versions in the same solution. That seems very reasonable, but this is still insufficient.</p>
+<p>A large customer of us has more than 200 developers on the team, more than 100 projects spread over a dozen of solutions. How can you maintain versioning in this setup? Can you imagine the pain of the build manager? For sure, he does not like NuGet. And he probably didn’t like us neither, because we forced him to use NuGet. No longer.</p>
+<h3>2. Lack of Trust in NuGet Gallery</h3>
+<p>Another frequent criticism of NuGet in large teams is that it makes it too easy for anyone to pull a dependency. Taking a dependency on a third-party component is a serious decision. Somehow, NuGet makes it too easy to do the wrong thing.</p>
+<p>It’s not really NuGet’s fault, it’s rather because of the public NuGet Gallery, which contains unverified packages. Some companies may want to block access to <em>nuget.org</em> for good reasons. For these customers, we propose the curated package source <a title="https://www.postsharp.net/nuget/packages" href="https://www.postsharp.net/nuget/packages">https://www.postsharp.net/nuget/packages</a>.</p>
+<h2>Using PostSharp without NuGet</h2>
+<p>As an alternative to NuGet, we’re re-introducing the folder-based distribution starting from PostSharp 4.3. The feature is hidden by default because we believe this is a minority use case.</p>
+<p>To install PostSharp in a solution without using NuGet:</p>
+<ol>
+<li>In Visual Studio, go to PostSharp / Options / General / NuGet and check the option <em>Always ask before using NuGet Package Manager.<br></em><img alt="" src="/assets/2016-06-16-new_in_postsharp_43_an_alternative_to_nuget/options1.png"></li>
+<li>In the Solution Explorer, right-click on the project and then on <em>Add PostSharp to project.</em></li>
+<li>In the wizard, select Install PostSharp into a new folder then select the installation folder of PostSharp.<br><img alt="" src="/assets/2016-06-16-new_in_postsharp_43_an_alternative_to_nuget/wizard2.png"></li>
+</ol>
+<p>As a result:</p>
+<ul>
+<li>PostSharp compiler tools and libraries will be copied to the folder you specified.</li>
+<li>A <em>MySolution.pssln</em> file will be created to store the location of the PostSharp folder, so that we don’t need to ask the next time you add PostSharp to a project of the same solution.</li>
+<li>The project file (csproj) is modified to reference the copy of PostSharp installed in the specified folder.</li>
+</ul>
+<h2>Updating PostSharp without NuGet</h2>
+<p>Once you are using PostSharp in a solution (or set of solutions) without NuGet, it is very easy to update it. You just have to download the zip distribution from our web site (a file named <em>PostSharp-4.3.x.zip</em>) and extract it to the installation folder. That’s all. Because the folder name does not include the version number, there is no need to go through all projects and change references. What a relief!</p>
+<h2>Summary</h2>
+<p>One size does not fit all. NuGet does not work for everybody. Now you can hate NuGet and still love PostSharp. There is no conflict. Starting from PostSharp 4.3, we give you an option to simply extract the product to a folder and reference it. No more versioning hell, no more update headache.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p><p>P.S. This post is the second in a series dedicated to the new features of PostSharp 4.3:<ol><li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-Preview-Command-Line-Interface">Command-Line Interface</a>;
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-Preview-Improved-Debugging-Experience">Improved Debugging Experience;</a><li>Alternative to NuGet deployment.</li></ol>

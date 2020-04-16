@@ -1,0 +1,37 @@
+---
+layout: post
+title: " Announcing PostSharp 6.1 RC"
+date: 2019-02-20 17:03:00 +01:00
+categories: [Announcements]
+permalink: /post/announcing-postsharp-61-rc.html
+---
+<p>I&rsquo;m happy to announce we&rsquo;ve just published PostSharp 6.1 RC, available for download on <a href="https://www.nuget.org/profiles/PostSharp">nuget.org</a> (make sure to enable pre-release packages) and on <a href="https://www.postsharp.net/downloads/postsharp-6.1">our website</a> .</p>
+<p>This release focuses on two areas: we improved the debugging experience, and we took our logging API up to the expectations of a cloud-based, AI-enabled world.</p>
+<h1>Improved Debugging Experience</h1>
+<p>PostSharp 6.1 includes a major refactoring of our add-in to the Visual Studio debugger. This add-in makes sure the debugging experience (such as pressing F10 or F11) is natural when aspects are woven into hand-written code. We&rsquo;ve been working on this feature for more than a year, and we&rsquo;re excited to finally roll it out.</p>
+<p>PostSharp 6.1 fixes most known issues in the debugging experience with a special focus on the debugging of async methods. In previous versions, debugging an aspected async method could be pretty challenging. It now behaves very smoothly.</p>
+<p>This feature was a major engineering effort and it has disappointingly little visibility. If we&rsquo;ve done our job properly, you will not notice any difference when debugging code with or without an aspect. We&rsquo;re very proud of this achievement and happy it&rsquo;s finally out.</p>
+<h1>Semantic Logging</h1>
+<p>In the past, the primary consumers of logs were human beings. Times are changing. More and more often, logs are stored in centralized and structured servers like Elasticsearch or Application Insights, and statistical processing becomes more important than human readability. And statistical processing, as you know, starts with bucketizing. You want to find the most frequent warning with its most frequent parameters. The problem is, how do you bucketize a human-readable string?</p>
+<p>Structured logging is a long step in the right direction because it makes it easier to filter on parameters, but it still based on human-readable strings, and they are still difficult to bucketize.</p>
+<p>Enter semantic logging. Contrarily to structured logs, semantic logs are not primarily designed to be read by humans. Each message has a name and a list of name-value pairs. That&rsquo;s it. Unlike structured logs, it is extremely easy to bucketize semantic logs.</p>
+<p>Semantic logging has been with .NET since 2014, although largely ignored. However, I believe that the current cloud &amp; AI trends warrant a shift of mindset, and we&rsquo;ve implemented support for that in PostSharp 6.1.</p>
+<p>For more details, see <a href="https://doc.postsharp.net/6.1/log-custom-messages#semantic"> Writing semantic messages for easy statistical processing </a> in the online documentation.</p>
+<h1>Distributed Logging</h1>
+<p>As more and more customers are moving to microservices, distributed logging is becoming increasingly important every day. How to get a consistent trace for the processing of a request whose execution spans several machines? Several practices and specifications like <a href="https://opentracing.io/">OpenTracing</a> or the <a href="https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/HttpCorrelationProtocol.md"> HTTP Correlation Protocol </a> are emerging, and logging frameworks need to evolve to support the new concepts.</p>
+<p>PostSharp 6.1 brings two improvements for distributed logging:</p>
+<ul>
+<li>Hierarchical Ids: we can generate ids that let you easily select all records of a distributed request with a wildcard query such as <em>Properties.EventId: "|2ceff3ef47.a2.*"</em>, and sort them alphabetically for logical ordering. The generated ids comply to the <a href="https://github.com/dotnet/corefx/blob/master/src/System.Diagnostics.DiagnosticSource/src/HierarchicalRequestId.md"> Hierarchical Request-Id specification </a> .</li>
+<li>You can now attach properties to custom activities and custom log messages, and mark these properties as cross-process (this implements the Tag and Baggage concepts of OpenTracing).</li>
+</ul>
+<p>For more details, see <a href="https://doc.postsharp.net/6.1/distributed-logging"> Implementing Logging for a Distributed System </a> in the online documentation.</p>
+<h1>Sampled Logging</h1>
+<p>PostSharp Logging makes it so easy to add logging to your application that you can easily end up capturing gigabytes of data every minute. As it goes, most of this data won't ever be useful, but you still need to pay for storage and bandwidth. The ability to trace an application at a high level of detail is very useful, but it is important to be able to select when you want to log. This is especially relevant in web applications.</p>
+<p>Starting from PostSharp 6.1, you can select which requests you want to log, and which ones you want to ignore.</p>
+<p>For more details, see <a href="https://doc.postsharp.net/6.1/sampled-logging"> Choosing Which Requests to Log </a> in the documentation.</p>
+<h1>Summary</h1>
+<p>In PostSharp 6.1, we focused on two areas: the debugging experience (especially async methods) and logging of distributed applications.</p>
+<p>Other improvements include support for C# 7.3, filling gaps in .NET Standard support, and a few other features you will find in <a href="https://doc.postsharp.net/6.1/whats-new-61"> What's New in PostSharp 6.1 </a> .</p>
+<p>As always at PostSharp, when we say RC, we really mean it: complete tests and documentation, API freeze, backward compatibility, and most importantly, zero known important bugs. It is ready to be tested in your projects, and you can expect an RTM in April.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

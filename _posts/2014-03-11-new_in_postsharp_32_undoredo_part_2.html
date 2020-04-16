@@ -1,0 +1,109 @@
+---
+layout: post
+title: "New in PostSharp 4.0: Undo/Redo, Part 2"
+date: 2014-03-11 13:21:00 +01:00
+categories: []
+permalink: /post/new-in-postsharp-32-undoredo-part-2.html
+---
+<p>In my <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">previous blog post</a>, I described how to make your model classes recordable, so that they can participate in the undo/redo feature. Today, I will show how you can expose the feature to your application’s user interface. There are two approaches: one is to simply include ready-made <em>UndoButton</em> or <em>RedoButton</em> controls to your XAML code. The other is to interact with the <em>Recorder</em> class in C#. Let’s see how.</p><p><em>This article is part of a series of 5 about undo/redo:</em></p><ol><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">Announcement and introduction</a></em></li><li><em><strong>Getting started – tutorial</strong></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-3">Logical operations, scopes, naming</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-4">Recorders, recorder providers, callbacks</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/VisualDesigner-or-how-to-build-your-own-domain-specific-PowerPoint">Case study: Visual Designer</a></em></li></ol><p><em>        NOTE: This blog post is about an available pre-release of PostSharp. You can install PostSharp 4.0 only using NuGet by enabling the “Include        pre-release” option. Undo/Redo is implemented in the package PostSharp.Patterns.Model. </em></p>
+<h1>Undo/Redo Fast Track</h1>
+<p>For this post, I will use a popular sample application from Visual Studio Gallery: “Easy MVVM Example”. You can create a new project based on this project yourself easily; just open the New Project dialog in Visual Studio, select the Online tab, and search for the sample named “Easy MVVM Example”.</p>
+<h2>Step 1. Install NuGet packages</h2>
+<p>Go to the NuGet package manager dialog and add the pre-release package named <em>PostSharp.Patterns.Model.Controls</em>. This will add all dependent packages. Remember to display pre-release packages and not only stable ones.</p>
+<h2>Step 2. Clean up INotifyPropertyChanged</h2>
+<p>The sample was not written for PostSharp, so it has its custom INotifyPropertyChanged (INPC) implementation. We would need to write additional code to have our undo/redo feature work with their hand-written INPC, so let’s just clean the project and replace their implementation with our own.</p>
+<p>To proceed, find the file Person.cs and replace it with the following content:</p>
+<pre>using PostSharp.Patterns.Model;
+
+namespace MvvmExample.Model
+{
+    [NotifyPropertyChanged]
+    public class Person
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public int Age { get; set; }
+    }
+}
+</pre>
+<p>This incidentally removes 75% of boilerplate code.</p>
+<h2>Step 3. Make the Person class recordable</h2>
+<p>Add the [Recordable] attribute to the Person class.</p>
+<p>The code becomes as follows:</p>
+<pre>using PostSharp.Patterns.Model;
+using PostSharp.Patterns.Recording;
+
+namespace MvvmExample.Model
+{
+    [NotifyPropertyChanged]
+    [Recordable]
+    public class Person
+    {
+        public string FirstName { get; set; }
+        public string LastName { get; set; }
+        public int Age { get; set; }
+    }
+}
+</pre>
+<h2>Step 4. Add undo/redo buttons to XAML</h2>
+<ol>
+<li>
+<p>Open the <em>MainWindow.xaml</em> file.</p>
+</li>
+<li>
+<p>Add the following namespace definition to the root &lt;Window&gt; tag:</p>
+<pre>xmlns:model="clr-namespace:PostSharp.Patterns.Model.Controls;assembly=PostSharp.Patterns.Model.Controls"   </pre>
+</li>
+<li>
+<p>Add the following controls before the closing &lt;/Window&gt; tag. </p>
+</li>
+</ol>
+<pre>&lt;model:UndoButton HorizontalAlignment="Left" Margin="22,24,0,0" VerticalAlignment="Top" /&gt;
+&lt;model:RedoButton HorizontalAlignment="Left" Margin="64,24,0,0" VerticalAlignment="Top"/&gt;
+</pre>
+<p>At this point, you can start the application and try to modify a data grid cell and try clicking the undo and redo buttons.</p>
+<p><img alt="" src="/assets/2014-03-11-new_in_postsharp_32_undoredo_part_2/recordable-mainwindow.png"></p>
+<h1>Interacting with the Recorder manually</h1>
+<p>In the previous section, we just inserted the UndoButton and RedoButton controls into our XAML code. If you want more control, you can access the Recorder class directly from C# code.</p>
+<p>In this example, we are using a global <em>Recorder</em> object. You can get a reference to this instance from the <em>RecordingServices.DefaultProvider</em> class. This class provides the following members:</p>
+<ul>
+<li>
+<p><em>UndoOperations</em> and <em>RedoOperations</em> collections: give access to operations that can be undone or redone. Operations are objects derived from the <em>Operation</em> class. This class has a <em>Name</em> property, which is the human-readable name of the operation.</p>
+</li>
+<li>
+<p><em>Clear</em> : remove all operations both from the <em>UndoOperations</em> and <em>RedoOperations</em> collection.</p>
+</li>
+<li>
+<p><em>CanUndo</em> and <em>CanRedo</em> properties: determines whether the Undo or Redo commands are available.</p>
+</li>
+<li>
+<p><em>Undo</em> and <em>Redo</em> methods: undo or redo one operation</p>
+</li>
+<li>
+<p><em>AddRestorePoint</em> method: creates a restore point, which basically is an empty operation that serves as a marker.</p>
+</li>
+<li>
+<p><em>CanAddRestorePoint</em> property: determines if the AddRestorePoint command is available</p>
+</li>
+<li>
+<p><em>UndoTo</em> and <em>RedoTo</em> methods: undo or redo all operations from the now to a given operation or restore point.</p>
+</li>
+<li>
+<p><em>MaximumOperationsCount</em> property: maximum number of operations in the <em>UndoOperations</em> collection before old operations are removed.</p>
+</li>
+</ul>
+<p>The <em>Recorder</em> class also has other methods and properties that will be explained in a later post.</p>
+<h2>Example</h2>
+<p>Let’s see how we can manually interact with the <em>Recorder </em>in practice.</p>
+<p>If you click on the arrow of the Undo button just after the application started, you will see that the operation list is already populated with nine items. These operations were created during the application initialization.</p>
+<p><img alt="" src="/assets/2014-03-11-new_in_postsharp_32_undoredo_part_2/recordable-dropdown.png"></p>
+<p>If we don’t want users to be able to undo these operations, we can clear the Recorder at initialization. Go to the ViewModelMain class and append the following instruction to the constructor:</p>
+<pre>RecordingServices.DefaultRecorder.Clear();
+</pre>
+<p>Now, when you start the demo application, you will see that the undo and redo buttons are initially disabled.</p>
+<h1>Summary</h1>
+<p>Adding the undo/redo feature to your application can be dead easy if you already have a well-structure code, with a nice separation between the UI and the model. Basically, all you need to do is to make your model recordable, then drop the undo and redo buttons to your toolbar.</p>
+<p>Of course, no real-world piece of software is so simple than a demo application, and I would not like you to believe that implementing Recordable is always so trivial. Yet, our implementation of the Recordable pattern makes it possible to customize the behavior to your needs.</p>
+<p>In the next blog post, we’ll go deeper and see how you can control the creation and naming of operations.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p><p><em>UPDATE: Change product version from PostSharp 3.2 to PostSharp 4.0.</em></p>

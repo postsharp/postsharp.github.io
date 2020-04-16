@@ -1,0 +1,128 @@
+---
+layout: post
+title: "AOP for .NET"
+date: 2008-12-12 08:55:39 +01:00
+categories: [General]
+permalink: /post/aop-for-net.html
+---
+<h1>AOP on .NET</h1>
+<p><strong>These pages are about Aspect-Oriented Programming (AOP) techniques 
+   for the .NET Framework. They help you understand what all is AOP and how AOP 
+   is implemented on .NET. It is PostSharp-centric, but not limited to 
+   PostSharp. We always try to refer to other existing AOP tools when relevant.</strong></p>
+<div id="what-is-aspect-oriented-programming-aop">
+   <h2><a name="what-is-aspect-oriented-programming-aop">What is Aspect-Oriented 
+   Programming (AOP)?</a></h2>
+   <p>Aspect-Oriented Programming (<strong>AOP</strong>), also named 
+      Aspect-Oriented Software Development (<strong>AOSD</strong>), is an 
+      approach to software development that goes further in the direction of
+      <strong>separation of concerns</strong>. Separation of concerns is one of 
+      the most important rules in software development. It states that the same 
+      concern should be solved in a single unit of code. This is also called <em>
+      modularization</em>. In <em>procedural programming</em>, the unit of code 
+      is the procedure (or function, or method). In <em>object-oriented 
+      programming</em>, the unit of code is the class.</p>
+   <p>Some concerns cannot be implemented successfully using a pure procedural 
+      or object-oriented programming. An example is code security. If you want 
+      to secure objects and methods, you have to modify the code of each method. 
+      That's why security is said a <strong>crosscutting</strong> concern, 
+      because it crosscuts the unit of modularization of the programming 
+      paradigm, in this case the class.</p>
+   <p>An <em>aspect</em> is a concern that cross-cuts many classes and/or 
+      methods.</p>
+   <p>So <strong>AOP</strong> is a technique that allows to address issues that 
+      cross-cuts objects. AOP is frequently used to implement caching, tracing, 
+      security or failure injections.</p>
+   <p>See also our <a href="/aop-net/glossary/">Glossary</a> 
+      for technical terms.</p>
+   <div id="example">
+      <h3><a name="example">Example</a></h3>
+      <p>Say we have a large set of business objects and some of their methods 
+         need to be secured. The current user is required to be in some roles in 
+         order to be given the permission to execute the method. Using the AOP 
+         programming model, you could, instead of modifying each method, develop 
+         an aspect and 'apply' it on methods of interest. In PostSharp Laos, the 
+         aspect could look like this:</p>
+      <pre lang="csharp">public sealed class RequiresRoleAttribute : OnMethodBoundaryAspect
+{
+  string[] roles;
+  public string[] Roles 
+  { 
+    get { return this.roles; }
+    set { this.roles = value; }
+  }
+
+  public override void OnEntry( MethodExecutionEventArgs e )
+  {
+    ((ISecurable) e.Instance).RequireRoles( this.roles );
+  } 
+}
+</pre>
+      <p>This defines a custom attribute that can be applied to any method. You 
+         can use wildcards to apply the aspect to a set of objects and methods:</p>
+      <pre lang="csharp">[assembly: RequiresRole( 
+      Roles=new string[] { "Delete" }, TargetMethods="Delete*" )]</pre>
+      <p>There are of course a lot of AOP techniques to achieve the same result. 
+         The illustration above is only one of them.</p>
+   </div>
+</div>
+<div id="major-aop-techniques-in-net">
+   <h2><a name="major-aop-techniques-in-net">Major AOP techniques in .NET</a></h2>
+   <p>There are basically two approaches to change the behavior of a program in 
+      .NET (i.e. to <em>weave</em> a .NET program):</p>
+   <ul>
+      <li><a href="/aop-net/compiletime-weaving/" >
+      Compile-Time Weaving</a>: the program is modified during the build process 
+      on the development machine, before deployment.</li>
+      <li><a href="/aop-net/runtime-weaving/">Runtime 
+      Weaving</a>: the program is modified during its execution, after 
+      deployment.</li>
+   </ul>
+</div>
+<div id="expressing-the-semantics">
+   <h2><a name="expressing-the-semantics">Expressing the semantics</a></h2>
+   <p>We know <em>what</em> we want: apply additional behaviors to existing 
+      code. Now we need to know <em>how to express it</em>. We have to express 
+      the following facts:</p>
+   <ul>
+      <li><strong>What</strong> behavior we want to add (<em>advices</em>),</li>
+      <li><strong>Where</strong> we want to add it (specification of <em>join 
+      points</em> using <em>pointcuts</em>).</li>
+   </ul>
+   <p>The following approaches are available when the .NET Framework is 
+      targeted:</p>
+   <ul>
+      <li><a href="/aop-net/language-extension/" >
+      Extending the Language</a> : Create a new .NET language with new 
+      constructs.</li>
+      <li><a href="/aop-net/companion-files/" >Companion 
+      Files</a> : Use external files, for instance XML files.</li>
+      <li><a href="/aop-net/custom-attributes/" >Custom 
+      Attributes</a> : Use 'normal' .NET custom attributes to annotate the code.</li>
+      <li>Domain-Specific Languages: 
+      Use of a graphical designer to express the semantics, as well as IDE 
+      integration to simplify build and debugging experiences</li>
+      <li><a href="/aop-net/programmatic-tipping/" >
+      Programmatic Tipping</a> : All previous approaches were declarative. 
+      Another solution is to have normal .NET imperative code to add advices to 
+      join points.</li>
+   </ul>
+</div>
+<div id="external-links">
+   <h2><a name="external-links">External Links</a></h2>
+   <ul>
+      <li><span>
+      <a href="http://en.wikipedia.org/wiki/Aspect-oriented_programming">
+      AOP on Wikipedia</a></span></li>
+      <li><span>
+      <a href="http://www.aosd.net/">aosd.net, the home of the 
+      AOP conference</a></span></li>
+      <li><span>
+      <a href="http://janus.cs.utwente.nl/twiki/bin/view/AOSDNET/CharacterizationOfExistingApproaches">
+      Extensive list of AOP tools from the university of twente, NL</a></span></li>
+      <li><span>
+      <a href="http://www.sable.mcgill.ca/aop.net/">Eric 
+      Bodden's list of AOP tools</a></span></li>
+   </ul>
+</div>
+<p> </p>

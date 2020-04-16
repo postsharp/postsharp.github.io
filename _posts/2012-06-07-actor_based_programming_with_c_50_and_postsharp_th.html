@@ -1,0 +1,151 @@
+---
+layout: post
+title: "Actor-Based Programming with C# 5.0 and PostSharp Threading Toolkit"
+date: 2012-06-07 11:12:21 +02:00
+categories: [Toolkits]
+permalink: /post/actor-based-programming-with-c-50-and-postsharp-threading-toolkit.html
+---
+<p>Last week, we announced the pre-release of <a href="http://www.sharpcrafters.com/blog/post/Large-scale-multithreaded-applications-with-PostSharp-Threading-Toolkit.aspx">PostSharp Threading Toolkit</a>, a library of aspects implementing best-practice patterns of multithreaded applications. The toolkit is available on <a href="https://www.nuget.org/packages/PostSharp-Threading-Toolkit">NuGet</a> and its source code is hosted on <a href="https://github.com/sharpcrafters/PostSharp-Toolkits">GitHub</a>.</p> <p>Note: the source code of the ping-pong example is available on <a href="https://github.com/sharpcrafters/ThreadingTalk">GitHub</a> too.</p> <h2>The Right Level of Abstraction</h2> <p>The motto of this toolkit is that direct use of the <em>System.Threading</em> namespace brings so much complexity that it cannot scale to large object models. In other words, if you’re using <em>System.Threading</em> or just locks in your business or UI layer (except in a few very specific classes), you are probably addressing the threading concern at the wrong level of abstraction, and you and your co-workers will perhaps have difficulties to handle that complexity in large applications.</p> <p>A far better approach to multithreading is to grab a few <em>threading models</em> and to make sure everyone understands them. Then, select the proper threading model for every part of your application (UI and domain will probably require a different threading model). Finally, implement the threading model in all your classes. That final step is obviously the most complex and time-consuming (there can be thousands of classes) and cancels the benefits of abstraction – unless you are getting the tools for the job: Erlang, F#, or… PostSharp Threading Toolkit.</p> <h2>The Bad: Mutable Shared State</h2> <p>Imagine you have a room full of accounting assistants all working on the yearly balance of the same company. To make it easier to share information among workers, the manager thought it was smart to decide that all accounts will be maintained on a blackboard, so that many workers can update it simultaneously. (I chose a blackboard on purpose, because if whiteboards existed, they would probably have chosen a computer.) </p> <p>It’s clear that workers of this team need to cooperate (i.e., communicate) in order to get their jobs done, otherwise they are going to overwrite each other’s accounting lines and mess with the balance.</p> <p>The moral in the fable: concurrent access by several workers to <em>shared mutable state</em> causes mess.</p> <p>A state (typically: a field or an element array) is <em>mutable </em>if it can be modified. It is <em>shared</em> if it can be read or updated by several workers concurrently. Immutable shared state does not cause conflict (all workers can concurrently look at the President’s picture on the wall). Private mutable state is safe too (there would be no issue if every worker was assigned a single account).</p> <h2>Actors Against Mutable Shared State</h2> <p><a href="http://en.wikipedia.org/wiki/Actor_model">Actor-Based Programming</a> (or simply actors) address the problem of multithreaded software by eradicating mutable shared state. Formally, the Actor model wants to ensure that, for any <em>state</em>:</p> <p>&nbsp;&nbsp;&nbsp;&nbsp; NOT (<em>state</em> is mutable AND<em> state</em> is shared). </p> <p>In other words, the Actor model ensures that:</p> <p>&nbsp;&nbsp;&nbsp;&nbsp; <em>state</em> is mutable XOR <em>state</em> is shared.</p> <p>The Actor model implements these restrictions using – guess what: actors! Think of as Actor as an object-oriented class (with some children objects such as collections, perhaps). </p> <p>The Actor model is based on the following principles:</p> <ul> <li>Actors communicate between each other and with the rest of the world using messages.  <li>Messages are immutable.  <li>An actor process only one message at a time.  <li>Processing messages may cause a change of the state of the actor that processes it. Other state changes must be ordered through message passing. </li></ul> <p>The principles ensure that the only mutable state is private to an actor, and since the message-passing mechanism guarantees actors are single-threaded, the mutable state is not shared among different processors.</p> <p>These simple principles are at the origin of the success of Erlang and F#, but have traditionally been difficult to implement in C#. With the new C# 5.0 and PostSharp Threading Toolkit, this is now much easier!</p> <h2>A Simple Ping-Pong Game</h2> <p>Let’s see these principles in action on the simplest multi-actor game invented: ping-pong. To make the game a little more interesting (and show that execution is actually asynchronous), I’m throwing two balls in the game.</p><pre>class Player : Actor
+{
+    string name;
+    int counter;
+
+    public Player(string name)
+    {
+        this.name = name;
+    }
+
+    public void Ping(Player peer,  int countdown)
+    {
+        Console.WriteLine("{0}.Ping from thread {1}", this.name, <br>                          Thread.CurrentThread.ManagedThreadId);
+
+        if (countdown &gt;= 1)
+        {
+            peer.Ping(this, countdown - 1);
+        }
+
+        this.counter++;
+    }
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        Player ping = new Player("Sarkozy");
+        Player pong = new Player("Hollande");
+
+        ping.Ping(pong, 4);
+        ping.Ping(pong, 4);
+
+        Console.ReadLine();
+    }
+}</pre>
+<p>This program gives the following output:</p><pre>Sarkozy.Ping from thread 3
+Sarkozy.Ping from thread 3
+Hollande.Ping from thread 4
+Hollande.Ping from thread 4
+Sarkozy.Ping from thread 3
+Sarkozy.Ping from thread 3
+Hollande.Ping from thread 4
+Hollande.Ping from thread 4
+Sarkozy.Ping from thread 6
+Sarkozy.Ping from thread 6</pre>
+<p>As you can see, actors run on a different thread than the <em>Main</em> method. Calling the <em>Ping</em> method results in a message to be appended to the actor’s message queue. When a message queue was empty and got its first message, the dispatcher creates a <em>Task</em> to process the message queue. Therefore, actors run on the thread pool and there’s no need to have one thread per actor.</p>
+<p>Note that the field <em>Player.counter</em> is incremented by the <em>Ping</em> method. Incrementing consists in reading and writing a field atomically. In a concurrent environment, we should have used <em>Interlocked.Increment</em>. But since the field is private to the actor, we don’t have to think about data races.</p>
+<h2>Build-Time Validation</h2>
+<p>I’ve said that the <em>Player.counter</em> field is safe because it’s private. I meant that logically it belongs to the private state of the actor, as opposed to the state that is shared among actors and threads. That said, <em>private</em> is also a C# concept, so what if the field was <em>public</em>?</p>
+<p>We thought about this issue, and we designed the toolkit to minimize the level of thinking necessary to apply a threading model, so the toolkit will warn you of any potential error with the following build-time error message:</p><pre>1&gt;------ Build started: Project: TestAsync, Configuration: Debug Any CPU ------
+1&gt;POSTSHARP : postsharp error THR005: Field Player.counter must be private or <br>protected because the Player class is an Actor.
+1&gt;POSTSHARP : postsharp error PS0060: The processing of module "TestAsync.exe" was <br>not successful.
+========== Build: 0 succeeded, 1 failed, 0 up-to-date, 0 skipped ==========</pre>
+<p>The toolkit does not claim it’s smarter than you, but it prevents you (and more likely your co-workers) from obvious mistakes. If you decide that a public field is really what you want, you have to annotate the field with the <em>[ThreadUnsafe]</em> custom attribute, which opts out from the safety net enforced by the toolkit.</p>
+<p>In a similar spirit, the toolkit will prevent an actor to expose public method that return a value or have <em>ref</em> or <em>out</em> parameters. Why? Because these methods are modified to run asynchronously, so output values could not be known at the time the asynchronous call completes (asynchronous means that the execution continues after the call completes).</p>
+<p>If you think this is an awful limitation, you’re right. But we have some good news for you.</p>
+<h2>Where C# 5.0 Saves the Day</h2>
+<p>The C# feature of the year is the ability to work with asynchronous methods thanks to two new keywords: <em>async</em> and <em>await</em>. The <em>async</em> keyword basically allows the use of the <em>await</em> keyword, which suspends the execution of the method until some task (or anything “awaitable”) completes. This is exactly what we need to get actor methods return some output to the caller.</p>
+<p>Suppose we want to add a <em>GetCounter</em> method to the <em>Player</em> class. We could simply do that:</p><pre>public async Task&lt;int&gt; GetCounter()
+{
+    return this.counter;
+}</pre>
+<p>Intellisense gives some warning that there is no <em>async</em> keyword and the method will therefore run synchronously, but PostSharp adds some magic to make the method run asynchronously from the message queue of the Actor. You don’t have to take care of that and can safely ignore the compiler warning.</p>
+<p>Now, suppose we call <em>GetCounter</em> just after we call <em>Ping</em>. The message is going to be queued just after the first <em>Ping</em> messages, we we’re probably going to get a counter value of 1. This is not what we want: we want to get the counter after the ping-pong game is finished. To achieve that, we need to make the <em>Ping</em> method awaitable by using the <em>async</em> and <em>await</em> keywords.</p>
+<p>Here is the updated source code of our new ‘awaitable’ actor game:</p><pre>class Player : Actor
+{
+    string name;
+    private int counter;
+
+    public Player(string name)
+    {
+        this.name = name;
+    }
+
+    public async Task&lt;int&gt; GetCounter()
+    {
+        return this.counter;
+    }
+
+    public async Task Ping(Player peer, int countdown)
+    {
+        Console.WriteLine("{0}.Ping({1}) from thread {2}", this.name, countdown, <br>                          Thread.CurrentThread.ManagedThreadId);
+
+        if (countdown &gt; 1)
+        {
+            await peer.Ping(this, countdown - 1);
+        }
+
+        this.counter++;
+    }
+
+    [ThreadSafe]
+    public override string ToString()
+    {
+        return this.name;
+    }
+
+}
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        AsyncMain().Wait();
+    }
+
+    private static async Task AsyncMain()
+    {
+
+        Player ping = new Player("Sarkozy");
+        Player pong = new Player("Hollande");
+
+        Task pingTask = ping.Ping(pong, 4);
+        Task pongTask = pong.Ping(ping, 4);
+
+        await pingTask;
+        await pongTask;
+
+        Console.WriteLine("{0} Counter={1}", ping, await ping.GetCounter());
+        Console.WriteLine("{0} Counter={1}", pong, await pong.GetCounter());
+    }
+}</pre>
+<p>&nbsp;</p>
+<h2>Is PostSharp Necessary Anyway?</h2>
+<p>You could wonder where is PostSharp in this code. After all, isn’t C# 5.0 all you need? Actually, PostSharp is hidden behind the Actor class. It will modify the code of all public instance methods of actors to make them compatible with the Actor model. If you remove PostSharp, you will perhaps still have asynchronous methods, but they will not respect the Actor model and C# 5.0 alone isn’t going to clean up the multithreaded mess.</p>
+<p>Actually, PostSharp adds the following code on the top of the main method of the asynchronous state machine. That seems complex, but it’s actually approximately equivalent to doing an “await Task.Yield()” if the code executes from the wrong context, to force it to be rescheduled in the right context.</p><pre>if (!this.&lt;&gt;4__this.Dispatcher.CheckAccess())
+{
+  this.&lt;&gt;t__dispatchAwaiter = Task.Yield().GetAwaiter();
+  SynchronizationContext oldContext = SynchronizationContext.Current;
+  SynchronizationContext.SetSynchronizationContext<br>                  (this.&lt;&gt;4__this.Dispatcher.SynchronizationContext);
+  this.&lt;&gt;t__builder.AwaitUnsafeOnCompleted&lt;YieldAwaitable.YieldAwaiter, <br>          Player.&lt;GetCounter&gt;d__0&gt;(ref this.&lt;&gt;t__dispatchAwaiter, ref this);
+}
+else
+{<br>   // Your original code.<br>}
+</pre>
+<p>Additionally to adding behavior to public methods, PostSharp (the Threading Toolkit, more specifically) ensures that your source code respects some safety rules for the Actor model, and emits build-time errors or run-time exceptions if necessary.</p>
+<h2>To-Do List</h2>
+<p>Although the main functionalities are implemented and work fine, there is still a lot of work on the to-do list. For instance, the toolkit does not enforce dispatching of private interface implementation yet, neither callback methods (delegate). Not all build-time and run-time checking are already implemented. Specifically, we don’t check that all messages (method parameters and return values) are immutable or otherwise thread-safe.</p>
+<h2>Summary</h2>
+<p>I’ve shown how PostSharp Threading Toolkit, together with C# 5.0, offer a compelling implementation of the Actor threading model. As you can see, proper compiler support (PostSharp is a compiler extension) makes programming much easier because it allows to address a problem at the proper level of abstraction.</p>
+<p>In later posts, we’ll talk about other threading models supported by PostSharp Threading Toolkit: reader-writer synchronized, and thread unsafe (or singlethreaded).</p>
+<p>Happy PostSharping!</p><pre></pre>
+<p>-gael</p>

@@ -1,0 +1,153 @@
+---
+layout: post
+title: "Configuring PostSharp Diagnostics Toolkits"
+date: 2012-04-03 16:11:52 +02:00
+categories: [Toolkits]
+permalink: /post/configuring-postsharp-diagnostics-toolkits.html
+---
+<p>One of the ideas behind the PostSharp Toolkits was a zero code change requirement, that would allow you to simply install the relevant toolkit from NuGet, rebuild your project and that’s it. To achieve that, we have revived the PostSharp XML configuration. The XML configuration is the unification of the Plug-in and Project models in the project loader. Let’s have a look on how PostSharp Diagnostics Toolkits use this XML configuration.</p>  <h3></h3>  <h2>PSPROJ XML Configuration</h2>  <p>After installing the PostSharp Diagnostics Toolkits via NuGet, a file with the .psproj extension will be created, named after the current project. The .psproj files are an XML representation of the PostSharp Project structure – containing the configuration of the application, with resolved properties and references.</p>  <p>Let’s take a look at the default configuration that is produced by the PostSharp Diagnostic Toolkit package:</p>  <pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
+&lt;!-- Default project used when PostSharp is detected according to project references. --&gt;
+&lt;Project xmlns=&quot;http://schemas.postsharp.org/1.0/configuration&quot; <br />    ReferenceDirectory=&quot;{$ReferenceDirectory}&quot;&gt;&#160;&#160; <br />&#160;<br />  &lt;Property Name=&quot;LoggingBackend&quot; Value=&quot;trace&quot; /&gt;<br />&#160;<br />  &lt;Using File=&quot;default&quot;/&gt;<br />  &lt;Using File=&quot;..\..\Build\bin\{$Configuration}\PostSharp.Toolkit.Diagnostics.Weaver.dll&quot;/&gt;
+  <br />  &lt;Tasks&gt;<br />&#160;&#160; &lt;XmlMulticast /&gt;<br />  &lt;/Tasks&gt;<br /><br />  &lt;Data Name=&quot;XmlMulticast&quot;&gt;<br />&#160;&#160;&#160; &lt;LogAttribute <br />        xmlns=&quot;clr-namespace:PostSharp.Toolkit.Diagnostics;assembly:PostSharp.Toolkit.Diagnostics&quot; /&gt;<br />&#160;&#160;&#160; &lt;LogAttribute <br />       xmlns=&quot;clr-namespace:PostSharp.Toolkit.Diagnostics;assembly:PostSharp.Toolkit.Diagnostics&quot; <br />        AttributeExclude=&quot;true&quot; <br />        AttributeTargetMembers=&quot;regex:get_.*|set_.*&quot; /&gt;&#160; <br />  &lt;/Data&gt;<br />&lt;/Project&gt;</pre>
+
+<p>Let’s look at the properties more closely:</p>
+
+<p><strong>Project</strong> – the XML root node – defines the PostSharp Project configuration.</p>
+
+<p>The property <strong>LoggingBackend</strong> specifies the logger that should be used by the Diagnostics Toolkit. This value is set during the installation of the toolkit via NuGet. The supported values in the PostSharp Diagnostics Toolkit package are <strong>trace</strong> (default) and <strong>console</strong>. Additional packages, PostSharp Diagnostics Toolkit for Log4Net and NLog add <strong>log4net</strong> and <strong>nlog</strong> as the supported backends.</p>
+
+<p>The <strong>Using</strong> directives are a part of the plug-in model, allowing PostSharp to use external services. In this case, there are two entries (additional entries are added by other toolkits), the <strong>default</strong>, which is a required entry, and a (relative) path to the actual weaver implementation of our toolkit. At build time, PostSharp looks for project configurations in the referenced DLLs.</p>
+
+<p>The <strong>Tasks</strong> section specifies a key feature of the XML configuration – the <strong>XML Multicasting</strong>. Like regular <a href="http://doc.sharpcrafters.com/postsharp-2.1/##PostSharp-2.1.chm/html/1B05CE59-61DE-4043-8E7C-12C130B1ACBB.htm">aspect multicasting</a>, that is, the ability to apply a single aspect to multiple elements, XML Multicasting allows you to define aspect multicasting declaratively via XML. The <strong>XmlMulticast</strong> task will look for the <em>data island</em> with the name <code>XmlMulticast</code>, instantiate and apply the aspects that are specified within.</p>
+
+<p>Which brings us to the actual <code>LogAttribute</code> aspect, that is shipped with the toolkits. This is a custom MethodLevelAspect, that is defined in the assembly <strong>PostSharp.Toolkit.Diagnostics.dll</strong>. The two entries in the XML file above define that the aspect will be applied by default to a) all methods in all types of the current assembly and b) will ignore property getters and setters. These lines are equivalent to applying the aspect on assembly level in code:</p>
+
+<pre>[assembly: Log] 
+    <br />[assembly: Log(AttributeExclude=&quot;true&quot; AttributeTargetMembers=&quot;regex:get_.*|set_.*&quot;)]</pre>
+
+<p>You can limit the multicasting by using the regular PostSharp filters, such as <a href="http://doc.sharpcrafters.com/postsharp-2.1/##PostSharp-2.1.chm/html/1B05CE59-61DE-4043-8E7C-12C130B1ACBB.htm">AttributeTargetTypes</a>.</p>
+
+<h3>Logging Options</h3>
+
+<p>To control the logging level, severity and granularity of the logging, the Diagnostics toolkits include several options for fine-grained control over the logging output:</p>
+
+<p><strong>OnEntryLevel</strong>/<strong>OnSuccessLevel/OnExceptionLevel</strong> – specifies the logging level (severity) of the Entry/Exit/Exception message (e.g. “Entering: MyType.MyMethod()/Leaving: MyType.MyMethod()”)</p>
+
+<p>Possible values:</p>
+
+<ul>
+  <li><strong>None</strong> – the message will not be logged </li>
+
+  <li><strong>Debug</strong> – the message will be logged at Debug/Trace level (when applicable) </li>
+
+  <li><strong>Info</strong> – the message will be logged at Info level </li>
+
+  <li><strong>Warning</strong> – the message will be logged at Warn level </li>
+
+  <li><strong>Error</strong> – the message will be logged at Error level </li>
+
+  <li><strong>Fatal</strong> – the message will be logged at Fatal level </li>
+</ul>
+
+<p><strong>OnEntryOptions/OnSuccessOptions</strong> – sets options for logging parameters and return values.</p>
+
+<p>The options include:</p>
+
+<ul>
+  <li><strong>None</strong> – no parameter information will be included </li>
+
+  <li><strong>IncludeParameterType</strong> – includes the type name of the parameter </li>
+
+  <li><strong>IncludeParameterName</strong> – includes the name of the parameter </li>
+
+  <li><strong>IncludeParameterValue</strong> - Includes parameter value, by calling <code>ToString</code> on the object instance </li>
+
+  <li><strong>IncludeReturnValue</strong> – includes the return value (applicable on <strong>OnSuccessOptions</strong> only) </li>
+
+  <li><strong>IncludeThisArgument</strong> – includes the value of <code>this</code> argument in an instance method </li>
+</ul>
+
+<p>The default values for the different options are:</p>
+
+<table border="0" cellspacing="0" cellpadding="2" width="665"><tbody>
+    <tr>
+      <td valign="top" width="194"><strong>Option Name</strong></td>
+
+      <td valign="top" width="469"><strong>Default Value</strong></td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="212">OnEntryLevel</td>
+
+      <td valign="top" width="469">Debug</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="217">OnSuccessLevel</td>
+
+      <td valign="top" width="469">Debug</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="218">OnExceptionLevel</td>
+
+      <td valign="top" width="469">Warning</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="217">OnEntryOptions</td>
+
+      <td valign="top" width="469">IncludeParameterType, IncludeParameterName, IncludeParameterValue</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="217">OnSuccessOptions</td>
+
+      <td valign="top" width="469">IncludeParameterType, IncludeReturnValue</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="217">OnExceptionOptions</td>
+
+      <td valign="top" width="469">None (exception is printed using the OnExceptionLevel severity)</td>
+    </tr>
+  </tbody></table>
+
+<p><strong></strong></p>
+
+<h2>Examples:</h2>
+
+<p>Suppose we have a method <code>Reverse</code> in class <code>StringUtils</code>, that takes in a string and returns a reversed string. With the default settings, using NLog as the backend, our call to this method with the word “orange” will be logged like this:</p>
+
+<p>&#160;</p>
+
+<pre>...
+<br />TRACE Entering: MyApplication.StringUtils.Reverse(System.String input = &quot;orange&quot;)
+<br />TRACE Leaving: MyApplication.StringUtils.Reverse(System.String) : &quot;egnaro&quot;
+<br />...</pre>
+
+<p>&#160;</p>
+
+<p>In the <em>Entering </em>line, the method signature contains the type name (<code>System.String</code>), the parameter name (“input”) and its value. The <em>Leaving</em> line contains only the parameter type and the return value.</p>
+
+<p>Let’s look at another example. Suppose you have a class <code>Customer</code>, implementing an <a href="http://en.wikipedia.org/wiki/Active_record_pattern">Active Record pattern</a>, located in the namespace <code>MyApplication.Data</code>. Suppose we want to log all calls made to methods in this namespace with the <strong>Info</strong> level, and having the value of the instance (this argument) printed in the log output together with the value of the parameters. Simply add the following line to the .psproj file:</p>
+
+<p>&#160;</p>
+
+<pre>&lt;LogAttribute
+    xmlns=&quot;clr-namespace:PostSharp.Toolkit.Diagnostics;assembly:PostSharp.Toolkit.Diagnostics&quot;
+    AttributeTargetTypes=&quot;MyApplication.Data.*&quot;<br />&#160;&#160;&#160; OnEntryLevel=&quot;Info&quot;<br />&#160;&#160;&#160; OnSuccessLevel=&quot;Info&quot;<br />&#160;&#160;&#160; OnEntryOptions=&quot;IncludeThisArgument | IncludeParameterValue&quot; /&gt;</pre>
+
+<p>You can find additional configuration examples in the test projects of the PostSharp Diagnostics Toolkit <a href="https://github.com/sharpcrafters/PostSharp-Toolkits">source code</a>.</p>
+
+<h3>Additional notes</h3>
+
+<p>In the toolkits we’re done away with manually specifying the ordering using AttributePriority – the value is now generating automatically during compilation, so be aware that ordering of the XML elements matters.</p>
+
+<p>As always, we’d like to get your feedback on our <a href="http://www.sharpcrafters.com/forum/Group27.aspx">Support Forums</a> for PostSharp Toolkits! If you have suggestions, issues, or any other feedback, please let us know about it!</p>
+
+<p>We hope that you’ll enjoy using the PostSharp Toolkits as much as we enjoy building them!</p>
+
+<p>Happy PostSharping!</p>
+
+<p>-Igal</p>

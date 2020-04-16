@@ -1,0 +1,59 @@
+---
+layout: post
+title: "Announcing PostSharp 4.3 RTM: Faster builds, better debugging, easier deployment, and more"
+date: 2016-07-27 15:16:00 +02:00
+categories: []
+permalink: /post/announcing-postsharp-43-rtm-faster-builds-better-debugging-easier-deployment-and-more.html
+---
+<p>Today we&rsquo;re excited to announce the release of PostSharp 4.3 RTM, available for <a href="https://www.postsharp.net/download">download</a> on Visual Studio Gallery and NuGet.&nbsp; PostSharp 4.3 addresses the most important concerns of current customers.&nbsp; It focuses on improving the current experience without adding brand new features.</p>
+<p>In a nutshell, PostSharp 4.3 brings you:</p>
+<ul>
+<li>Improved build-time performance: up to 3x faster</li>
+<li>Improved debugging experience</li>
+<li>Alternative to NuGet-based deployment</li>
+<li>Command-line tool</li>
+<li>Improvements in the NotifyPropertyChanged aspect</li>
+<li>Some licensing goodness for everybody.</li>
+</ul>
+<p>You can <a href="https://www.postsharp.net/documentation/video?id=178043950">watch the recording</a> of the webinar <em>What's New in PostSharp 4.3</em> that shows the updates of the new version.</p>
+<p>Let&rsquo;s look at these improvements one by one:</p>
+<h1>Improved build-time performance</h1>
+<p>PostSharp 4.3 is up to 3 times faster than PostSharp 4.2. The real figures will depend on the number and size of your projects, how many aspects are being used, and whether you enabled the <em>solution-wide build optimizations</em>. This option can be found under the PostSharp tab of the Solution properties in Visual Studio.</p>
+<p><img src="/assets/2016-07-27-announcing_postsharp_43_rtm_faster_builds_better_d/solutionwidebuild.png" alt="" /></p>
+<p>What is does is to try to build the whole solution in a single AppDomain (or as few as possible) so the overhead per project is much smaller.</p>
+<h1>Improved debugging experience</h1>
+<p>Debugging an application enhanced with aspects is now even easier thanks to the following improvements:</p>
+<ul>
+<li>
+<p>Full support for Just My Code.</p>
+</li>
+<li>
+<p>During Step Into, aspect code is now stepped over by default.</p>
+</li>
+<li>
+<p>The call stack no longer contains PostSharp implementation details by default.</p>
+</li>
+</ul>
+<p>To learn more about these features, see the blog post <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-Preview-Improved-Debugging-Experience">New in PostSharp 4.3 Preview: Improved Debugging Experience</a>.</p>
+<h1>Alternative to NuGet-based deployment</h1>
+<p>Between versions 3.0 and 4.2, the PostSharp compiler and libraries were only distributed as NuGet packages. Let&rsquo;s face it: some companies did not like this at all that we forced them to use NuGet. Starting from version 4.3, we are re-introducing the old good zip file, and integrate it better with PostSharp Tools for Visual Studio.</p>
+<p>For more information, see the blog post <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-An-alternative-to-NuGet">New in PostSharp 4.3 Preview &ndash; An alternative to NuGet</a>.</p>
+<h1>Command-line tool</h1>
+<p>Using PostSharp as a command-line tool is now a supported and documented scenario. It means you can now even instrument assemblies that you are not building yourself &ndash; whether or not you have its source code.</p>
+<p>You can see how it works in the blog post <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-Preview-Command-Line-Interface">New in PostSharp 4.3 Preview: Command-Line Interface</a>.</p>
+<h1>Some licensing goodness for everybody</h1>
+<p>We hate licensing just as you do but we&rsquo;ve working on it in PostSharp 4.3 and we&rsquo;re glad to come with two major improvements:</p>
+<ul>
+<li>You no longer need a license to build source code that you just checked out from Git or TFS but did not create/edit yourself.</li>
+<li>The limitations of PostSharp Express for new users are now much simpler: you get <em>everything</em> of PostSharp Ultimate, but only if you add aspects to 10 classes per project.</li>
+</ul>
+<h1>Improvements in the NotifyPropertyChanged aspect</h1>
+<p>Due to popular demand, we&rsquo;ve added support for Caliburn.Micro and MVVM Light.</p>
+<p>We&rsquo;ve also added an option to suppress false positives. To enable the option (which has some runtime overhead and is disabled by default), set the PreventFalsePositives option when constructing the NotifyPropertyChanged aspect:</p>
+<pre>[NotifyPropertyChanged(PreventFalsePositives = true)]</pre>
+<h1>Summary</h1>
+<p>With PostSharp 4.3, we&rsquo;ve been addressing the top concerns of existing customers. PostSharp users will spend less time waiting for the build and will be much more productive while debugging. Plus, there&rsquo;s a ton of improvements to make the deployment and the licensing of PostSharp easier.</p>
+<p>PostSharp 4.3 is fully backward compatible with PostSharp 4.2, so it&rsquo;s safe to update today.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+<p>&nbsp;</p>

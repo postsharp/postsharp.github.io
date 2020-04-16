@@ -1,0 +1,88 @@
+---
+layout: post
+title: "Announcing PostSharp 2.1 RTM"
+date: 2011-10-31 11:07:00 +01:00
+categories: []
+permalink: /post/announcing-postsharp-21-rtm.html
+---
+<p>I&rsquo;m delighted to announce the release of PostSharp 2.1 RTM, available for download on <a href="http://www.sharpcrafters.com/downloads/postsharp-2.1/rtm/PostSharp-2.1.5.1.exe">our web site</a> and on <a href="http://www.nuget.org/List/Packages/PostSharp">NuGet</a>.</p>
+<p>The last release candidate has been available as the front-page download for more than a month now with no reported bugs. PostSharp 2.1 becomes the recommended version for everyone and is now considered more stable than the 2.0 branch.</p>
+<h2>New features</h2>
+<p>PostSharp 2.1 brings the following improvements to PostSharp 2.0:</p>
+<ul>
+<li>Improved build-time performance: up to 5x faster. <a href="http://www.sharpcrafters.com/blog/2011/01/default.aspx">Read more.</a></li>
+<li>Architecture validation: build-time validation of design rules. <a href="http://www.sharpcrafters.com/blog/post/Architectural-Validation.aspx">Read more.</a></li>
+<li>Extended reflection API: programmatically navigate code references. <a href="http://www.sharpcrafters.com/blog/post/New-in-PostSharp-21-Reflecting-Custom-Attributes.aspx">Read more</a> <a href="http://www.sharpcrafters.com/blog/post/New-in-PostSharp-21-Navigating-Code-Relationships.aspx">and more</a>. </li>
+<li>NuGet packaging and improved no-setup deployment experience. <a href="http://www.sharpcrafters.com/blog/post/New-in-PostSharp-21-NuGet-Package.aspx">Read more.</a></li>
+<li>Support for obfuscators: we now support Dotfuscator. <a href="http://www.sharpcrafters.com/blog/post/Whate28099s-New-in-PostSharp-21-Support-for-Obfuscation-(Dotfuscator).aspx">Read more.</a></li>
+<li>Improved Visual Studio Extension (PostSharp tab page in project properties).</li>
+<li>Warnings and errors now come with file/line information. The feature is optional and must be enabled manually from Visual Studio options. We&rsquo;re eager to hear feedback about this feature from customers with larger projects. </li>
+<li>Support for Silverlight 5 and Windows Phone 7.1. </li>
+<li>Compatibility with Code Contracts 4. </li>
+<li>Improved messaging API. </li>
+<li>Streamlined licensing experience and &ldquo;getting started&rdquo;.</li>
+<li>License server (optional).</li>
+<li>Streamlined &ldquo;getting started&rdquo; experience.</li>
+<li>Warnings can be disabled locally (for a specific element of code) using the <strong>IgnoreWarning</strong> custom attribute. See <a href="http://doc.sharpcrafters.com/postsharp-2.1/Content.aspx/PostSharp-2.1.chm/html/dbcf53d8-7525-48c2-b5fc-0aea945c6957.htm">online documentation</a> for details. </li>
+</ul>
+<h2>Bug fixes</h2>
+<p>The RTM fixes the following issues from RC2:</p>
+<ul>
+<li>"EnhancedByPostSharpAttribute" causes issues with the WPF compiler</li>
+<li>Aspected methods with parameter of generic types are not underlined in VS code editor</li>
+<li>Constant SkipPostSharp does not work</li>
+<li>Different versions of PostSharp cannot be used in the same solution</li>
+<li>Error due to file lock of *.vhost.exe</li>
+<li>Invalid version number is written in native resources</li>
+<li>MSBuild error "CodeContractsPerformCodeAnalysis target is missing" with Code Contracts Standard (without Code Analysis)</li>
+<li>Type parser throws exception with arrays or generic types</li>
+</ul>
+<h2>Upgrading from PostSharp 2.0</h2>
+<p>This new version is fully backward compatible with PostSharp 2.0 (except one breaking bug fix), and can be installed side-by-side with PostSharp 2.0. In order to upgrade, you should just update the references to PostSharp.dll (and possibly to PostSharp.targets, if PostSharp is installed in source control). A utility contained in PostSharp HQ helps you converting projects from 2.0 to 2.1.</p>
+<p><strong>The upgrade is free for everyone</strong> and your 2.0 license key will work with 2.1. However, you will be asked to enter your license key.</p>
+<p>Even if you are happy with the features of 2.0, <strong>you have to upgrade to 2.1 because your projects are going to compile damn faster</strong>! Frankly. PostSharp has now the fastest MSIL engine on the market.</p>
+<h2>Announcing PostSharp 2.0 Update 6</h2>
+<p>By the way, we&rsquo;ve also updated the PostSharp 2.0 release. It contains the following fixes compared to the previous update. Needless to say, these fixes are also included in the 2.1 release.</p>
+<ul>
+<li>Aspect instance fields should not be marked as serializable</li>
+<li>Aspects may conflict with themselves</li>
+<li>Attempt to use two adornment layers when symbol file is updated</li>
+<li>BaseMarkerManager.RefreshTextMarkers causes AccessViolationException</li>
+<li>Collapsed region names should not be underlined by the VSX</li>
+<li>CSharpLanguageAdapter.VisitPropertyAccessor causes CodeProperty.get_Parent to throw InvalidOperationException</li>
+<li>Exception in MulticastAtributeTask when a parameter-level MulticastAttribute is applied to a property</li>
+<li>Exception in MulticastAttributeTask with inheritance on generic methods</li>
+<li>Exception when an aspect is applied to a generic protected method, or a protected method of a generic type, in a third assembly.</li>
+<li>Exception when an aspect is applied to a virtual method of a sealed/value type</li>
+<li>Exception with multicasting inheritance on generic methods.</li>
+<li>ImportMember throws an exception when a member is a property and an accessor is missing.</li>
+<li>In IntroduceMember, CopyCustomAttribute with merge does not work</li>
+<li>Incompatibility of the PostSharp VSX with CodeRush - collapsed regions</li>
+<li>Invalid code generation when several OnMethodBoundary aspects are applied</li>
+<li>Invalid code generation with a MSIL-serialized aspect containing an array argument</li>
+<li>Invalid handling of generic instances in reflection wrappers</li>
+<li>Invalid MSIL generation when [IntroduceMember] is applied to a member with a generic type argument</li>
+<li>InvalidCastException when IAspectProvider is used when MsilAspectSerializer, and a non-instrinsic is passed to the ObjectConstruction</li>
+<li>InvalidComObjectException from SolutionWatcher constructor</li>
+<li>ManagedDotNet40Platform.GetGetClrIdentityManagerProc throws COMException: The handle is invalid.</li>
+<li>Many features MethodRefDeclaration fail when the method refers to an implicit method of multidimensional arrays</li>
+<li>Method-level MulticastAttributes with multicast inheritance are not multicast to derived types accross assemblies</li>
+<li>MSBuild step "PostSharp20CopyOutputToCodeAnalysis" can fail because of file locking</li>
+<li>Multicast attributes are applied to anonymous methods, but should not</li>
+<li>MulticastAttribute.TargetMemberAttributes is not respected for properties and events</li>
+<li>NullReferenceException in QuickInfoTracker.OnMouseMove</li>
+<li>ProjectWatcher.UpdateSymbolPath throws NullReferenceException</li>
+<li>Some debugging sequence points are dropped</li>
+<li>ToolInvocationHelper.InvokeTool process output listener causes ArgumentOutOfRangeException on</li>
+<li>UpdateCheckUtility.BeginRetrieveMessages throws ThreadStartException</li>
+<li>UpdateCheckUtility.BeginRetrieveMessages throws ThreadStartException</li>
+<li>VsPackage.BeginInvoke throws COMException</li>
+<li>Win32Exception in PostSharp.VisualStudio.HWndDispatcher.BeginInvoke</li>
+<li>Windows Phone 7 does not support tail calls generated by PostSharp</li>
+<li>WriteWeavingSymbolsTask.Execute throws UnauthorizedAccessException</li>
+</ul>
+<h2>What&rsquo;s Next?</h2>
+<p>It has been precisely one year since I started working on PostSharp 2.1. Arguably, it took way too much time to get that release out of the door. And here&rsquo;s why: most of our time was invested in building the company and spreading the work about AOP. Since July, I&rsquo;ve started research and planning for the next major version of PostSharp and a new product code-named Resonance, which will be to .NET software what magnetic resonance is to human body (detailed and non-invasive imaging). We&rsquo;ve hired two software developers and, while PostSharp 2.1 was maturing, we started real development on the new &ldquo;thing&rdquo;. You&rsquo;re going to be amazed, I promise.</p>
+<p>But today, we&rsquo;ve become confident that PostSharp 2.1 is ready for production, and it&rsquo;s a great time for you to upgrade.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

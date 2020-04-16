@@ -1,0 +1,108 @@
+---
+layout: post
+title: "Implementing Undo-Redo with Aspects"
+date: 2010-11-23 11:21:00 +01:00
+categories: [Tutorial]
+permalink: /post/implementing-undo-redo-with-aspects.html
+---
+<p align="right"><a href="http://www.sharpcrafters.com/downloads/blog/2010-11-UndoRedo.zip" target="_blank">Download the source code for this post.</a></p>  <p>Undo-redo is one of those features we don’t notice any more. It is however one of the most annoying to program because it requires so much menial code. Fortunately, aspect-oriented programming (AOP) renders this task virtually effortless.</p>  <p>There are two ways to implement an undo-redo feature. The first way, in a model-view-controller, is to put the feature inside the controller (each command implementation in the controller is responsible for generating another command, reversing the effect of the first one). The second way is to record all changes on the model. We’ll focus on this one and demonstrate how you could use an aspect to automatically record any change to domain objects.</p>  <h4>Designing the undo-redo system</h4>  <p>First, let me remind you that aspect-oriented programming is not opposed to object-oriented programming in any way; therefore a good aspect-oriented design must always start with a good object-oriented design.</p>  <p>In our design, every single change to a model object (such as changing the value of a field or added an object to a collection) is modeled as an object implementing the interface <b>IUndoItem</b>, with the following semantics:</p>  <pre>public interface IUndoItem
+{
+  void Redo();
+  void Undo();
+}</pre>
+
+<p>Next we need an <b>UndoManager</b>. The manager has two kinds of clients (or consumers). First, <i>domain objects</i> (model) will call its <b>Record</b> operation whenever they are changed, so the manager will maintain a list of <b>IUndoItem</b>. Secondly, <i>UI objects</i> (or, possibly, the controller) will call its operations <b>Undo</b> and <b>Redo</b>. The core of the <b>UndoManager</b> is a double linked list of undo items and a cursor to the current item. When the UI invokes the<b> Undo</b> operation, the <b>UndoManager</b> invokes the <b>Undo</b> operation of the current item, and moves the cursor backward. When the UI invokes the <b>Redo</b> operation, the <b>UndoManager</b> invokes the <b>Redo</b> operation of the next item and moves the cursor forward.</p>
+
+<p>Since the purpose of this article is to demonstrate the use of aspects and not to design or implement a general undo-redo system, I will not spend more time on the architecture and implementation of the manager. </p>
+
+<h4>Implementing the aspect</h4>
+
+<p>What do we want the aspect to do? Well, we need to intercept any change to a domain object field, wrap it into an <b>IUndoItem</b>, and record it using the <b>UndoManager</b>. This is pretty easy to do, since we can use aspects derived from <b>LocationInterceptionAspect</b> to hook any change to any field.</p>
+
+<pre>/// <summary>
+/// Aspect that, when applied on a field (directly or indirectly, using multicasting),
+/// registers all changes to that field into the <see cref="UndoManager" />.
+/// </summary>
+[Serializable]
+[MulticastAttributeUsage( MulticastTargets.Field )]
+public class UndoableAttribute : LocationInterceptionAspect
+{
+    /// <summary>
+    /// Method invoked whenever a field value is changed.
+    /// </summary>
+    /// <param name="args" />Information about the field being changed and 
+    /// the new value.</param>
+    public override void OnSetValue( LocationInterceptionArgs args )
+    {
+        // Store the new and old values.
+        object newValue = args.Value;
+        object oldValue = args.GetCurrentValue();
+
+        // If we're not changing anything, don't do anything.
+        if ( Equals( newValue, oldValue ) )
+            return;
+
+        // Change the field value (or invoke the next aspect in chain).
+        base.OnSetValue( args );
+
+        // Record the change in the UndoManager.
+        UndoManager.Record( new UndoField( args.Binding, args.Instance, oldValue, newValue ) );
+    }
+
+    /// <summary>
+    /// Encapsulates a change of field value as an <see cref="IUndoItem" />.
+    /// </summary>
+    private class UndoField : IUndoItem
+    {
+        private readonly ILocationBinding binding;
+        private object instance;
+        private readonly object oldValue;
+        private readonly object newValue;
+
+        public UndoField( ILocationBinding binding, object instance, <br />                          object oldValue, object newValue )
+        {
+            this.binding = binding;
+            this.instance = instance;
+            this.oldValue = oldValue;
+            this.newValue = newValue;
+        }
+
+        public void Redo()
+        {
+            this.binding.SetValue(ref this.instance, Arguments.Empty, newValue );
+        }
+
+        public void Undo()
+        {
+            this.binding.SetValue(ref this.instance, Arguments.Empty, oldValue );
+        }
+
+
+        public bool CanUndo { get { return true; } }
+        public bool CanRedo { get { return true; } }
+    }
+}</pre>
+
+<p>The implementation is pretty simple, as you can read yourself: the method <b>OnSetValue</b> is invoked whenever a change of a field value is attempted; this method encapsulates the change as an instance of the <b>UndoField</b> class, and records it in the <b>UndoManager</b>.</p>
+
+<p>The only difficulty is maybe to set the value of the field. We could use reflection (<b>FieldInfo.SetValue</b>), but it has two drawbacks: it is slow, and it would cause a recursion of the aspect: the change done during an undo operation would be recorded in the <b>UndoManager</b>. PostSharp addresses this issue with the notion of <i>binding</i>. When you assign a value to a field, you usually just think that you assign a value to a field, but PostSharp sees that a little differently: it considers you’re sending a message to the field, and this message is “set the value to <i>x</i>”. PostSharp considers aspects as filters between the sender and the receiver of the message. Every filter receives a <i>binding</i>: this is where the filter should send the message. A binding binds to the next filter in the chain or to the final receiver. The point of this message-passing mechanism is that it’s robust: you can’t mess with the order of aspects. Also, note that the message-passing mechanism is only a mental model; in reality, this is implemented as normal method calls, and is very resource-effective.</p>
+
+<h4>Using the aspect</h4>
+
+<p>Since the aspect class behaves as a custom attribute we could apply it to any field we want to make undoable. Of course, this is not very convenient, and that’s why we will use a combination of <i>custom attribute multicasting</i> (by applying on a class, we implicitly apply it to all fields of that class) and <i>custom attribute inheritance</i> (by applying on a class, we implicitly apply it to all derived classes). Supposing that the common ancestor of all domain classes is <b>Entity</b>, we would write:</p>
+
+<pre>[Undoable(AttributeInheritance = MulticastInheritance.Multicast)]
+abstract class Entity
+{
+    public int ID;
+}</pre>
+
+<p>That’s all you need to track changes to all fields of your domain objects. However, that’s not the end of the story: you still need to ensure that the type of all fields of domain classes is either a domain class itself, either value types (hint: see <b>CompileTimeValidate</b> in PostSharp documentation), and you have implement the design pattern for collection types (using standard OOP, this time).</p>
+
+<p>Now you can see how AOP offers an elegant solution where conventional OOP alone requires a lot of code duplication. Indeed, in most projects, there are plenty of opportunities to use aspects.</p>
+
+<p align="right"><a href="http://www.sharpcrafters.com/downloads/blog/2010-11-UndoRedo.zip" target="_blank">Download the source code for this post.</a></p>
+
+<p>Happy PostSharping!</p>
+
+<p>-gael</p>

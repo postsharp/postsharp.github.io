@@ -1,0 +1,134 @@
+---
+layout: post
+title: "Actor Programming with Orleans: What’s Different?"
+date: 2014-04-07 12:31:58 +02:00
+categories: []
+permalink: /post/actor-programming-with-orleans-whats-different.html
+---
+<p>At Build 2014, Microsoft announced Project Orleans, an implementation of the Actor model for .NET and Azure. With theoretical foundations laid in 1973,
+    this programming model can hardly be considered a newbie. The choice of the project name itself is heavy of history – Orleans, a French town south of
+    Paris, was an important Gallic center before being conquered by the Roman empire.
+</p>
+<p>
+    Actors are at the root of the success of the Erlang language. Erlang has been developed by Joe Armstrong of Ericsson in 1986 to build telephony
+    infrastructure applications such as switches. The language has been open sourced in 1998.
+</p>
+<p>
+    Initially designed for niche applications, the actor programming model became more popular with the end of Moore law and raise of multi-core machines. The
+    turn to cloud computing and the generalization of distributed architecture finished to bring the actor model into the mainstream spotlight.
+</p>
+<p>
+    Orleans is not the first actor framework for .NET. The <a href="http://code.google.com/p/n-act/">NAct</a> open-source project has been there for almost 4
+    years, and PostSharp has provided an <a href="http://doc.postsharp.net/##actor">implementation</a> for 2 years.
+</p>
+<h1>
+    Horizontal scalability
+</h1>
+<p>
+    Yet, Orleans is a significant release. It is the first actor implementation that really focuses on horizontal scalability. White both NAct and PostSharp
+    Actor were limited to organizing concurrency within a single process, Orleans has been built from the ground up to cross the machine boundary and scale up to
+    the cloud. Orleans is the first to be a real actor <em>platform</em>, not just a <em>framework</em>. The primary production environment of Orleans is
+    Windows Azure. You can run it in-process for testing purposes, but the primary usage scenario is to deploy it on the cloud.
+</p>
+<p>
+    The cloud-first objective underpins many decisions of Orleans. In this article, I will try to compare Orleans to PostSharp Actors. But first let me do the
+    usual full disclosure: I am the principal developer behind PostSharp Actors and we sell it commercially.
+</p>
+<h1>
+    Invocation technology
+</h1>
+<p>
+    It would be tempting to say that Orleans is a run-time technology and PostSharp a build-time one, but this would be incorrect. The two products include
+    both a run-time <em>and</em> a build-time part. Yet, PostSharp is quite thin at run-time, and Orleans’ build-time functionalities are more limited.
+</p>
+<p>
+    When an actor method is invoked from the outside, the actor framework first needs to pack the method call (i.e. the identity of the actor, the identity of
+    the method being invoked, and its arguments). Then, the message is appended to a queue. At the other end of the queue, the actor framework dequeues the
+    message, unpacks its arguments, and invokes the target method on the actor itself.
+</p>
+<p>
+    Orleans and PostSharp do this in a very different manner. However, both involve build-time code generation.
+</p>
+<p>
+    In Orleans, actors must expose their functionality as an interface. When you compile an Orleans project, the framework will generate two classes for each
+    actor interface: one client-side proxy implementing the actor interface and deriving the <em>GrainReference</em> class, and one server-side invoker that
+    unpacks the messages and invokes the actor class. Typically, actor interfaces are defined in a standalone project that is shared by both the client and the
+    server; both generated proxies live in the same project as the interface itself.
+</p>
+<p>
+    PostSharp relies on the <a href="http://doc.postsharp.net/">MethodInterceptionAspect</a>, which does something similar (packing and unpacking arguments)
+    but without introducing new classes. Under the cover, PostSharp uses sorts of “proxy methods” that don’t change the class hierarchy. Therefore, client code
+    can refer to the Actor class directly instead of going through an interface. This may seem a minor benefit for this specific scenario; you can still use an interface if you want, it’s just that you are not required to do it.
+</p>
+<p>
+    So, both Orleans and PostSharp rely on build-time generation of proxies and invokers. Orleans does it <em>before</em> compilation using a code generator,
+    while PostSharp does it <em>after</em> compilation.
+</p>
+<h1>
+    Model validation
+</h1>
+<p>
+    The core idea of the actor model is to avoid shared mutable state by ensuring that the actor’s private state is accessed by a single thread at a time. To
+    ensure thread safety, user code must respect a set of rules. For instance, all methods must be asynchronous, all fields must be private, and the private
+    state must not be made available to other threads in any way.
+</p>
+<p>
+    Orleans and PostSharp are very different to this regard.
+</p>
+<p>
+Orleans has some basic validation of user code against the model. For instance, if the actor interface contains a method whose return type is not a    <em>Task</em>, you will get a build-time error. However, Orleans does not validate that the implementation is really asynchronous. In .NET, it’s possible to
+    create a method that does some work synchronously before returning a <em>Task</em>. Orleans documentation warns you that this scenario is erroneous and
+    you should only use methods made asynchronous by the <em>async</em> keyword, but no build-time or run-time error stops you when you’re doing a mistake.
+    Instead, you will get random data corruption. <em>Errare humanum est</em>, but in the case of multi-core programming, any mistake that is not detected in a
+    deterministic way is likely to be disproportionately expensive to diagnose. Neither does Orleans prevent your fields to be public or your private fields
+    to be accessed from another thread without going through the message queue. In short, Orleans makes you responsible to write good code, and will work fine
+    if you respect all rules.
+</p>
+<p>
+    Model validation is at the heart of PostSharp’s approach of multi-threading. PostSharp takes the assumption that to make errors is human and a better strategy is to
+    decrease the cost of human errors by detecting errors earlier and deterministically. Some errors (like having a public field) would be detected at build-time. Other errors, like accessing the actor state
+    from the wrong thread, can be detected only through run-time analysis. To achieve this, PostSharp checks the calling thread whenever a field is accessed.
+And because PostSharp has a notion of    <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-Aggregation-and-Composition-Patterns">parent-child relationship</a>, we are able to do that
+    even for deep children of the object. Of course, runtime validation comes at a performance cost, so it’s enabled by default only in the debug build.
+</p>
+<p>
+    Thus, Orleans and PostSharp differ very significantly in their approach to model validation. One is more like C, the other is more like C#. You can do more
+    with the first, but the second is safer.
+</p>
+<h1>
+    Orleans unique features
+</h1>
+<p>
+    The biggest difference between Orleans and PostSharp Actors is that Orleans can scale across machine boundaries. Not only the actors can communicate over
+    the network, but actors can move from one to another machine, which makes it possible to dynamically add nodes to an Orleans cluster, and automatically
+    distribute the load to them.
+</p>
+<p>
+    This objective underpins another design concept of Orleans. The state of an actor is kept in a persistent storage. The lifetime of an instance of an
+    actor class does not match the lifetime of the actor itself. Instead, an instance of the class is created whenever an actor needs to be <em>activated</em>;
+    the state of the actor is then deserialized and assigned to the actor instance. When an operation finishes, the state of the actor is serialized and saved
+    back to the storage.
+</p>
+<p>
+    Orleans implement this design by requiring actor persistent state to be stored in a separate object, exposed as a separate interface. By comparison, the
+    state of the actor in PostSharp is stored in the fields of the actor class itself, which is a more natural programming model.
+</p>
+<h1>
+    Summary
+</h1>
+<p>
+    Orleans and PostSharp Actors build on different visions: Orleans focuses on scaling horizontally on the cloud, while PostSharp limits itself to in-process
+    concurrency and puts more energy into validating the code for thread safety. Different objectives lead to different designs, and this article tried to
+    highlight the most important differences between both implementation.
+</p>
+<p>
+    Could we have a unified actor programming model for .NET, which would work great and naturally for in-process computing but would robustly scale to the
+    cloud? I’m not convinced that a wedding between Orleans (best at scaling) and PostSharp (best at programming experience) would be a perfect one, but I do
+    think both could learn from each other.
+PostSharp could learn to integrate with Orleans, and Orleans could do more model validation, for instance by delivering a ruleset for Microsoft Code Analysis.</p><p>The good thing is that you don’t need to switch to a new language or platform to use actors.</p>
+<p>
+    Happy PostSharping!
+</p>
+<p>
+    -gael
+</p>

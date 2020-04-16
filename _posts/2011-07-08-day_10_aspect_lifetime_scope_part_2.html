@@ -1,0 +1,293 @@
+---
+layout: post
+title: "PostSharp Principles: Day 10 Aspect Lifetime & Scope Part 2"
+date: 2011-07-08 15:37:00 +02:00
+categories: [Tutorial]
+permalink: /post/day-10-aspect-lifetime-scope-part-2.html
+---
+<p>Continuing from yesterday, we’re covering the lifetime and scope of aspects. Today we’ll look at the scope of aspects.</p>  <h3>Scope</h3>  <p>Aspects come in two scopes, static and instance. Static scoped aspects are created and initialized at compile time for consumption at runtime using a singleton pattern. Instance scoped aspects are a bit different. Instanced scoped aspects use a prototype pattern by creating and initializing the aspect at compile time, but at run time when a new instance of a target member’s declaring type is created, a new instance of the aspect is created and used. </p>  <p>Static scoped aspects have the same lifetime as the application while instance scoped aspects have the same lifetime as the instance of the type the aspect was applied to. </p>  <p>However, no matter which scope an aspect will have, PostSharp creates an instance of the aspect for each target in which the aspect has been applied. No doubt this is all confusing so let's see what's going on with a demo. </p>  <h3>Aspect demo</h3>  <p>To make sense of all of this, let's start with a basic aspect.</p>  <pre>[Serializable]
+public class TestAspect : LocationInterceptionAspect
+{
+    private string InstID;
+    private string aspectID;
+    private string source;
+    private int getCount = 0;
+
+    public override void CompileTimeInitialize(LocationInfo targetLocation, 
+                                                                 AspectInfo aspectInfo)
+    {
+        source = targetLocation.DeclaringType.Name + &quot;.&quot; + targetLocation.Name 
+                             + &quot; (&quot; + targetLocation.LocationType.Name + &quot;)&quot;;
+        aspectID = Guid.NewGuid().ToString();
+    }
+
+    public override void RuntimeInitialize(LocationInfo locationInfo)
+    {
+        InstID = Guid.NewGuid().ToString();
+    }
+
+    public override void OnGetValue(LocationInterceptionArgs args)
+    {
+        getCount++;
+
+        Console.WriteLine(source + &quot;\n\tInstance: &quot; + this.InstID + &quot;\n\tAspect: &quot; +
+                                             aspectID + &quot;\n\tCount: &quot; + getCount);
+        args.ProceedGetValue();
+    }
+}</pre>
+
+<p>In CompileTimeInitialize we setup our source which is a combination of declaring type, target name and then the target's type. Then we assign a guid to aspectID which we'll use when we evaluate the aspect's life. In RunTimeInitialize we do the same thing and create a new guid that we use for the instance id. Then in the OnGetValue method we just increment the count and print all of our data to the console before calling ProceedGetvalue.</p>
+
+<p>Our example class is as follows</p>
+
+<pre>class TestClass
+{
+    [TestAspect]
+    public int MyField1;
+
+    [TestAspect]
+    public int MyField2;
+
+    [TestAspect]
+    public static int MyField3;
+
+    public TestClass()
+    {
+        MyField1 = 1;
+        MyField2 = 2;
+    }
+
+    static TestClass()
+    {
+        MyField3 = 10;
+    }
+}</pre>
+
+<p>And our test code</p>
+
+<pre>int val = 0;
+for (int i = 1; i &lt;= 2; i++)
+{
+    Console.WriteLine(&quot;--- PASS {0} ---&quot;, i);
+
+    TestClass tc1 = new TestClass();
+    TestClass tc2 = new TestClass();
+
+    val = TestClass.MyField3;
+                
+    Console.WriteLine();
+    val = tc1.MyField1;
+    val = tc1.MyField2;
+
+    Console.WriteLine();
+    val = tc2.MyField1;
+    val = tc2.MyField2;
+                
+    Console.WriteLine();
+}</pre>
+
+<p>What we're doing is creating two instances of our TestClass and then getting the value of Myfield1 and MyField2 from each instance which our aspect will intercept and provide us with information about which aspect is handling our request.</p>
+
+<h3>Aspect for each target</h3>
+
+<p>When we run our test code, we get the following output (I’ve put the two passes side by side for comparison) 
+  <table border="0" cellspacing="0" cellpadding="0"><tbody>
+      <tr>
+        <td valign="top" width="50%">
+          <pre>--- PASS 1 ---
+TestClass.MyField3 (Int32)
+Instance: d6c15b92-3ba1-4aba-8325-1ca07d50979c
+Aspect: b73e55cf-6568-4b1c-9465-8d3b77f3288c
+Count: 1
+
+TestClass.MyField1 (Int32)
+Instance: 667d5f03-ac25-43ef-86dd-7aa88ccc46c7
+Aspect: a6e612ed-7ab9-4f31-956d-6be2f3198352
+Count: 1
+
+TestClass.MyField2 (Int32)
+Instance: a5efc352-31f0-430c-8153-d78e0e1453c4
+Aspect: 8feb7451-5df2-48e5-b57d-3588456aca96
+Count: 1
+
+TestClass.MyField1 (Int32)
+Instance: 667d5f03-ac25-43ef-86dd-7aa88ccc46c7
+Aspect: a6e612ed-7ab9-4f31-956d-6be2f3198352
+Count: 2
+
+TestClass.MyField2 (Int32)
+Instance: a5efc352-31f0-430c-8153-d78e0e1453c4
+Aspect: 8feb7451-5df2-48e5-b57d-3588456aca96
+Count: 2</pre>
+        </td>
+
+        <td valign="top" width="50%">
+          <pre>--- PASS 2 ---
+TestClass.MyField3 (Int32)
+Instance: d6c15b92-3ba1-4aba-8325-1ca07d50979c
+Aspect: b73e55cf-6568-4b1c-9465-8d3b77f3288c
+Count: 2
+
+TestClass.MyField1 (Int32)
+Instance: 667d5f03-ac25-43ef-86dd-7aa88ccc46c7
+Aspect: a6e612ed-7ab9-4f31-956d-6be2f3198352
+Count: 3
+
+TestClass.MyField2 (Int32)
+Instance: a5efc352-31f0-430c-8153-d78e0e1453c4
+Aspect: 8feb7451-5df2-48e5-b57d-3588456aca96
+Count: 3
+
+TestClass.MyField1 (Int32)
+Instance: 667d5f03-ac25-43ef-86dd-7aa88ccc46c7
+Aspect: a6e612ed-7ab9-4f31-956d-6be2f3198352
+Count: 4
+
+TestClass.MyField2 (Int32)
+Instance: a5efc352-31f0-430c-8153-d78e0e1453c4
+Aspect: 8feb7451-5df2-48e5-b57d-3588456aca96
+Count: 4</pre>
+        </td>
+      </tr>
+    </tbody></table>
+</p>
+
+<p>Let's break it down. In Pass 1 we see 5 calls made to our aspect. The first call is to the static member MyField3 while the next 2 are instance calls to MyField1 and MyField3 on tc1 instance and the same for the next 2 calls, but for the tc2 instance.</p>
+
+<p>If you compare the aspect ID's, there are actually only 3 different instances of our aspect, one for each of the properties we applied it to, MyField1, MyField2 and MyField3 even though we have two separate instances of TestClass.</p>
+
+<h3>Static Scoped</h3>
+
+<p>Now that we've identified that a new aspect is generated for each target, let's examine the Instance ID's. In Pass 1 we see there are 3 instance ID's. Examining Pass 2, we see those exact same instance ID's even though we created new instances of our class. </p>
+
+<p>Notice how the counter is increasing. In Pass 1 the first call to tc1.MyField1 results in 1 while the call to tc2.MyField1 results in a 2. In Pass 2 we see that the trend continues. This is due to the static nature of the aspect instances.</p>
+
+<h3>Instance Scoped</h3>
+
+<p>Aspects are only instance scoped when implementing the IInstanceScopedAspect interface or inheriting from InstanceLevelAspect, so let's update our aspect. </p>
+
+<pre>[Serializable]
+public class TestAspect : LocationInterceptionAspect, IInstanceScopedAspect
+{
+    private string InstID;
+    private string aspectID;
+    private string source;
+    private int getCount = 0;
+
+    public override void CompileTimeInitialize(LocationInfo targetLocation, 
+                                                                 AspectInfo aspectInfo)
+    {
+        source = targetLocation.DeclaringType.Name + &quot;.&quot; + targetLocation.Name 
+                      + &quot; (&quot; + targetLocation.LocationType.Name + &quot;)&quot;;
+        aspectID = Guid.NewGuid().ToString();
+    }
+
+    public override void RuntimeInitialize(LocationInfo locationInfo)
+    {
+        InstID = Guid.NewGuid().ToString();
+    }
+
+    public override void OnGetValue(LocationInterceptionArgs args)
+    {
+        getCount++;
+
+        Console.WriteLine(source + &quot;\n\tInstance: &quot; + this.InstID 
+                 + &quot;\n\tAspect: &quot; + aspectID + &quot;\n\tCount: &quot; + getCount);
+        args.ProceedGetValue();
+    }
+
+
+    #region IInstanceScopedAspect Members
+
+    public object CreateInstance(AdviceArgs adviceArgs)
+    {
+        return this.MemberwiseClone();
+    }
+
+    public void RuntimeInitializeInstance()
+    {
+        InstID = Guid.NewGuid().ToString();
+    }
+
+    #endregion
+}</pre>
+
+<p>Now we implement IInstanceScopedAspect which requires CreateInstance() and RuntimeInitializeInstance(). CreateInstance is called to create a new instance of the aspect based on the current instance, thus using the current instance as a protoype. All we need to do is use the MemberwiseClone() and we're set.</p>
+
+<p>RuntimeInitializeInstance is where we update our instance ID. If we didn't, we would only get the instance ID specified in the RuntimeInitialize which is only invoked once for each aspect when it's deserialized, not when a new instance is created.</p>
+
+<p>Let's run our test code and see how things have changed. (I’ve put the two passes side by side for comparison) 
+  <table border="0" cellspacing="0" cellpadding="0"><tbody>
+      <tr>
+        <td valign="top" width="319">
+          <pre><font face="Courier New">--- PASS 1 ---
+TestClass.MyField3 (Int32)
+Instance: ea470da4-ed8d-49e1-be96-5ae16ac000a6
+Aspect: b6aa3c5c-3868-40e8-af37-70234032d734
+Count: 1
+
+TestClass.MyField1 (Int32)
+Instance: a0b96c14-0d81-463f-9374-6915b6def2a0
+Aspect: a975c1ce-6839-454c-b054-14b185fd29a8
+Count: 1
+
+TestClass.MyField2 (Int32)
+Instance: 3a6676c6-0325-4ee3-8dbb-fe4d6c93acdd
+Aspect: dbd6865f-3b5b-48dd-a87e-ef8a89695e2f
+Count: 1
+
+TestClass.MyField1 (Int32)
+Instance: 3ee8689a-a1a9-4dfc-9ca6-10bd50129a1d
+Aspect: a975c1ce-6839-454c-b054-14b185fd29a8
+Count: 1
+
+TestClass.MyField2 (Int32)
+Instance: 84f63d43-c91a-46ba-8bda-89ad16d0ba2c
+Aspect: dbd6865f-3b5b-48dd-a87e-ef8a89695e2f
+Count: 1
+</font></pre>
+        </td>
+
+        <td valign="top" width="319">
+          <pre><font face="Courier New">--- PASS 2 ---
+TestClass.MyField3 (Int32)
+Instance: ea470da4-ed8d-49e1-be96-5ae16ac000a6
+Aspect: b6aa3c5c-3868-40e8-af37-70234032d734
+Count: 2
+
+TestClass.MyField1 (Int32)
+Instance: 2ad257df-682e-4652-98fa-5466d2bb08aa
+Aspect: a975c1ce-6839-454c-b054-14b185fd29a8
+Count: 1
+
+TestClass.MyField2 (Int32)
+Instance: e39fe1e1-ca7a-4b26-90ac-8c81fc1aafe5
+Aspect: dbd6865f-3b5b-48dd-a87e-ef8a89695e2f
+Count: 1
+
+TestClass.MyField1 (Int32)
+Instance: cb40067e-2b69-4c5b-814e-4a7420a085a9
+Aspect: a975c1ce-6839-454c-b054-14b185fd29a8
+Count: 1
+
+TestClass.MyField2 (Int32)
+Instance: e4c21efc-92e6-41cc-bf34-babbddf4ea48
+Aspect: dbd6865f-3b5b-48dd-a87e-ef8a89695e2f
+Count: 1
+</font></pre>
+        </td>
+      </tr>
+    </tbody></table>
+</p>
+
+<p>First, have a look at the Aspect ID's. Notice that again, there are only 3 ID's as we only have 3 targets. They are used both in Pass 1 and Pass 2. This is the same as the static scoped example. The difference is the instance ID's. Except for TestClass.Myfield3, which is static, there are no repeating instance ID's. For each target, we get a new instance of the aspect when we instantiated a new instance of TestClass. This can be verified by examining the count. Since we only make one get call per TestClass instance, count is always 1 because it's scoped to the current instance of the declaring type, tc1 and tc2. </p>
+
+<p>So what happened with TestClass.MyField3? Even though the aspect implements IInstanceScopedAspect, when applied to a static target, the aspect instance becomes static scoped. This only makes sense considering the nature of static members. </p>
+
+<h3>Conclusion</h3>
+
+<p>It's amazing how much flexibility PostSharp gives us, but as I've stated before, a solid understanding of how it works is key to producing quality results. This week we spent a lot of time under the hood looking at what PostSharp does when you click the build button.</p>
+
+<p>&#160;</p>
+
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-08-day_10_aspect_lifetime_scope_part_2/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="/assets/2011-07-08-day_10_aspect_lifetime_scope_part_2/self573_thumb[1]_thumb_3.jpg" width="66" height="66" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

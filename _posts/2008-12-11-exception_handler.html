@@ -1,0 +1,8 @@
+---
+layout: post
+title: "Exception Handler"
+date: 2008-12-11 20:09:22 +01:00
+categories: [General]
+permalink: /post/exception-handler.html
+---
+<h6>Custom Attributes That Handles Exceptions <br /></h6><p style="font-family: Consolas; font-size: 10pt"><span style="color: blue">public</span><span> <span style="color: blue">class</span> <span style="color: #2b91af">ExceptionDialogAttribute</span> : <span style="color: #2b91af">OnExceptionAspect</span></span><span style="font-family: Consolas"><br />{<span><br /></span><span style="color: blue">  public</span> <span style="color: blue">override</span> <span style="color: blue">void</span> OnException(<span style="color: #2b91af">MethodExecutionEventArgs</span> eventArgs)<span><br /></span>  {<span><br /></span><span style="color: blue">    string</span> message = eventArgs.Exception.Message;<br /><span style="color: #2b91af">    Window</span> window = <span style="color: #2b91af">Window</span>.GetWindow((<span style="color: #2b91af">DependencyObject</span>) eventArgs.Instance);<br /><span style="color: #2b91af">    MessageBox</span>.Show(window, message, <span style="color: #a31515">"Exception"</span>);<br />    </span><span style="font-family: Consolas">eventArgs.FlowBehavior = <span style="color: #2b91af">FlowBehavior</span>.Continue;<span><br /></span>  }</span><span style="font-family: Consolas"><br />}</span></p>

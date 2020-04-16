@@ -1,0 +1,111 @@
+---
+layout: post
+title: "PostSharp Principles: Day 1 – OnExceptionAspect"
+date: 2011-06-27 15:36:00 +02:00
+categories: [Tutorial]
+permalink: /post/day-1-e28093-onexceptionaspect.html
+---
+<p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>  <p>Welcome to day 1 of learning PostSharp. This series will walk you through the features of PostSharp over the course of a few weeks. Each feature will be explored and used in a functioning project to give a better understanding of the examples. </p>  <p>This week we'll be using PostSharp to enhance a simple contact management application while giving you an introduction to some of the out-of-the-box aspect classes that PostSharp provides for us. </p>  <h3>Getting started</h3>  <p>You will need to download and install PostSharp and the <a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">demo project source code</a>. For this series we will be using <a href="http://www.sharpcrafters.com/postsharp/download">PostSharp 2.0.9.3</a>. </p>  <h3>About the demo application</h3>  <p>The demo application is a simple windows forms project that uses an in-memory data store. It features search, add, edit and delete functionality. Go ahead and run the application and play around with it. </p>  <h3>The Problem</h3>  <p>If you have not done so already, try doing a search for a name that isn’t in the list. You receive an error dialog. This exception is very cryptic and contains some sensitive information about the data layer. </p>  <p>Exceptions are great for debugging because they contain a lot of information that can be used to track down troublesome code and conditions. However, this can be a double edged sword. If you were exposing a web service or a web site to the public and exception data was allowed to bubble up to the user, it could be used for malicious purposes. Another case is that the end user doesn’t need to know very specific details about what happened, just that something went wrong. </p>  <p>The best practice in these cases are to capture the real exception, perform some actions on it (such as logging) and then throw a new, more generic exception. </p>  <h3>The Fix</h3>  <p>There are two places where we can handle this, the data layer and the UI. We want to handle it in the data layer. The reason why is because we don’t want to expose details to the other layers if we don’t have to. This point might seem lost on this simple demo, but in real world development, you might have many public consumers of a data layer so you have to consider what data is exposed. </p>  <p>Update the GetByName method in InMemoryDataStore.cs by adding a try/catch around the method body </p>  <pre>public IQueryable<contact> GetByName(string value)
+{
+    try
+    {
+        var res = _contactStore.Where(c =&gt; c.FirstName.Contains(value) 
+                    || c.LastName.Contains(value));
+
+        if (res.Count() &lt; 1)
+        {
+            ThrowNoResultsException();
+        }
+
+        Thread.Sleep(3000);
+        return res.AsQueryable();
+    }
+    catch (Exception ex)
+    {
+        //Log exception here
+        throw new Exception(&quot;There was a problem.&quot;);
+    }
+}</pre>
+
+<p>Run the application and try a search for a non-existent name. This time we get a dialog with a friendly message and none of the sensitive information. </p>
+
+<h3>A Better Way</h3>
+
+<p>Not only did we fix our problem, we also cluttered the method with at least 7 lines of code to do it and it isn’t reusable. If we wanted to apply the same fix to the rest of the methods we would need to add the same try/catch to each method. </p>
+
+<p>Since this problem is a cross-cutting concern we can employ Aspect Oriented Programming. This is where PostSharp comes in. </p>
+
+<h3>OnExceptionAspect</h3>
+
+<p>PostSharp comes with an aspect class called OnExceptionAspect that is specifically designed for implementing exception handling policies. This is exactly what we need. Add a new file named DatabaseExceptionWrapper.cs and add the following code </p>
+
+<pre>[Serializable]
+public class DatabaseExceptionWrapper : OnExceptionAspect
+{
+    public override void OnException(MethodExecutionArgs args)
+    {
+        string msg = string.Format(&quot;{0} had an error @ {1}: {2}\n{3}&quot;, 
+            args.Method.Name, DateTime.Now, 
+            args.Exception.Message, args.Exception.StackTrace);
+
+        Trace.WriteLine(msg);
+
+        throw new Exception(&quot;There was a problem&quot;);
+    } 
+}</pre>
+
+<p>To use OnExceptionAspect, we simply inherit from it. OnExceptionAspect exposes a few virtual methods that we can override to gain access to certain events. Since we want to handle exceptions when they occur, we override the OnException method. </p>
+
+<p>The OnException method is called when an unhandled exception occurs in the target method. PostSharp will wrap the target method in a try/catch where the code we provided will be placed in the catch. </p>
+
+<p>Inside OnException, we build a string to hold some exception information that we will log. OnException provides us with a MethodExecutionArgs parameter that contains useful information about the current method and the exception that was thrown. args.Exception holds the exception that was thrown by the method so we can extract the details we need from there. We’ll cover more of MethodExecutionArgs later this week. </p>
+
+<h3>Applying an aspect</h3>
+
+<p>Now that we have it, we need to use it. PostSharp is flexible in how aspects can be applied. Today we'll go over the most direct way which is applying it to the target method declaration. Open the InMemoryDataStore.cs and navigate to the GetByName method. Remove the extra code we added before and add a [DatabaseExceptionWrapper] attribute to the method declaration. </p>
+
+<pre>[DatabaseExceptionWrapper]
+public IQueryable<contact> GetByName(string value)
+{
+    var res = _contactStore.Where(c =&gt; c.FirstName.Contains(value) 
+                || c.LastName.Contains(value));
+
+    if (res.Count() &lt; 1)
+    {
+        ThrowNoResultsException();
+    }
+
+    Thread.Sleep(3000);
+    return res.AsQueryable();
+}</pre>
+
+<p>Run the application again and the result is exactly the same as it was before. The difference is that we now have a reusable and clean way to apply our exception wrapping solution to methods. </p>
+
+<p>Since PostSharp is a Post-Compile processor, meaning it does its work after msbuild.exe has turned your C# into MSIL, it uses the attributes to determine the work that needs to be done. PostSharp will find the DatabaseExceptionWrapper attribute decoration on the GetByName method and then inject our code in the correct spots. </p>
+
+<h3>GetExceptionType</h3>
+
+<p>Another method that OnExceptionAspect exposes for us is GetExceptionType. The way OnExceptionAspect works is by wrapping the method in a try/catch block and catching exceptions of type Exception. But there will be cases when you want to handle a specific type of error. </p>
+
+<p>A good example of this would be a connection time-out exception when making a call to a web service. Your exception handling policy for a connection time-out could be to wait and retry before giving up. But you only want to handle that specific exception, not all exceptions. This is where GetExecutionType comes in. </p>
+
+<p>Implementing GetExceptionType is nothing more than returning the type you wish to handle. This method is called at build-time by PostSharp to determine how the try/catch block is going to be created. </p>
+
+<p>Add the following code to our aspect class </p>
+
+<pre>public override Type GetExceptionType(System.Reflection.MethodBase targetMethod)
+{
+    return typeof(InvalidOperationException);
+}</pre>
+
+<p>GetExceptionType is called at compile time by PostSharp to determine how to generate the try/catch. We’re telling PostSharp that it should build the catch clause to only handle InvalidOperationException types. If a different exception were thrown then our aspect would not cover it. </p>
+
+<p>To add flexibility, you can declare an ExceptionType public property on the aspect that will allow the type to be set when the aspect is declared. The GetExceptionType method would only need to return that property. </p>
+
+<h3>Conclusion</h3>
+
+<p>How much time will you save by creating logging code once and then forgetting about it? Adding logging and exception handling to new and existing methods is now just one line of code and no clutter. Different aspects can be built to handle different scenarios and can be added and removed to any method in any combination with little or no development effort. </p>
+
+<p>&#160;</p>
+
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self" border="0" alt="self" align="left" src="/assets/2011-06-27-day_1_e28093_onexceptionaspect/self.jpg" width="66" height="66" />Dustin Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

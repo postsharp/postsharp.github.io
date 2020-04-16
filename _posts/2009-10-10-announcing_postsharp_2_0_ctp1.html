@@ -1,0 +1,108 @@
+---
+layout: post
+title: "Announcing PostSharp 2.0 CTP1"
+date: 2009-10-10 09:14:22 +02:00
+categories: [General]
+permalink: /post/announcing-postsharp-2-0-ctp1.html
+---
+
+<p>PostSharp 2.0 CTP1 it out! You can
+<a href="http://www.postsharp.org/all-downloads/postsharp-2.0">download it</a> 
+today. </p>
+<p>As you understood from my previous posts, PostSharp 2.0 is no disguised minor 
+upgrade. PostSharp 2.0 brings major innovations not only to the .NET community, 
+but also to the aspect-oriented programming (AOP) community in general.</p>
+<p>The <a href="http://www.postsharp.org/blog/postsharp-20-design-objectives">design objective</a> of PostSharp 2.0 is to 
+provide a powerful, robust and supportable platform for build-time 
+aspect-oriented programming for the next 5 years, with high focus on 
+extensibility and well-definedness; PostSharp 2.0 is explicitely designed to 
+support multiple vendors of aspects so that ISVs can confidently distribute 
+aspects to their customers.</p>
+<p>The principal new features of PostSharp 2.0 are the following:</p>
+
+
+<ul>
+<li>
+<a href="http://www.postsharp.org/blog/introducing-postsharp-20-1-notifypropertychanged">
+Brand new aspect framework with support for advices (formerly named handlers)</a>, putting PostSharp
+on the level of leading aspect frameworks in other programming communities.</li><li>
+<a  href="http://www.postsharp.org/blog/introducing-postsharp-20-2-amazing-runtime-performance-enhancements">
+Amazing Runtime Performance 
+Enhancements</a> thanks to Adaptive Code Generation: you don't pay any more for features you don't use.
+</li>
+<li>
+
+<a  href="http://www.postsharp.org/blog/introducing-postsharp-20-3-aspect-dependencies">
+A Robust Aspect Dependencies Framework</a> ensuring 
+that multiple aspects behave in a predictive and 
+consistent way when applied on the same code 
+element.</li>
+<li>
+<a href="http://www.postsharp.org/blog/introducing-postsharp-20-4-visual-studio-add-in">
+A Visual 
+Studio Add-In</a> enhancing developers' productivity by answering graphically to two questions: 
+to which code elements is my aspect applied, and which aspects are 
+applied to my code element.
+</li>
+<li>
+<a  href="http://www.postsharp.org/blog/introducing-postsharp-20-5-build-performance-and-packaging">
+Improved Packaging and Start-Up Process</a> acheiving higher 
+performance, better reliability of the assembly search algorithm, 
+and better supportability through extensive logging and support for
+<a href="http://www.gibraltarsoftware.com/">Gibraltar</a> (you can 
+download <a href="http://www.gibraltarsoftware.com/Try/Default.aspx">
+their evaluation version</a> if you want to have the same support 
+experience than we have when you&#39;ll send us support details -- just 
+start Gibraltar Analyst).</li>
+</ul>
+
+<p>That was for the hype.</p>
+<p>Now, frankly. Put your expectations inline with this fact that it is the 
+first CTP. The objective of an early CTP is to deliver all risky features and 
+see if it works. Sure, we have hundreds of unit tests, and it works for us. But 
+there is a huge varierty of deployment conditions and source code structure in 
+the field, and it&#39;s something we&#39;ll never be able to fully reproduce in a lab.</p>
+<h2>What&#39;s Not There?</h2>
+<p>This is maybe as important as what&#39;s there. The following features are not in 
+the first preview but <em>they will be there in a future preview</em>.</p>
+<ul>
+<li>Conceptual documentation has not been updated. Class reference has been. 
+Please refer to the blog (links given above) for introduction.</li>
+<li>PostSharp SDK (PostSharp Core) is not a part of the release and is not 
+documented. Please do not use PostSharp Sdk with this CTP since next 
+previews will probably break your code.</li>
+<li>.NET 4.0 is not yet supported. Sorry for that. I know many of you are 
+looking forward for it. It&#39;ll be in next preview.</li>
+<li>Support for Compact Framework and Silverlight is not shipped with this 
+release. It will be enabled back in a future preview, and newer versions of 
+the platform will be supported.</li>
+</ul>
+<h2>When Will It Be Commercially Available?</h2>
+<p>Not before december; probably later.</p>
+<p>Lenka, Jirka and others are working hard to deliver a brand new website. 
+Attorneys are at work to deliver license texts. And PostSharp 2.0 is far from a 
+release candidate anyway.</p>
+<p>So please be patient and contact me for any commercial question.</p>
+<h2>So What&#39;s Now?</h2>
+<p>Remember
+<a href="http://www.postsharp.org/blog/postsharp-20-design-objectives">what I 
+wrote</a> when I gave the first indications about PostSharp 2.0:</p>
+<blockquote>
+You know how communication is like: people will blog about it, say it&#39;s 
+great (it is), and so on. I will do the same because I need to sell. But 
+don&#39;t forget we are first engineers and not marketers.
+
+I want you to break the product. Find flaws. Find the weak element. Where 
+will the design break, when it will break? Compare the features to your 
+cases. Is there a case we could solve with a small design modification? We 
+will maybe not solve your use case in this release, but make sure the design 
+allows us to address the case in a future release. Nobody else than you, 
+knowledgeable of your particular business, can provide this feedback.</blockquote>
+<p>So download PostSharp 2.0 CTP1 and put it on the test bench. Discuss issues 
+on the forum and report bugs. You did a great job with PostSharp 1.0. Together, 
+we&#39;ll PostSharp 2.0 still better!</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+
+
+

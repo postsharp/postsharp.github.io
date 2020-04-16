@@ -1,0 +1,135 @@
+---
+layout: post
+title: "PostSharp Principles: Day 9 Aspect Lifetime & Scope Part 1"
+date: 2011-07-07 15:24:00 +02:00
+categories: [Tutorial]
+permalink: /post/day-9-aspect-lifetime-scope-part-1.html
+---
+<p>Aspects have a lifetime as well as a scope just like classes in your project. Understanding this cycle is important for producing quality aspects as well as getting aspects to do what you need them to do. Today we’re going to cover the lifecycle.</p>  <h3>Aspect Lifetime</h3>  <p>So far we’ve built aspects and we’ve seen the results in action. What we haven’t seen is what happens between those two points. After the build process has been completed by MSBuild, PostSharp starts up and starts processing our aspects and aspect declarations. </p>  <p>Aspects go through two phases, compile time initialization and run time initialization.</p>  <p><i>Note: For Silverlight, Windows Phone and .NET CF, aspects are initialized at run time and all compile time steps are skipped. </i></p>  <h3>Compile time</h3>  <p>One of the benefits of using PostSharp is that it initializes aspects at compile time. Any expensive work that needs to be done related to the aspect can be done at compile time instead of run time. The build process may take a hit on performance, but run time does not suffer. </p>  <p>A new aspect instance is created for every target to which the aspect is applied. Each aspect goes through compile time validation and initialization. Aspect instances are then serialized into a resource for consumption at run time.</p>  <h4>Compile time Validation</h4>  <p>Last week we covered multicasting which is a way to apply an aspect to multiple targets. Even though multicasting gives us flexibility in applying aspects to targets, there are times when application of an aspect to a target must be considered using logic. </p>  <p>All aspects have a CompileTimeValidate virtual method. When implemented in the aspect, PostSharp will call this method to determine if the application of the aspect should continue on the given target. Depending on the type of aspect being implemented, CompileTimeValidate parameter(s) will be reflection information about the current target PostSharp is asking about. For example, Method based aspects like OnExceptionAspect and OnMethodBoundaryAspect will have a parameter of type MethodBase while LocationInterceptionAspect will have a parameter of type LocationInfo. If the aspect has been applied on an invalid target, implementations of this method must return false so this target will be silently ignored. Implementations can emit errors and warning by using Message.Write.</p>  <h4>Compile time Initialization</h4>  <p>All aspects also have a CompileTimeInitialize virtual method that can be implemented to perform expensive operations and/or initialize serializable fields so they are available at run time. PostSharp provides CompileTimeInitialize with the reflection information about the current target as well as information about the current aspect. Remember that since this is compile time, you won’t have access to the actual instance of the targets.</p>  <h3>Run time</h3>  <p>Before any aspect can be executed, PostSharp has to deserialize the aspects and initialize them. Since the serialization process uses a binary serializer, the aspect’s constructor is not called. The only way to perform initialization tasks at run time is to implement the RunTimeInitialize virtual method. When implementing RunTimeInitialize, you have access to the reflection information for the target but unlike CompileTimeInitialize, you have access to the instance of the target, not just the Meta data.</p>  <h3>Example: Caching</h3>  <p>We’re going to borrow the caching aspect from Matthew Groove’s post <a href="http://www.sharpcrafters.com/blog/post/5-Ways-That-Postsharp-Can-SOLIDify-Your-Code-Caching.aspx">5 Ways That Postsharp Can SOLIDify Your Code: Caching</a> for this example. </p>  <pre>[Serializable]
+public class CacheAttribute : MethodInterceptionAspect
+{
+    [NonSerialized]
+    private static readonly ICache _cache;
+    private string _methodName;
+
+    static CacheAttribute()
+    {
+        if (!PostSharpEnvironment.IsPostSharpRunning)
+        {
+            // one minute cache
+            _cache = new StaticMemoryCache(new TimeSpan(0, 1, 0));
+            // use an IoC container/service locator here in practice
+        }
+    }
+
+    public override void CompileTimeInitialize(MethodBase method, AspectInfo aspectInfo)
+    {
+        _methodName = string.Format(&quot;{0}.{1}&quot;, method.DeclaringType.Name, method.Name);
+    }
+
+    public override void OnInvoke(MethodInterceptionArgs args)
+    {
+        var key = BuildCacheKey(args.Arguments);
+        if (_cache[key] != null)
+        {
+            args.ReturnValue = _cache[key];
+        }
+        else
+        {
+            var returnVal = args.Invoke(args.Arguments);
+            args.ReturnValue = returnVal;
+            _cache[key] = returnVal;
+        }
+    }
+
+    private string BuildCacheKey(Arguments arguments)
+    {
+        var sb = new StringBuilder();
+        sb.Append(_methodName);
+        foreach (object argument in arguments.ToArray())
+        {
+            sb.Append(argument == null ? &quot;_&quot; : argument.ToString());
+        }
+        return sb.ToString();
+    }
+}</pre>
+
+<p>Notice the _cache field is marked as NonSerialized. Fields that are not initialized at compile time or are not serializable should be decorated with NonSerializable. This aspect has a static constructor to instantiate _cache to a new instance of StaticMemoryCache. Static constructors are called even when doing binary serialization. </p>
+
+<p>CompileTimeInitialize is where the cache key prefix is created. In this case it’s just the method name for the target. The values stored in fields/properties at compile time will be serialized into the aspect for consumption at runtime.</p>
+
+<p>The OnInvoke method starts out by building a cache key which consists of the method name of the target method (set at compile time) and the value of each method argument. If the cache contains a valid object for the generated key then the value is returned from cache. If not, then the method is invoked and the return value is stored in cache.</p>
+
+<p>A caching aspect is beneficial on expensive operations such as complex computations or frequently accessed data from a database. We’ll use it on our MD5 hash computation method</p>
+
+<pre>class Program
+{
+    static void Main(string[] args)
+    {
+        TestClass tc = new TestClass();
+        Console.WriteLine(tc.GetMD5Hash(&quot;PostSharp&quot;));
+        Console.WriteLine(tc.GetMD5Hash(&quot;SharpCrafters&quot;));
+        Console.WriteLine(tc.GetMD5Hash(&quot;PostSharp&quot;));
+        Console.WriteLine(tc.GetMD5Hash(&quot;SharpCrafters&quot;));
+
+        Console.ReadKey();
+
+    }
+}
+
+class TestClass
+    {
+        public TestClass() { }
+
+        [Cache]
+        public string GetMD5Hash(string value)
+        {
+            MD5 md5 = System.Security.Cryptography.MD5.Create();
+            byte[] inputBytes = System.Text.Encoding.ASCII.GetBytes(value);
+            byte[] hash = md5.ComputeHash(inputBytes);
+
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i &lt; hash.Length; i++)
+            {
+                sb.Append(hash[i].ToString(&quot;X2&quot;));
+            }
+            return sb.ToString();
+        }
+            
+    }</pre>
+
+<p>The first two calls will result in a computation but the second two will return the value from cache without the original method being called.</p>
+
+<p>Just for fun, set break points on the CompileTimeValidate and CompileTimeInitialize methods. Notice they are never hit even if you run the application. Let’s have a look at what happened after we compiled. 
+  <table border="0" cellspacing="0" cellpadding="0"><tbody>
+      <tr>
+        <td valign="top" width="319">
+          <p><b>No aspects applied</b></p>
+        </td>
+
+        <td valign="top" width="319">
+          <p><b>Aspects applied</b></p>
+        </td>
+      </tr>
+
+      <tr>
+        <td valign="top" width="319"><a href="/assets/2011-07-07-day_9_aspect_lifetime_scope_part_1/image_15.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-07-day_9_aspect_lifetime_scope_part_1/image_thumb_15.png" width="249" height="74" /></a></td>
+
+        <td valign="top" width="319"><a href="/assets/2011-07-07-day_9_aspect_lifetime_scope_part_1/image_16.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-07-day_9_aspect_lifetime_scope_part_1/image_thumb_16.png" width="391" height="109" /></a></td>
+      </tr>
+    </tbody></table>
+</p>
+
+<p>Looking at the compiled executable with ILSpy, we can see that compiling with our aspect applied produces a Resources node on the namespace tree which contains a binary file. Remember, in CompileTimeInitialize the private field _methodName was populated with the target method name. If you browse around ILSpy you won’t find any trace of that value. If you look at the binary file under Resources however, we see that the value was serialized along with the aspect instance.</p>
+
+<p><a href="/assets/2011-07-07-day_9_aspect_lifetime_scope_part_1/image_17.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-07-day_9_aspect_lifetime_scope_part_1/image_thumb_17.png" width="622" height="269" /></a></p>
+
+<p>PostSharp has initialized the instances of the aspect for each target, and then serialized them into a resource for consumption at run time.</p>
+
+<h3>Conclusion</h3>
+
+<p>You should now have a good idea about the process between writing an aspect and seeing it in action. Understanding the process of how an aspect is initialized is important when rolling custom aspects. Today we only cove<a name="_GoBack"></a>red the first half. Tomorrow we’re going to cover aspect scope.</p>
+
+<p>&#160;</p>
+
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-07-day_9_aspect_lifetime_scope_part_1/self573_thumb[1]_2.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="/assets/2011-07-07-day_9_aspect_lifetime_scope_part_1/self573_thumb[1]_thumb_2.jpg" width="66" height="66" /></a>Dustin Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

@@ -1,0 +1,142 @@
+---
+layout: post
+title: "PostSharp Threading Toolkit: Thread Dispatching"
+date: 2012-07-11 16:12:00 +02:00
+categories: []
+permalink: /post/postsharp-threading-toolkit-thread-dispatching.html
+---
+<p>Following the announcement of our new PostSharp Threading Toolkit, today I would like to show you some of its capabilities, starting with method dispatching.</p>  <p>Typical applications often include long-running operations that should be scheduled to run in a background thread, often invoked with a fire-and-forget approach.</p>  <p>This is doubly true in case of thick client applications. Almost all desktop applications need to load some data from disk, download it from network or perhaps call a WCF service. These operations take time and if you execute them from the main application thread, they are going to block the message loop and even prevent the user interface from being drawn. This is the “frozen application” syndrome that frustrates so many users.</p>  <h2>Non-Solution 1: Manual thread dispatching</h2>  <p>The obvious solution is to run the operation in a background thread, so that the message loop is not blocked. In .NET this can be done in several ways, typically using ThreadPool or Tasks. The code may not be as pretty as you would like it to be, but it works. Things get worse when you need to display the progress of the operation or notify the user when you are done. Whether you are developing in WinForms or WPF, you will not be allowed to interact with the UI from a background thread and have to resort to Control.Invoke() or Dispatcher object, resulting in code resembling this snippet:</p>  <pre>private void onButtonClick(object sender, EventArgs e)
+{
+   Task.Factory.StartNew(() =&gt;
+      {
+         for (int i = 0; i &lt; 100; ++i)
+         {
+            this.Invoke(new Action(() =&gt; { this.progressBar.Value = i; }));
+         }
+      });
+}</pre>
+
+<p>Note that half of this code aims at dispatching the execution from one thread to another, which makes it difficult to read and understand.</p>
+
+<h2>Non-Solution 2: BackgroundWorker</h2>
+
+<p>If all you need is to update some progress bar, you may be tempted to use the BackgroundWorker component instead:</p>
+
+<pre>public Form()
+{
+   backgroundWorker.DoWork += backgroundWorker_DoWork;
+   backgroundWorker.ProgressChanged += backgroundWorker_ProgressChanged;
+   backgroundWorker.RunWorkerCompleted += backgroundWorker_RunWorkerCompleted;
+}
+
+private void onButtonClick(object sender, EventArgs e)
+{
+   backgroundWorker.RunWorkerAsync();
+}
+
+void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
+{
+   for (int i = 0; i &lt; 100; ++i)
+   {
+      backgroundWorker.ReportProgress(i);
+   }
+}
+
+void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
+{
+   this.progressBar.Value = e.ProgressPercentage;
+}
+
+void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
+{
+   this.statusLabel.Text = &quot;Done!&quot;;
+}</pre>
+
+<p>Although this solution has some boilerplate code, it is actually reasonably legible and hassle-free. Still, it forces you to have an event–based code execution flow, which, in most cases, is not really natural for the operation being performed. And you’re limited to the interaction points provided by .NET framework (started, finished, progress changed). This may be an acceptable trade-off, if no better solution is readily available (and, of course, I’m going to show you one in just a little moment).</p>
+
+<p>Additionally, what if you want to use pattern such as Model-View-Presenter (MVP) or Model-View-ViewModel (MVVM)? You probably would like to execute the most time-consuming methods of your presenters (or ViewModels) in the background, and all the rest of their code in the UI thread (to avoid multithreading issues and allow free interaction with the views). Still, you probably don’t want your presenters to directly depend on the <em>BackgroundWorker</em> component. To avoid awkwardness in your code base, you need some dispatching mechanism available within your presenter.</p>
+
+<h2>Solution 3. C# 5.0 and async/await</h2>
+
+<p>What about async / await mechanism of C# 5, then? Well, firstly, it is not here yet. Your customers probably do not have .NET 4.5 installed on their machines and this is probably not going to change for quite some time. If you are adventurous, you can try out Async Targeting Pack for Visual Studio 2012 and run your async / await code on .NET 4.0. Still, do async / awaits really solve your problems?</p>
+
+<p>First thing to remember is that async methods are by themselves still executed in the UI thread. They only gain the capability to await other asynchronous operations. Unless you are calling non-blocking operations only (e.g. typically asynchronous operations provided to you by the framework), you will actually still need some boilerplate code (mainly creating tasks) to make some of your code execute in the background.</p>
+
+<p>Moreover, the async/await mechanism is not useful for dispatching back to the foreground thread when you are currently on the background thread. You still need to ensure that you are calling the async method from the thread it is intended to run on.</p>
+
+<p>Enter Postsharp Threading Toolkit and its dispatching aspects.</p>
+
+<h2>Solution 4. PostSharp Threading Toolkit</h2>
+
+<p>Thread dispatching aspects let you easily achieve all the above goals while having negligible impact on your code readability. For simplicity’s sake, let’s assume you’re developing WinForms application using MVP pattern and at some point need to perform a time-consuming operation while reporting progress in the UI.</p>
+
+<p>In case your goal is calculation of Fibonacci number while also sleeping repeatedly (it is a kind of operation you implement every day, right?) your presenter might end up looking somewhat like this one:</p>
+
+<pre>public class FibonacciPresenter
+{
+    private readonly IFibonacciView _view;
+        
+    public FibonacciPresenter(IFibonacciView view)
+    {
+        _view = view;
+    }
+
+    public void OnFibonacciNumberRequested(int index)
+    {
+        _view.EnterWaitingState();
+        CalculateFibonacciNumber(index);
+    }
+
+    [BackgroundMethod]
+    private void CalculateFibonacciNumber(int index)
+    {
+        long[] fibNumbers = new long[index+1];
+        fibNumbers[0] = 0;
+        fibNumbers[1] = fibNumbers[2] = 1;
+        for (int i = 3; i &lt;= index; ++i)
+        {
+            fibNumbers[i] = fibNumbers[i - 1] + fibNumbers[i - 2];
+            Thread.Sleep(100);
+            DisplayProgress((int) Math.Round(100*(i/(double) index)));
+        }
+
+        OnFibonacciNumberCalculated(index, fibNumbers[index]);
+    }
+
+    [DispatchedMethod(IsAsync = true)]
+    private void DisplayProgress(int percent)
+    {
+        _view.DisplayProgress(percent);
+    }
+
+    [DispatchedMethod(IsAsync = true)]
+    private void OnFibonacciNumberCalculated(int index, long fibonacciNo)
+    {
+        _view.DisplayCalculatedFibonacciNumber(fibonacciNo);
+        _view.ExitWaitingState();
+    }
+}</pre>
+
+<p>As you see, the code basically ignores the fact that two threads are involved and the background method simply calls UI-modifying methods (<em>DisplayProgress</em> and <em>OnFibonacciNumberCalculated</em>) without any explicit cross-thread operations. All the heavy-lifting is actually handled by the two aspects:</p>
+
+<ul>
+  <li><strong>BackgroundMethodAttribute</strong> marks a method for execution as a separate Task, the caller is going to immediately continue execution; </li>
+
+  <li><strong>DispatchedMethodAttribute</strong> informs that the method should be executed in the UI thread; it supports both WinForms and WPF applications. </li>
+</ul>
+
+<p><em>BackgroundMethodAttribute</em> simply executes the method from the thread pool by creating a new Task. If you create a lot of tasks (directly or using Threading Toolkit) and expect that this particular method may take significant amount of time to complete, set <em>IsLongRunning</em> property to true. This is equivalent to setting <em>TaskCreationOptions.LongRunning</em> when creating task manually.</p>
+
+<p><em>DispatchedMethodAttribute</em> is a little bit more complicated. It requires that objects whose methods it’s applied on are created in the UI thread. Additionally, in its current implementation, it can only work if <em>SynchronizationContext</em> has already been initialized by the .NET Framework by the time the object is constructed. This means that your dispatching-reliant objects should not be created before the first UI class (Window, Form, Application etc.). As you can see in the example, this is not a problem in a typical application, but, if you prefer, you can take more control of the way actual dispatching is performed.</p>
+
+<p><em>DispatchedMethodAttribute</em> executes the method from the thread that created the object, typically the UI thread. Under the hood, the <em>SynchronizationContext</em> machinery is used. If you want to have complete control over which <em>SynchronizationContext</em> should be used to execute the method, you can have the class implement the <em>IDispatcherObject </em>interface. Otherwise, PostSharp will just implement this interface for you. Finally, the <em>IsAsync</em> property determines whether the method should be executed as “fire and forget”. By default, the calling thread will wait until the foreground completed the execution of the method.</p>
+
+<h2>Summary</h2>
+
+<p>Dispatching code back and forth from the foreground to the background thread is not fun. It’s one of these concerns that is not a feature. It does not really bring value for customers, but they won’t be satisfied if you don’t implement it.</p>
+
+<p>Because the compiler is not smart enough to understand multithreading, you have to write most of this code yourself. Not only does this divert you from building real features, but it also makes your code less readable and more difficult to maintain. With PostSharp Threading Toolkit, we made your compiler much smarter. You can just concentrate on your business logic and let PostSharp handle the technicalities.</p>
+
+<p>In case you’re interested how they work behind the scenes, simply have a look at the source code in the Github repository (<a href="https://github.com/sharpcrafters/PostSharp-Toolkits">https://github.com/sharpcrafters/PostSharp-Toolkits</a>).</p>
+
+<p>Happy PostSharping!</p>

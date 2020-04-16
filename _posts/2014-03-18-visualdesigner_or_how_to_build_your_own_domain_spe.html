@@ -1,0 +1,122 @@
+---
+layout: post
+title: "VisualDesigner, or how to build your own domain-specific PowerPoint"
+date: 2014-03-18 08:01:00 +01:00
+categories: []
+permalink: /post/visualdesigner-or-how-to-build-your-own-domain-specific-powerpoint.html
+---
+<p><em>A couple of weeks ago we announced our PostSharp 3.2 makes it much easier to <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">implement undo/redo in your app</a>. We didn’t want to publish the feature before giving it a serious try, but didn’t have an internal app to dogfood. So we looked for an open-source project that would greatly benefit from the feature. We selected <a href="https://github.com/SuperJMN/VisualDesigner">VisualDesigner</a>, a framework to build graphical editors as PowerPoint, Visio or Blend. VisualDesigner is hosted on <a href="https://github.com/SuperJMN/VisualDesigner">GitHub</a> and released under the permissive MS-PL.</em></p>
+<p><em>VisualDesigner is being developed by José Manuel Nieto (@SuperJMN). José works at DocPath, building software to help customers to design and create dynamic documents. With years of experience in graphical editors, he understands that visualization and UI interaction are very important to DocPath’s product line. You can find José’s contact info on his <a href="https://github.com/SuperJMN">GitHub profile page</a>.</em></p>
+<p><em>We asked José to talk about his project.</em></p>
+<p><img style="border: 1px solid grey; margin-top: 40px; margin-left: 25px; float: right;" alt="Jose Manuel Nieto" src="/assets/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/jose1.jpg"></p>
+<p><strong>How did you come to the idea of creating VisualDesigner?</strong></p>
+<p>It all started as one of my many side projects. As part of my experience, I have seen that visual designers have a lot of potential. A great number of applications can benefit in a way or another from this concept. I realized that there was almost no information about how to develop a visual designer from scratch and most importantly, doing it the right way. Only a few basic samples, incomplete and not generic enough to be a solid start for others to make their own designers in a MVVM way. I took it as a challenge and felt I had enough knowledge to make something useful out of it while enjoying my passion for development.</p>
+<p><strong>Tell us more about VisualDesigner.</strong></p>
+<p>It’s a little framework that enables anybody to develop their own designer in minutes. It solves the most common scenarios in a designer and can be extended easily. It’s made specifically to apply the MVVM pattern.</p>
+<p>The project consists of several libraries and 2 demo applications. One is a WPF demo. It was the first I developed.</p>
+<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="WPF Demo App" src="/assets/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd1.png">
+<p style="text-align: center; font-size: 0.85em;"><em>Picture 1 WPF Demo application</em></p>
+</div>
+<p>As most of the code is shared through a Portable Class Library, it was very easy to create a demo application using other Windows platforms like Windows RT.</p>
+<p>The Window RT demo is a very basic comic creator. You can drop a sample character, add speech bubbles and frames. You can also modify their properties like text, fonts, colors…</p>
+<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="" src="/assets/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd2.png">
+<p style="text-align: center; font-size: 0.85em;"><em>Picture 2 Windows Store Demo Application </em></p>
+</div>
+<p>90% of the code is shared, and it works out of the box, that it’s a very good thing.</p>
+<p><strong>What are the principal features of VisualDesigner?</strong></p>
+<p>I think the most important feature is that it’s domain-agnostic. It doesn’t require you to modify your model to work as expected.</p>
+<p>Talking about the different operations that can be applied to a design, it features:</p>
+<ul style="margin-left: 25px;">
+<li>move, resize,</li>
+<li>group, ungroup,</li>
+<li>bring to front, send to back,</li>
+<li>snapping, undo/redo.</li>
+</ul>
+<p>It supports WPF and WinRT through Portable Class Librairies.</p>
+<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="" src="/assets/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd3.png">
+<p style="text-align: center; font-size: 0.85em;"><em>Picture 3 Snapping to edges is a nice feature </em></p>
+</div>
+<p><strong>What were your architectural/design priorities?</strong></p>
+<p>As a die-hard Clean Code follower, I think that source code should be written to be read, not to be deciphered. I put emphasis in best practices and principles to make it robust and easy to understand. Also, having a clean domain model is a top priority for me. I come from applications developed from a Domain-Driven Design perspective and my natural tendency is to keep the model as the true protagonist.</p>
+<p>For instance, take a look at this class:</p>
+<pre>    
+public class SpeechBubble : Shape
+{
+    public string Text { get; set; }
+
+    public Color TextColor { get; set; }
+
+    public double FontSize { get; set; }
+    public string FontName { get; set; }
+}
+
+
+</pre>
+<p>It’s what we call a POCO. It cannot be clearer. It is part of the model, and in VisualDesigner we can work with instances of SpeechBubble directly on a DesignSurface without adding anything else.</p>
+<p><strong>How did PostSharp help achieve better code?</strong></p>
+<p>PostSharp has a wide variety of features that can improve the quality of the code. The NotifyPropertyChanged aspect is particularly useful when working with the UI.</p>
+<pre>    
+[NotifyPropertyChanged]
+    public sealed class DesignSurface : ListBox, IDesignSurface
+    {
+…
+
+</pre>
+<p>Marking a type with this annotation (aspect) makes PostSharp to automatically raise the PropertyChanged event whenever a property changes.</p>
+<p>It’s really nice to see that this feature works in perfect consonance with the rest of the features, like Undo/Redo. This is especially valuable. A solid Undo/Redo mechanism can be quite hard to develop and always needs to add a lot of extra code in the model. PostSharp provides it and works without any hassle. It works recording changes in the state of the objects using aspects. The Recordable aspect indicates to PostSharp to record a history of changes made to instances of that type:</p>
+<p>Look at this snippet.</p>
+<pre>       
+   [Recordable]
+    public class CanvasModelItem : CanvasItem
+    {
+        [Child]
+        private readonly CanvasItemCollection items = new CanvasItemCollection();
+
+        [Parent]
+        private ICanvasItemContainer parent;
+…
+
+</pre>
+<p>Later, you can use the Recorder object to go to previous states.</p>
+<pre>    RecordingServices.DefaultRecorder.Undo();
+</pre>
+<p>It is as simple as it seems. In the snippet you can also see other interesting annotations: <strong>Child</strong> and <strong>Parent</strong>. It helps to automate the aggregation relationship between instances.</p>
+<p><strong>How did you handle undo/redo “continuous operations” like move or resize?</strong></p>
+<p>It’s very common to find operations that raise a big amount of changes in a period of time. For instance, when the user drags an item its coordinates change continuously while the user moves the item with the mouse. We may not want all those changes to be recorded so each time a continuous operation starts, we can define a “recording scope”. This way, the recorder will know that changes between the start and end signals in the scope should be ignored. Then, the operation can be undone (or redone) as a whole, in an atomic way, that is a more convenient and useful. Otherwise, the recorder history would be filled with irrelevant changes.</p>
+<p>For instance:</p>
+<pre>    
+        private void Rectangle_PointerPressed(object sender, PointerRoutedEventArgs e)
+        {
+            if ( this.recordingScope != null )
+            {
+                throw new InvalidOperationException("There is already an active recording scope.");
+            }
+
+            this.recordingScope = RecordingServices.DefaultRecorder.StartAtomicScope();
+            bDetectColor = true;
+        }
+
+</pre>
+<p>This event handler is called when the user click (or presses in a touch screen). You can see the StartAtomicScope being called. It signals makes the Recorder aware of the operation about to begin.</p>
+<pre>            
+        private void Border_PointerReleased(object sender, PointerRoutedEventArgs e)
+        {
+            if (this.recordingScope == null)
+                throw new InvalidOperationException("There is no active recording scope,");
+
+            GetHue(sender, e);
+
+            bDetectColor = false;
+
+            this.recordingScope.Complete();
+            this.recordingScope = null;
+        }
+
+
+</pre>
+<p>This is the complementary handler that is called when the user released the mouse/finger. The recording scope is set to complete calling the Complete() method. As simple as it sounds.</p>
+<p><strong>What is the next thing you would like to focus on?</strong></p>
+<p>At the moment I’m thinking of a version 2.0 of VisualDesigner. I know that some code can be simplified and improved. The current version was thought to be a WPF application, using a whole set of features that are specific to the platform. When porting to WinRT I had some difficulties that exposed some weaknesses of VisualDesigner itself. For example, the concept of Adorners don’t exist in WinRT, and the current code relies on them to provide visual aids like handles and snapping guides to the user. It will be even easier to use and to extend, and since I have PostSharp from the beginning I’m sure the development will be faster and the code cleaner and way easy to understand.</p>
+<p>I want VisualDesigner to become a great tool and a sample about how to deal with some complex topics. If it works for me, it would work for somebody else. I’m always proud to collaborate with the community and I want to give my best to other people. So yes, a new and improved version will be the next step.</p>
+<p><em>Thank you, José. Happy PostSharping!</em></p>
+<p><em>-gael</em></p><p><em></em>&nbsp;</p><p><em>This article is part of a series of 5 about undo/redo:</em></p><ol><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">Announcement and introduction</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-2">Getting started – tutorial</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-3">Logical operations, scopes, naming</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-4">Recorders, recorder providers, callbacks</a></em></li><li><em><strong>Case study: Visual Designer</strong></em></li></ol><p><em>        NOTE: This blog post is about an available pre-release of PostSharp. You can install PostSharp 3.2 only using NuGet by enabling the “Include        pre-release” option. Undo/Redo is implemented in the package PostSharp.Patterns.Model. </em></p>

@@ -1,0 +1,117 @@
+---
+layout: post
+title: "Detailed logging with Enterprise Library and PostSharp 3 CTP"
+date: 2013-01-14 08:37:55 +01:00
+categories: [Announcements]
+permalink: /post/detailed-logging-with-enterprise-library-and-postsharp-3-ctp.html
+---
+<p>Microsoft Logging Application Block, a part of Enterprise Library, is very popular in corporate environments. As all logging frameworks, the Logging Application Block provides an infrastructure for collecting and routing log entries, but falls short at generating them. If you want to log something, you have to write code that emits this log record. But there are situations where you just want to trace the execution of <em>every</em> method in some part of your application so that you can troubleshoot some issue. That typically requires a lot of boilerplate code.</p>  <p>This is why we designed PostSharp Diagnostics Toolkit, a tool that excels at generating the boilerplate needed to emit tracing information at a very low level of details. Today, we’re proud that the toolkit also supports Enterprise Library, besides NLog, Log4Net and System.Diagnostics.</p>  <h2>Adding tracing to your application</h2>  <p>Seriously, adding tracing to your application has never been so easy. </p>  <p>First, install PostSharp 3 CTP from <a href="http://visualstudiogallery.msdn.microsoft.com/a058d5d3-e654-43f8-a308-c3bdfdd0be4a" target="_blank">Visual Studio Gallery</a> or Visual Studio Extension Manager.</p>  <p>Then, in the Solution Explorer, right-click on the project and choose Add &gt; PostSharp policy</p> <img style="float: none; margin-left: auto; display: block; margin-right: auto" alt="" src="/blog/image.axd?picture=182fd200394133b0.png" />   <p>You’ll get a list of project-level policies. Choose logging.</p> <img alt="" src="/blog/image.axd?picture=336fb2e5261048b4.png" />   <p>You’re then asked which types and methods should be logged.</p> <img alt="" src="/blog/image.axd?picture=3b5bdaf11c7c1e27.png" />   <p>Here you have a chance to specify which details need to be included. There are two default profiles: log everything, and log only on exceptions. Both default profiles will include parameter values by default. You can edit the profiles and create new ones as required.</p> <img alt="" src="/blog/image.axd?picture=3d9339a90a967dbc.png" />   <p>Finally, you are asked to change the logging back-end. </p> <img alt="" src="/blog/image.axd?picture=30d1a7417f462119.png" />   <p>After confirmation, PostSharp will download the required NuGet packages and will add a [Log] custom attribute to a new file named GlobalAspects.cs. </p>  <pre>[assembly: Log(AttributeTargetMemberAttributes = MulticastAttributes.Public,<br />               AttributeTargetTypeAttributes = MulticastAttributes.Public)]</pre>
+
+<p>Of course, you can use the full power of <a href="http://doc.sharpcrafters.com/postsharp-2.1/Content.aspx/PostSharp-2.1.chm/html/1B05CE59-61DE-4043-8E7C-12C130B1ACBB.htm" target="_blank">aspect multicasting</a> to fine-tune the set of methods that you want to trace.</p>
+
+<p>If you build and run the application, and if you have included a trace listener, you will see that all public methods of public types have been traced!</p>
+
+<h2>High-Performance</h2>
+
+<p>The Logging Application Block is a bit different from other logging frameworks in that there is no concept of “trace source”. Instead, there is a a concept of extensible log record and a concept of filters that can match any property of log records, including custom properties. This design makes Enterprise Library more flexible than other logging frameworks, but is at first sight less suitable for massive tracing because of the expense of building a log record object. Fortunately, intelligent code generation can make Enterprise Library as fast as other frameworks by sharing some read-only data structures and assuming that filters do not change when the application is executing (i.e., that a change requires an application restart).</p>
+
+<h2>Hierarchical categories</h2>
+
+<p>Another limitation, critical for automated tracing, is the lack of support for hierarchical categories. As a workaround, PostSharp will enlist each log record in several categories, one for each part of the type name and namespace.</p>
+
+<h2></h2>
+
+<h2>Generated Code</h2>
+
+<p>For those who want to see what’s under the hood, the following snippet shows the code generated from a simple “Hello, world” method with full tracing enabled.</p>
+
+<pre>public static void Main(string[] args)
+{
+    if (&lt;&gt;z__LoggingImplementationDetails._3)
+    {
+        object[] CS$0$0__args0 = new object[] { args };
+        &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Verbose,<br />            &quot;Entering: ConsoleApplication39.Program.Main({{{0}}})&quot;, CS$0$0__args0, <br />            &lt;&gt;z__LoggingImplementationDetails._2.Categories);
+    }
+    try
+    {
+        <strong>Console.WriteLine(&quot;Hello, world.&quot;);
+</strong>        if (&lt;&gt;z__LoggingImplementationDetails._3)
+        {
+            object[] CS$0$1__args1 = new object[] { args };
+            &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Verbose, <br />               &quot;Leaving: ConsoleApplication39.Program.Main({{{0}}})&quot;, CS$0$1__args1, <br />               &lt;&gt;z__LoggingImplementationDetails._2.Categories);
+        }
+    }
+    catch (Exception)
+    {
+        if (&lt;&gt;z__LoggingImplementationDetails._5)
+        {
+            Exception CS$0$2__ex;
+            object[] CS$0$3__args3 = new object[] { args, CS$0$2__ex };
+            &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Warning, <br />                 &quot;Exception in ConsoleApplication39.Program.Main({{{0}}}):\n{1}&quot;, <br />                 CS$0$3__args3,  &lt;&gt;z__LoggingImplementationDetails._4.Categories);
+            throw;
+        }
+    }
+}</pre>
+
+<p>As you can see, there is a lot of references to the class LoggingImplementationDetails. This class is generated by PostSharp. The static constructor configures prototype log entries and evaluates the filters. The <em>Write</em> method acts as a re-entrance guard, preventing infinite recursions typically induced by <em>ToString</em> when arguments get included in the logged text.</p>
+
+<pre>internal static class &lt;&gt;z__LoggingImplementationDetails
+{
+    // Fields
+    public static readonly object[] _1 = new object[0];
+    public static readonly LogEntry _2;
+    public static readonly bool _3;
+    public static readonly LogEntry _4;
+    public static readonly bool _5;
+    [ThreadStatic]
+    private static bool isLogging;
+
+    // Methods
+    static &lt;&gt;z__LoggingImplementationDetails()
+    {
+        LogEntry CS$0$0__logEntry0 = new LogEntry();
+        CS$0$0__logEntry0.set_Severity((TraceEventType) TraceEventType.Verbose);
+        CS$0$0__logEntry0.Categories.Add(&quot;ConsoleApplication39&quot;);
+        CS$0$0__logEntry0.Categories.Add(&quot;ConsoleApplication39.Program&quot;);
+        _2 = CS$0$0__logEntry0;
+        _3 = Logger.ShouldLog(_2);
+        LogEntry CS$0$1__logEntry1 = new LogEntry();
+        CS$0$1__logEntry1.set_Severity((TraceEventType) TraceEventType.Warning);
+        CS$0$1__logEntry1.Categories.Add(&quot;ConsoleApplication39&quot;);
+        CS$0$1__logEntry1.Categories.Add(&quot;ConsoleApplication39.Program&quot;);
+        _4 = CS$0$1__logEntry1;
+        _5 = Logger.ShouldLog(_4);
+    }
+
+    public static void Write(TraceEventType severity, string messageFormat, <br />               object[] messageArgs, ICollection<string> categories)
+    {
+        if (!isLogging)
+        {
+            isLogging = true;
+            try
+            {
+                LogEntry CS$0$0__logEntry0 = new LogEntry();
+                CS$0$0__logEntry0.set_Severity(severity);
+                CS$0$0__logEntry0.Message = string.Format(messageFormat, messageArgs);
+                CS$0$0__logEntry0.Categories = categories;
+                Logger.Write(CS$0$0__logEntry0);
+            }
+            finally
+            {
+                isLogging = false;
+            }
+        }
+    }
+}</pre>
+
+<p>In theory, the JIT compiler could see that the tracing block code depends on the read-only static field whose value is false, and could completely avoid to generate the logging code, resulting in zero cost in case that a given trace category is disabled.</p>
+
+<h2>Limitations</h2>
+
+<p>Perhaps the main feature that I regret is missing from the current version is support for the <em>Tracer</em> facility, which may be more appropriate for the low-level massive tracing we are trying to achieve. We will have to consider, in a next version, how we can make this concept fit with the current architecture of the PostSharp Diagnostics Toolkit.</p>
+
+<h2>Summary</h2>
+
+<p>Detailed tracing with Enterprise Library Logging Application Block is now easier than ever. In just a few clicks, you can add tracing to thousands of methods, with no impact or your source code and minimal impact on run-time performance.</p>
+
+<p>Happy PostSharping!</p>

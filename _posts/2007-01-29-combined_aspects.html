@@ -1,0 +1,74 @@
+---
+layout: post
+title: "Combined Aspects"
+date: 2007-01-29 22:16:00 +01:00
+categories: [General]
+permalink: /post/combined-aspects.html
+---
+I had a <a href="http://www.postsharp.org/community/forums/laos/666048739">new interesting discussion</a>, this time with John Vanspronssen. I'm not sure I've understood all he has in mind, but I was challenged by the idea of 'composed aspects', that is, aspects composed of many transformations. In order to avoid confusion with object composition, I chose to rename this <span style="font-style: italic;">combined aspects</span>. I first planned to implement this in a later phase, but this discussion just excited me to do it... and <span style="font-style: italic;">it's done</span>!
+
+<span style="font-weight: bold;">So what's a composed aspect?</span>
+
+As I said, it is an aspect composed of many sub-aspects. John gave the <span style="font-style: italic;">binding</span> aspect as an example. This aspect 'simply' raises an event <span style="font-style: italic;">OnPropertyChanged</span>.
+
+Say I have the following base code:
+<pre>
+interface IBindable
+{
+event EventHandler OnPropertyChanged;
+}
+
+[Bindable]
+class MyClass
+{
+private int field1;
+
+public int Field1
+{
+ get { return field1; }
+ set { field1 = value; }
+}
+}
+</pre>The post-compiled code should look like this:
+<pre>class MyClass : IBindable
+{
+private int field1;
+
+public event EventHandler OnPropertyChanged;
+
+public int Field1
+{
+  get { return field1; }
+  set
+  {
+      field1 = value;
+      if (this.OnPropertyChanged != null)
+      {
+          this.OnPropertyChanged(this, EventArgs.Empty);
+      }
+  }
+}
+}
+</pre>There are two sub-aspects combined in the Binding aspect:
+<ol><li>A <span style="font-weight: bold;">CompositionAspect</span>: adding the <span style="font-style: italic;">IBinding</span> interface and its implementation.</li><li>An <span style="font-weight: bold;">OnMethodBoundaryAspect</span> applied to the method <span style="font-style: italic;">set_MyProperty</span> method: raising the <span style="font-style: italic;">OnPropertyChanged</span> method. If there were more than one property, there would be one aspect of this type for each writable property.</li></ol>The aspect implementation has less than 100 lines of code including blank ones. I don't copy it in this post, but you can <a href="http://postsharp.svn.sourceforge.net/viewvc/postsharp/trunk/Samples/PostSharp.Samples.Binding/BindableAttribute.cs?view=markup" target="_blank">see it online</a>.
+
+The following points are interesting:
+<ol><li>The class <span style="font-weight: bold;">BindableImplementation</span> is the implementation of the <span style="font-style: italic;">IBindable</span> interface. This type is composed inside the target the <span style="font-weight: bold;">AddBindableInterfaceAspect</span> aspect, which is derived from <span style="font-style: italic;">CompositionAspect</span>.
+</li><li>The aspect <span style="font-weight: bold;">OnPropertySetAspect<span style="font-style: italic;"> </span></span>is derived from <span style="font-style: italic;">OnMethodBoundaryAspect</span> and implements only the <span style="font-style: italic;">OnExit</span> method. The only thing it does is to retrieve the implementation of <span style="font-style: italic;">IBindable</span> for this instance (that is, the composed <span style="font-style: italic;">BindableImplementation</span> object) and raise the <span style="font-style: italic;">OnObjectChanged</span> event.</li><li>The class <span style="font-weight: bold;">BindableAttribute </span>is the principal class and the only public one. It is derived from <span style="font-style: italic;">CombinedAspect</span> and implement the method <span style="font-style: italic;">ProvideAspects</span>. This method is the most interesting. First it adds the <span style="font-weight: bold;">AddBindableInterfaceAspect</span> to the type, then it scans all the writable properties in this type and applies the <span style="font-weight: bold;">OnPropertySetAspect</span> to them. This method is of course executed at compile time.</li></ol>A good question is: <span style="color: rgb(255, 0, 0);">how can the </span><span style="font-style: italic; color: rgb(255, 0, 0);">OnProperySetAspect</span><span style="color: rgb(255, 0, 0);"> retrieve the implementation of the </span><span style="font-style: italic; color: rgb(255, 0, 0);">IBindable</span><span style="color: rgb(255, 0, 0);"> interface?<span style="color: rgb(0, 0, 0);">
+
+It took me at least two nights to answer. Let me ask the question more formally: suppose that an object is composed of different behaviours (composed objects and aspects). How can these different behaviour exchange information between themselves?
+
+I think that this problem should ideally be solved by the platform, that is, by .NET itself. The platform should ideally have a concept that 'an instance is the friend of another'. If the developer chooses to apply an aspect to a class, it is legitimate to give this aspect more permissions on the target type than the permissions we want to give to everybody ('public' access). And it is not possible for the aspect to have access only to <span style="font-style: italic;">protected</span> data, since the aspect is not derived from the target type.
+
+The solution I designed is to rely on <span style="font-style: italic;">credentials</span>. Each instance (at least each instance of a type that wants to 'share' something) has its own 'secret' called credentials. The can <span style="font-style: italic;">give</span> the credentials to some other instance. Then, this instance can use these credentials to get access to some 'protected' data (but here protected by these credentials, not by restriction of visibility).
+
+This mechanism is currently only used to retrieve the instance implementing an interface that has been composed by <span style="font-style: italic;">CompositionAspect</span>. Composed types may optionally implement the interface <span style="font-weight: bold;">IComposed<t></t></span> , where <span style="font-style: italic;">T</span> is the composed interface (<span style="font-style: italic;">IBindable</span> in our example). This interface has a single method <span style="font-weight: bold;">GetImplementation</span>... that requires the credentials.
+
+How can the <span style="font-style: italic;">OnPropertySetAspect</span> know the credentials? These are passed through the event arguments (<span style="font-style: italic;">MethodExecutionEventArgs</span>). That is, aspects will receive the credentials to access 'protected' data of the aspected instance. But only of this instance!
+
+I've said this was designed, but this is not completely implemented. In the version I put online tonight, credentials are not yet checks. And there are still problems if you try to apply the same custom attributes on a class and its parent class. This will be solved during the next week or two.
+
+<span style="color: rgb(204, 0, 0);">Enjoy!</span>
+
+Gael
+</span></span>

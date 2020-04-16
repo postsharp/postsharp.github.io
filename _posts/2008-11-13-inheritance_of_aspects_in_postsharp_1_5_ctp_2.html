@@ -1,0 +1,114 @@
+---
+layout: post
+title: "Inheritance of Aspects in PostSharp 1.5 CTP 2"
+date: 2008-11-13 09:34:36 +01:00
+categories: [General]
+permalink: /post/inheritance-of-aspects-in-postsharp-1-5-ctp-2.html
+---
+<p>Microsoft PDC 2008 is over, as are American presidential elections. We can now talk about something exiting again and hope it will gain some momentum in the community (thus blogging about boring technical details during PDC was intentional).</p>  <p>It's maybe the most exciting feature of PostSharp after PostSharp itself: aspects are now inheritable.</p>  <p>A code sample worthing a hundred words, here is what is now possible:</p>  <div>   <pre style="padding-right: 0px; padding-left: 0px; font-size: 8pt; padding-bottom: 0px; margin: 0em; overflow: visible; width: 100%; color: black; border-top-style: none; line-height: 12pt; padding-top: 0px; font-family: consolas, &#39;Courier New&#39;, courier, monospace; border-right-style: none; border-left-style: none; background-color: #f4f4f4; border-bottom-style: none"><span style="color: #0000ff">public</span> <span style="color: #0000ff">interface</span> IDiary
+{
+    Contact TryFindContact([NonEmpty] <span style="color: #0000ff">string</span> name);
+
+    [<span style="color: #0000ff">return</span>: NonNull]
+    Contact FindContact([NonEmpty] <span style="color: #0000ff">string</span> name);
+
+    <span style="color: #0000ff">void</span> Update([NotNull] Contact contact);
+}</pre>
+</div>
+
+<p>&#160;</p>
+
+<p>The aspects (here NonEmpty and NonNull) are applied on methods of an interface... but are effective on all implementations of this interface!</p>
+
+<p>(Oh yes, for this to work correctly, you need to download the latest build from <a href="http://download.postsharp.org/builds/1.5">http://download.postsharp.org/builds/1.5</a> -- the CTP 2 contained some bugs that have been solved in the mean time).</p>
+
+<p>The implementation of these aspects does not use Laos, but a dedicated plug-in that generates optimal MSIL instructions. You can download the plug-in using an SVN client from <a title="https://postsharp-user-plugins.googlecode.com/svn/trunk/1.5/Torch" href="https://postsharp-user-plugins.googlecode.com/svn/trunk/1.5/Torch">https://postsharp-user-plugins.googlecode.com/svn/trunk/1.5/Torch</a>.</p>
+
+<p>The inheritance feature is indeed implemented at the level of <strong>MulticastAttribute</strong>, and not directly in Laos. It means that you can use it inside any plug-in. But let's now see an example using Laos.</p>
+
+<h3>Simple Invariant Checking</h3>
+
+<p>Here is an interesting first example of this feature; it is both simple and useful.</p>
+
+<p>We want to check invariants, and we want to do it simply. With PostSharp 1.5, checking invariants can be as simple as implementing an interface, say <strong>IConsistant</strong>.</p>
+
+<div>
+  <pre style="padding-right: 0px; padding-left: 0px; font-size: 8pt; padding-bottom: 0px; margin: 0em; overflow: visible; width: 100%; color: black; border-top-style: none; line-height: 12pt; padding-top: 0px; font-family: consolas, &#39;Courier New&#39;, courier, monospace; border-right-style: none; border-left-style: none; background-color: #f4f4f4; border-bottom-style: none"><span style="color: #0000ff">public</span> <span style="color: #0000ff">interface</span> IConsistant
+{
+    <span style="color: #0000ff">void</span> CheckConsistency();
+}</pre>
+</div>
+
+<p>When an object implements the IConsistant assembly, we want the CheckConsistency method to be &quot;automagically&quot; invoked after each non-private instance method. </p>
+
+<p>It's possible by applying a single custom attribute, say [ConsistantAspect] to the IConsistant interface:</p>
+
+<div>
+  <pre style="padding-right: 0px; padding-left: 0px; font-size: 8pt; padding-bottom: 0px; margin: 0em; overflow: visible; width: 100%; color: black; border-top-style: none; line-height: 12pt; padding-top: 0px; font-family: consolas, &#39;Courier New&#39;, courier, monospace; border-right-style: none; border-left-style: none; background-color: #f4f4f4; border-bottom-style: none">[ConsistantAspect]
+<span style="color: #0000ff">public</span> <span style="color: #0000ff">interface</span> IConsistant</pre>
+</div>
+
+<p>This custom attribute is unbelievably simple:</p>
+
+<div>
+  <pre style="padding-right: 0px; padding-left: 0px; font-size: 8pt; padding-bottom: 0px; margin: 0em; overflow: visible; width: 100%; color: black; border-top-style: none; line-height: 12pt; padding-top: 0px; font-family: consolas, &#39;Courier New&#39;, courier, monospace; border-right-style: none; border-left-style: none; background-color: #f4f4f4; border-bottom-style: none"><p>[AttributeUsage(AttributeTargets.Interface)]
+[MulticastAttributeUsage(MulticastTargets.Method,
+    TargetMemberAttributes = MulticastAttributes.Public | MulticastAttributes.Protected | MulticastAttributes.Internal | 
+    MulticastAttributes.Instance,
+    Inheritance = MulticastInheritance.Multicast)]
+[Serializable]
+<span style="color: #0000ff">public</span> <span style="color: #0000ff">sealed</span> <span style="color: #0000ff">class</span> ConsistantAspect : OnMethodBoundaryAspect
+{
+    <span style="color: #0000ff">public</span> <span style="color: #0000ff">override</span> <span style="color: #0000ff">void</span> OnSuccess(MethodExecutionEventArgs eventArgs)
+    {
+        ((IConsistant) eventArgs.Instance).CheckConsistency();
+    }
+}
+</p><p>&#160;</p></pre>
+</div>
+
+<p>Basically, we have create an OnMethodBoundaryAspect and we implement the OnSuccess handler that invokes the CheckConsitency method when the target method has successfully completed. The AttributeUsage custom attribute restricts the use of this aspect to interfaces; actually, we will use it only once: on the IConsistant method.</p>
+
+<p>The interesting part if the custom attribute MulticastAttributeUsage on the top of that:</p>
+
+<ul>
+  <li>The property TargetMemberAttributes is old and known: here we define that we want to apply the aspect only to non-private instance methods.</li>
+
+  <li>The property Inheritance is the new and interesting one: the value Multicast means that the aspect should be inherited (from the interface to classes implementing the interface) and then multicast to all methods matching TargetMemberAttributes.</li>
+</ul>
+
+<p>As a result, when we implement the interface and have invariants checked automatically:</p>
+
+<div>
+  <pre style="padding-right: 0px; padding-left: 0px; font-size: 8pt; padding-bottom: 0px; margin: 0em; overflow: visible; width: 100%; color: black; border-top-style: none; line-height: 12pt; padding-top: 0px; font-family: consolas, &#39;Courier New&#39;, courier, monospace; border-right-style: none; border-left-style: none; background-color: #f4f4f4; border-bottom-style: none"><span style="color: #0000ff">class</span> Cashbox : IConsistant
+{
+    <span style="color: #0000ff">public</span> <span style="color: #0000ff">decimal</span> Balance { get; <span style="color: #0000ff">private</span> set; }
+
+    <span style="color: #0000ff">public</span> <span style="color: #0000ff">void</span> Debit(<span style="color: #0000ff">decimal</span> amount)
+    {
+        <span style="color: #0000ff">this</span>.Balance -= amount;
+    }
+
+    <span style="color: #0000ff">public</span> <span style="color: #0000ff">void</span> Credit(<span style="color: #0000ff">decimal</span> amount)
+    {
+        <span style="color: #0000ff">this</span>.Balance += amount;
+    }
+
+    <span style="color: #0000ff">public</span> <span style="color: #0000ff">void</span> CheckConsistency()
+    {
+        <span style="color: #0000ff">if</span> ( Balance &lt; 0 )
+            <span style="color: #0000ff">throw</span> <span style="color: #0000ff">new</span> Exception(<span style="color: #006080">&quot;Invalid balance.&quot;</span>);
+    }
+    
+}</pre>
+</div>
+
+<p>&#160;</p>
+
+<p>As you can see, no aspect is directly applied on Cashbox or on its methods. Aspects are inherited from IConsistant and then propagated to all public instance methods. </p>
+
+<p>I'll blog more about this feature later.</p>
+
+<p>Happy PostSharping!</p>
+
+<p>-gael</p>

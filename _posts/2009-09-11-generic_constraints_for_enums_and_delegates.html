@@ -1,0 +1,193 @@
+---
+layout: post
+title: "Generic constraints for enums and delegates"
+date: 2009-09-11 07:03:01 +02:00
+categories: [General]
+permalink: /post/generic-constraints-for-enums-and-delegates.html
+---
+
+<p>Yesterday, C# MVP 
+<a href="http://msmvps.com/blogs/jon_skeet/archive/2009/09/10/generic-constraints-for-enums-and-delegates.aspx">Job Skeet blogged about a<span style="mso-spacerun: yes">&nbsp;
+</span>way to add generic constraints for enums and delegates</a>. He noticed that, 
+while the C# compiler forbids such constructions, it is perfectly possibly in MSIL. 
+And he is fully right with this.</p>
+<p>Jon uses a post-build step to add modify generic constraints. 
+His process: ILDASM, then find-and-replace, then ILASM. That’s possible because 
+the requirement is pretty easy.</p>
+<p>But here he challenged me:</p>
+<blockquote><span lang="EN" style="mso-ansi-language: EN">I&#39;ve looked at
+<a href="http://postsharp.org">PostSharp</a> and
+<a href="http://cciast.codeplex.com/license">CCI</a>; both look <em>
+<span style="font-family: "Calibri","sans-serif"; mso-ascii-theme-font: minor-latin; mso-hansi-theme-font: minor-latin; mso-bidi-font-family: "Times New Roman"; mso-bidi-theme-font: minor-bidi">
+way</span></em> more complicated than the above.<o:p></o:p></span></blockquote>
+<p><span lang="EN" style="mso-ansi-language: EN">Sure, PostSharp 
+would be more complex, but Jon’s ILASM-based solution works only in best cases. 
+There are plenty of things that you have to keep in mind while building a post-build 
+step that modifies MSIL. For instance, how will ILASM find referenced assemblies? 
+What with signed assemblies?<span style="mso-spacerun: yes">&nbsp; </span>Sure, 
+you can find a solution to everything – after all, PostSharp uses ILASM as a back-end 
+(contrarily to rumors, it does <i style="mso-bidi-font-style: normal">not</i> use 
+ILDASM). But, believe me, addressing these side issues will prove more difficult 
+than the core job itself.<o:p></o:p></span></p>
+<p><span lang="EN" style="mso-ansi-language: EN">And anyway, why 
+would it be so complex to implement these rather simple requirements using PostSharp? 
+PostSharp is designed so that easy jobs get easily done. <o:p></o:p>
+</span></p>
+<p><span lang="EN" style="mso-ansi-language: EN">I took the challenge 
+and implemented an add-in adding arbitrary constraints to generic parameters. I 
+measured time. It took me 30 minutes. NDepend counts 12 lines of code.<o:p></o:p></span></p>
+<p><span lang="EN" style="mso-ansi-language: EN">It’s based on 
+custom attributes. PostSharp loves custom attributes. I defined a custom attribute
+</span><b style="mso-bidi-font-weight: normal">AddGenericConstraintAttribute</b> 
+that can be applied to generic parameters. Here is how it’s used:</p>
+<pre>public static class EnumHelper
+{
+    public static T[] GetValues&lt;[AddGenericConstraint( typeof(Enum) )] T&gt;() 
+       where T : struct
+    {
+        return (T[]) Enum.GetValues( typeof(T) );
+    }
+}</pre>
+<p><span lang="EN" style="mso-ansi-language: EN">The project can 
+be downloaded from
+<a href="http://postsharp-user-samples.googlecode.com/files/AddGenericConstraint.zip">
+http://postsharp-user-samples.googlecode.com/files/AddGenericConstraint.zip</a>. 
+In order to use the plug-in, follow the <a href="http://doc.postsharp.org/1.5/">
+documentation</a>.<o:p></o:p></span></p>
+<p><span lang="EN" style="mso-ansi-language: EN">Here are the 
+principal steps I followed to create this plug-in:<o:p></o:p></span></p>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">1.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Create 
+a new solution AddGenericConstraint.sln.<o:p></o:p></span></p>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">2.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Create 
+a new class library project AddGenericConstraint.csproj. This project will be the 
+public interface of the plug-in.<o:p></o:p></span></p>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">3.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Create 
+the class AddGenericConstraintAttribute.cs:<o:p></o:p></span></p>
+<pre>[AttributeUsage( AttributeTargets.GenericParameter )]
+public sealed class AddGenericConstraintAttribute : Attribute
+{
+    public AddGenericConstraintAttribute( Type type )
+    {
+    }
+}</pre>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">4.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Create 
+a new class library project AddGenericConstraint.Impl.csproj. This will contain 
+the plug-in implementation.<o:p></o:p></span></p>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">5.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Add 
+references to PostSharp.Public.dll, PostSharp.Core.dll, AddGenericConstraint.csproj.<o:p></o:p></span></p>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">6.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Create 
+a class AddGenericConstraintTask. This is the real implementation class. This is 
+the hard point.<o:p></o:p></span></p>
+<pre>public class AddGenericConstraintTask : Task
+{
+    public override bool Execute()
+    {
+        // Get the type AddGenericConstraintAttribute.
+        ITypeSignature addGenericConstraintAttributeType = 
+            this.Project.Module.FindType(
+               typeof(AddGenericConstraintAttribute),
+               BindingOptions.OnlyDefinition | BindingOptions.DontThrowException );
+
+        if ( addGenericConstraintAttributeType == null )
+        {
+            // The type is not referenced in the current module. There cannot be a custom attribute
+            // of this type, so we are done.
+            return true;
+        }
+
+        // Enumerate custom attributes of type AddGenericConstraintAttribute.
+        AnnotationRepositoryTask annotationRepository = 
+            AnnotationRepositoryTask.GetTask( this.Project );
+
+        IEnumerator<IAnnotationInstance> customAttributesEnumerator =
+            annotationRepository.GetAnnotationsOfType( 
+              addGenericConstraintAttributeType.GetTypeDefinition(), false );
+
+        while ( customAttributesEnumerator.MoveNext() )
+        {
+            // Get the target of the custom attribute.
+            GenericParameterDeclaration target = (GenericParameterDeclaration)
+                customAttributesEnumerator.Current.TargetElement;
+&nbsp;
+            // Get the value of the parameter of the custom attribute constructor.
+            ITypeSignature constraintType = (ITypeSignature)
+                customAttributesEnumerator.Current.Value.
+                 ConstructorArguments[0].Value.Value;
+
+            // Add a generic constraint.
+            target.Constraints.Add( constraintType );
+
+            // Remove the custom attribute.
+            ((CustomAttributeDeclaration) customAttributesEnumerator.Current).Remove();
+        }
+
+        return base.Execute();
+    }
+}</pre>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">7.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Add 
+an XML file AddGenericConstraint.psplugin to the project. This file will describe 
+your plug-in. In file properties, specify “Copy to Output Directory: Copy Always”.<o:p></o:p></span></p>
+<pre>&lt;?xml version="1.0" encoding="utf-8" ?&gt;
+&lt;PlugIn xmlns="http://schemas.postsharp.org/1.0/configuration"&gt;
+  &lt;TaskType Name="AddGenericConstraint" Implementation="AddGenericConstraint.Impl.AddGenericConstraintTask, AddGenericConstraint.Impl" Phase="Transform"&gt;
+    &lt;Dependency TaskType="Remove" Position="After"/&gt;
+    &lt;Dependency TaskType="AnnotationRepository"/&gt;
+  &lt;/TaskType&gt;
+&lt;/PlugIn&gt;</pre>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">8.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Go 
+back to project AddGenericConstraint. Add a reference to PostSharp.Public.dll.
+<span style="mso-spacerun: yes">&nbsp;</span>Add the following on the top of the 
+class AddGenericConstraintAttribute to bind the custom attribute to its implementation:<o:p></o:p></span></p>
+<pre>[RequirePostSharp( "AddGenericConstraint", "AddGenericConstraint" )]</pre>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">9.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">Create 
+a test project. Add references to PostSharp.Public.dll and AddGenericConstraint.csproj. 
+In project properties, add directory “..AddGenericConstraint.ImplinDebug” to 
+reference paths.<o:p></o:p></span></p>
+<p><![if !supportLists]>
+<span lang="EN" style="mso-bidi-font-family: Calibri; mso-bidi-theme-font: minor-latin; mso-ansi-language: EN">
+<span style="mso-list: Ignore">10.<span style="font: 7.0pt "Times New Roman"">&nbsp;&nbsp;
+</span></span></span><![endif]><span lang="EN" style="mso-ansi-language: EN">You 
+are done.<o:p></o:p></span></p>
+<p><span lang="EN" style="mso-ansi-language: EN">What’s the catch? 
+Maybe that, if you don’t know PostSharp Core and MSIL, it will take you days to 
+come with the 12 lines of code that form the implementation. But when you got the 
+knowledge, you are incredibly productive. And all the issues caused by the integration 
+in the build process are solved for you. Believe me, after 5 years of existence, 
+there is a <i style="mso-bidi-font-style: normal">huge</i> knowledge behind PostSharp 
+integration.<o:p></o:p></span></p>
+<p><span lang="EN" style="mso-ansi-language: EN">Happy PostSharping!<o:p></o:p></span></p>
+<p><span lang="EN" style="mso-ansi-language: EN">-gael<o:p></o:p></span></p>
+<p><span lang="EN" style="mso-ansi-language: EN">PS. It took me 
+longer to write this blog than the implementation itself.<o:p></o:p></span></p>
+<p>
+<span style="font-size: 10.0pt; line-height: 115%; font-family: "Courier New"; mso-no-proof: yes">
+<o:p>&nbsp;</o:p></span></p>
+
+

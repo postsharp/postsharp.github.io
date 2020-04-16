@@ -1,0 +1,10 @@
+---
+layout: post
+title: "Remote Host"
+date: 2006-11-26 12:16:00 +01:00
+categories: [General]
+permalink: /post/remote-host.html
+---
+I wrote in the previous post that PostSharp now offers more possibilities for the host to customize the execution process, for instance phased execution and events. In order to enable it, we missed a functionality: to be able to run host code in the PostSharp application domain, not only in the host AppDomain.
+
+This is the role of the new concept of <span style="font-style: italic;">local host</span>. The local host is an object that resides in the PostSharp application domain <span style="font-style: italic;">between</span> the <span style="font-weight: bold;">PostSharpObject</span> and the host object residing in the host application domain (<span style="font-weight: bold;">IPostSharpHost</span>).  The whole communication between the <span style="font-weight: bold;">PostSharpObject </span>and the remote host now goes through the local host. We provide a default implementation in the <span style="font-weight: bold;">PostSharpLocalHost</span> class, but you can override it and pass your own implementation using the <span style="font-weight: bold;">LocalHostImplementation</span> property of the <span style="font-weight: bold;">PostSharpObjectSettings</span> object.

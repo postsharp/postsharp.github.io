@@ -1,0 +1,145 @@
+---
+layout: post
+title: "Validating parameters, fields and properties with PostSharp 3"
+date: 2013-01-09 11:01:26 +01:00
+categories: [Announcements]
+permalink: /post/validating-parameters-field-and-properties-in-postsharp-3.html
+---
+<p>A few days after Phil Haack described how to <a href="http://haacked.com/archive/2013/01/05/mitigate-the-billion-dollar-mistake-with-aspects.aspx" target="_blank">implement a null-checking aspect with PostSharp 2</a>, it’s a good time to introduce a new feature of the refreshed PostSharp 3 CTP: validation of parameters, field, and properties.</p>  <p>First, you need to have <a href="http://visualstudiogallery.msdn.microsoft.com/a058d5d3-e654-43f8-a308-c3bdfdd0be4a" target="_blank">PostSharp 3 CTP (3.0.5)</a> installed.</p>  <p>To add a contract to to a parameter, just position the caret to the parameter name and select the relevant smart tag:</p> <img style="float: none; margin-left: auto; display: block; margin-right: auto" alt="" src="/blog/image.axd?picture=59c02ef0bec573f.png" />   <p>After you click on the action, PostSharp will download and install the relevant NuGet packages to your project, and add a [Required] custom attribute to the parameter. The same works for fields and properties. </p>  <p>It could not be easier. Of course, you can also introduce contracts without the user interface by installing the package PostSharp.Toolkit.Domain and adding the custom attribute yourself.</p>  <pre>public void Foo( [Required] string bar ) </pre>
+
+<p>(Make sure to allow pre-releases if you install the package manually.)</p>
+
+<h2>Ready-Made Contracts</h2>
+
+<p>The following contracts are available in the <em>PostSharp.Toolkit.Contracts</em> namespace, depending on the type of the field, property or parameter:</p>
+
+<table cellspacing="0" cellpadding="2" width="625" border="0"><tbody>
+    <tr>
+      <td valign="top" width="123">NotNull</td>
+
+      <td valign="top" width="500">Requires a non-null value</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">NotEmpty</td>
+
+      <td valign="top" width="500">Requires a non-null and non-empty string or collection</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">Required</td>
+
+      <td valign="top" width="500">Requires a non-null object or a non-whitespace string</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">CreditCard</td>
+
+      <td valign="top" width="500">Requires a valid credit card number</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">EmailAddress</td>
+
+      <td valign="top" width="500">Requires a valid email address</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">Phone</td>
+
+      <td valign="top" width="500">Requires a valid phone number</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">RegularExpression</td>
+
+      <td valign="top" width="500">Requires a match of a regular expression</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">StringLength</td>
+
+      <td valign="top" width="500">Requires a string of a given length</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">EnumDataType</td>
+
+      <td valign="top" width="500">Requires a valid value for an enumeration (can be applied to strings and integers)</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">GreaterThan</td>
+
+      <td valign="top" width="500">Requires a value greater than a threshold.</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">LessThan</td>
+
+      <td valign="top" width="500">Requires a value less than a threshold.</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">Positive</td>
+
+      <td valign="top" width="500">Requires a value greater or equal to 0.</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">StrictlyPositive</td>
+
+      <td valign="top" width="500">Requires a value strictly greater than 0.</td>
+    </tr>
+
+    <tr>
+      <td valign="top" width="123">Range</td>
+
+      <td valign="top" width="500">Requires a value within a range.</td>
+    </tr>
+  </tbody></table>
+
+<h2>High Performance and Flexibility</h2>
+
+<p>Unlike previous validation aspects based on <em>OnMethodBoundaryAspect</em>, the new aspects result in compact and fast code, with almost no overhead compared to hand-written code. </p>
+
+<p>Yet, they are based on an abstraction that you can extend to develop your own contracts: <em>ILocationValidationAspect&lt;T&gt;</em> is a new aspect primitive designed specifically for the task. It works transparently for fields, properties, and parameters.</p>
+
+<p>If you want to create your own contract, you can derive a class from <em>System.Attribute</em>, or preferably <em>PostSharp.Extensibility,MulticastAttribute</em> (which supports inheritance, see below), and <em>ILocationValidationAspect&lt;T&gt;</em>, where <em>T</em> is the type of values to be validated, as many times as necessary. Note that the aspect does not know any standard type conversion (other than down-casting, which is not a conversion), so you will need a lot of these <em>T</em>s, for instance for <em>int</em>, <em>int?</em>, <em>long</em>, <em>long?</em>, and so on if you want to target numbers.</p>
+
+<h2>Contract Inheritance</h2>
+
+<p>If you apply a contract to a parameter of an interface, abstract or virtual method, any the contract will be implemented in any derived method, for instance:</p>
+
+<pre>interface IFoo
+{
+   void Bar( [Required] string fooBar );
+}
+
+class Foo : IFoo
+{
+   public void Bar( string fooBar ) 
+   {
+      // PostSharp will inject the [Required] contract at the top of this method body.
+   }
+}</pre>
+
+<p>Note that inheritance is a feature of <em>MulticastAttribute</em> and not just contracts, so you can use it with just any aspect.</p>
+
+<h2>Limitations</h2>
+
+<p>I already mentioned that the aspect does not support any type conversion, which could be annoying if you need to develop contracts that work on numbers.</p>
+
+<p>Also note that the aspect is not yet able to validate output argument and return values. It is purely a precondition checker.</p>
+
+<p>Finally, note that all contracts are opt-in. There is no “not-null by default”. It would be fairly easy to develop such a policy using an assembly-level <em>IAspectProvider</em>, but currently you have to do it yourself.</p>
+
+<h2></h2>
+
+<h2>Summary</h2>
+
+<p>PostSharp 3 introduces a new aspect primitive that is optimized to validate fields, properties, and parameters with high run-time efficiency. The PostSharp Domain Toolkit contains a set of standard contracts that you can add to your code easily – just using the smart tags in Visual Studio.</p>
+
+<p>Happy PostSharping!</p>
+
+<p>-gael</p>

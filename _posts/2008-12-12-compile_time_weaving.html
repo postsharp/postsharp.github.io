@@ -1,0 +1,67 @@
+---
+layout: post
+title: "Compile-Time Weaving"
+date: 2008-12-12 08:59:07 +01:00
+categories: [General]
+permalink: /post/compile-time-weaving.html
+---
+<h1>Compile-Time Weaving</h1>
+<p>There are basically three ways to modify the behavior of a .NET programs during 
+the build phase:</p>
+<div id="source-level-weaving">
+	<h2><a name="source-level-weaving" title="source-level-weaving"></a>Source-Level 
+	Weaving</h2>
+	<p>You have to parse the source code, modify it and compile it using a standard 
+	compiler. The disadvantage is that you have to write a parser-renderer for each 
+	of the targeted languages. But you have the possibility to add constructions 
+	to the syntax.</p>
+	<p>Tools:</p>
+	<ul>
+		<li><span>
+		<a href="http://www.dsg.cs.tcd.ie/dynamic/?category_id=169">
+		AspectC#</a></span></li>
+		<li><span>
+		<a href="http://www.dsg.cs.tcd.ie/dynamic/?category_id=438">
+		SourceWeave.NET</a></span></li>
+	</ul>
+</div>
+<div id="writing-your-own-compiler">
+	<h2><a name="writing-your-own-compiler" title="writing-your-own-compiler">
+	</a>Writing your own compiler</h2>
+	<p>You can start from scratch or use from an existing open-source compiler like 
+	gcc or Mono. The disadvantage is clearly that you have to write your own compiler 
+	or extend an existing... and who can afford it? But, at this price, you can 
+	do virtually what you want.</p>
+	<p>Tools:</p>
+	<ul>
+		<li><span>
+		<a href="http://www.cs.iastate.edu/~eos">EOS</a></span></li>
+	</ul>
+</div>
+<div id="modifying-the-msil-code">
+	<h2><a name="modifying-the-msil-code" title="modifying-the-msil-code"></a>Modifying 
+	the MSIL code</h2>
+	<p>Let the standard compiler do its job, then read the compiled assembly, modify 
+	it and write it back. This is the approach of PostSharp.</p>
+	<p>Tools:</p>
+	<ul>
+		<li><a href="/">PostSharp</a></li>
+		<li><span>
+		<a href="http://dotnet.sys-con.com/read/113337.htm">Aspect.NET</a></span>. 
+		Relies on Phoenix.</li>
+		<li><span>
+		<a href="http://aspectdng.tigris.org/">AspectDNG</a></span>. 
+		Relies on Cecil.</li>
+		<li><span>
+		<a href="http://janus.cs.utwente.nl:8000/twiki/bin/view/Composer/WebHome">
+		ComposeStar</a></span> / <span>
+		<a href="http://wwwhome.cs.utwente.nl/twiki/bin/view/StarLight/WebHome">
+		StarLight</a></span></li>
+		<li><span>
+		<a href="http://www.dcl.hpi.uni-potsdam.de/research/loom/gripper_loom.htm">
+		Gripper Loom.NET</a></span></li>
+		<li><span>
+		<a href="http://www.columbia.edu/~me133/">Phx.Morph/Wicca</a></span>. 
+		Relies on Phoenix.</li>
+	</ul>
+</div>

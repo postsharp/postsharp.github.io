@@ -1,0 +1,78 @@
+---
+layout: post
+title: "What’s New in PostSharp 2.1: Support for Obfuscation (Dotfuscator)"
+date: 2011-07-25 17:42:32 +02:00
+categories: []
+permalink: /post/whate28099s-new-in-postsharp-21-support-for-obfuscation-(dotfuscator).html
+---
+<p>With prior versions of PostSharp, you had to be very careful to make your software compatible with any obfuscator. You could not obfuscate aspect classes, you could not store reflection objects, and you could not add use a reflection object in RuntimeInitialize with obfuscated generic methods. Indeed, all these features caused PostSharp to store the name of the metadata objects at build time, and to deserialize it at run time. But since the obfuscator renamed metadata objects after build time, the deserialization failed. Briefly said, previous versions of PostSharp were incompatible with all obfuscators.</p>  <p>PostSharp 2,1 provides a mechanism through which assemblies can be “repaired” after they have been obfuscated. Assemblies are still fully obfuscated, but PostSharp provides a utility to repair the name-object table. The build process is the following:</p>  <p>1. The compiler produces an assembly.</p>  <p>2. PostSharp post-processes the assembly and embeds an name table in the output assembly.</p>  <p>3. The obfuscator renames metadata objects, therefore breaks the PostSharp name table.</p>  <p>4. The post-obfuscation step (implemented by PostSharp) repairs the name table based on the obfuscation map produced by the obfuscator, and mapping the old name to the new name.</p>  <p>Since the post-obfuscation utility works with the obfuscation map, we need one implementation of this utility for every obfuscation map format, therefore for every obfuscation tool. PostSharp 2.1 includes support for <strong>Dotfuscator</strong>, the leading obfuscator .NET.</p>  <h2></h2>  <h2>Calling the post-obfuscator</h2>  <p>Let’s see how it works practically. You can <a href="http://www.sharpcrafters.com/downloads/samples/2.1/Obfuscation.zip" target="_blank">download the example</a> and try yourself.</p>  <p>To call the post-obfuscation step, you have to create an MSBuild project file and import the targets <em>AddIns\PostSharp.AddIn.PostObfuscation.targets. </em></p>  <pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot;?&gt;
+&lt;Project xmlns=&quot;http://schemas.microsoft.com/developer/msbuild/2003&quot; DefaultTargets=&quot;Build&quot;&gt;
+
+  &lt;ItemGroup&gt;
+    &lt;!-- Required: Path of dependencies of obfuscated assemblies. --&gt;
+    &lt;ObfuscatedSearchPath Include=&quot;Dotfuscated&quot; /&gt;
+    &lt;!-- Required: Path of dependencies of unobfuscated assemblies. --&gt;
+    &lt;UnobfuscatedSearchPath Include=&quot;Unobfuscated&quot;/&gt;
+    &lt;!-- Required: Obfuscation map file produced by Dotfuscator. --&gt;
+    &lt;MapFile Include=&quot;Dotfuscated\Map.xml&quot;/&gt;
+    &lt;!-- Required: Obfuscated files --&gt;
+    &lt;ObfuscatedAssembly Include=&quot;Dotfuscated\*.dll&quot;/&gt;
+    &lt;ObfuscatedAssembly Include=&quot;Dotfuscated\*.exe&quot;/&gt;
+    &lt;!-- Optional --&gt;
+    &lt;ContentFiles Include=&quot;Unobfuscated\*.config&quot;/&gt;
+  &lt;/ItemGroup&gt;
+
+  &lt;PropertyGroup&gt;
+    &lt;!-- Required: output directory --&gt;
+    &lt;OutputPath&gt;$(MSBuildProjectDirectory)\Remapped&lt;/OutputPath&gt;
+    &lt;!-- Required: selection of the remapping strategy --&gt;
+    &lt;Obfuscator&gt;Dotfuscator&lt;/Obfuscator&gt;
+  &lt;/PropertyGroup&gt;
+
+
+  &lt;Target Name=&quot;Build&quot; DependsOnTargets=&quot;PostObfuscationRemap&quot;&gt;
+    &lt;!-- Optional: copy other files to the output directory--&gt;
+    &lt;Copy SourceFiles=&quot;@(ContentFiles)&quot; DestinationFolder=&quot;$(OutputPath)&quot;/&gt;
+  &lt;/Target&gt;
+
+  &lt;Target Name=&quot;Rebuild&quot; DependsOnTargets=&quot;Clean;Build&quot;&gt;
+  &lt;/Target&gt;
+  
+  &lt;Import Project=&quot;..\..\Build\bin\AddIns\PostSharp.AddIn.PostObfuscation.targets&quot; /&gt;
+&lt;/Project&gt;</pre>
+
+<p>&#160;</p>
+
+<p>As you can see, this file defines some locations (required items and properties), and calls the <em>PostObfuscationRemap</em> target defined in <em>PostSharp.AddIn.PostObfuscation.targets</em>.</p>
+
+<h2></h2>
+
+<h2>Safe code references</h2>
+
+<p>The post-obfuscator ensures the following references to code are repaired after obfuscation:</p>
+
+<ul>
+  <li>References you are not aware of (used by PostSharp to provide the runtime features).</li>
+
+  <li>Reflection objects (for instance MethodInfo, Type) serialized inside objects using the default serializer (BinaryFormatter). This feature is implemented thanks to serialization surrogates for reflection objects.</li>
+</ul>
+
+<p>There is no magic. Other strings referencing to a metadata element, and stored somewhere else than in a reflection object serialized by the default serializer, will not be fixed. If you wrote your custom aspect serializer and want to take advantage of metadata reference serialization, you have to play with <em>IMetadataEmitter</em>/<em>IMetadataDispenser</em>. </p>
+
+<p>In other words, if you want to write obfuscation-safe aspects, the only serialized metadata references should be reflection objects in an aspect field (or somewhere under an aspect field).</p>
+
+<h2>Stripping of events and properties</h2>
+
+<p>Dotfuscator allows users to remove events and properties from code. The reason is simple: they are useless at runtime for the CLR. They are pure compiler syntactic sugar… or rather were, before XAML. So what if your aspect stores a <em>PropertyInfo</em> or <em>EventInfo</em>?</p>
+
+<p>PostSharp will be smart enough to provide you with a <em>PropertyInfo </em>or <em>EventInfo. </em>The only visible difference is that the <em>Name</em> property will return <em>null</em>. Other properties and methods will work as usually. Under the hood, PostSharp will give you an object of type <em>ObfuscatedPropertyInfo</em> or <em>ObfuscatedEventInfo</em> instead of <em>RuntimePropertyInfo</em> or <em>RuntimeEventInfo</em>, but your code should not see the difference.</p>
+
+<h2>Support for other obfuscators</h2>
+
+<p>As a first step, we provide support for Dotfuscator. If other vendors are interested to support PostSharp, we’ll gladly provide them with the specification of the binary format. If you want to contribute a post-obfuscation filter, then be pleased that the Dotfuscator-specific code is only 56 lines long (parsing of their XML obfuscation map). The post-obfuscation add-in is not obfuscated so feel free to use a decompiler :).</p>
+
+<h2>Summary</h2>
+
+<p>That’s it for obfuscation. A small, unexciting feature, but people who need to obfuscate their applications don’t have any excuse not to use PostSharp!</p>
+
+<p>Happy PostSharping!</p>

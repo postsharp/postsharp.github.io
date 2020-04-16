@@ -1,0 +1,30 @@
+---
+layout: post
+title: "First day at ECOOP 2007"
+date: 2007-07-31 19:23:00 +02:00
+categories: [General]
+permalink: /post/first-day-at-ecoop-2007.html
+---
+<span xmlns=""><p>Some thoughts about my first day at the European Conference on Object-Oriented Programming: how to cope with conflicts when different aspects apply to the same method?
+</p><p>Yesterday was my first day in Berlin at ECOOP 2007. I have attempted the 2nd International Workshop on Aspects, Dependencies and Interactions which studies, as its name indicates, what happens when you put many aspects together. Will there be a conflict? Or, contrarily, does one aspect depend of another?
+</p><p>My first impression was how far I've come from the academic world during these 6 years since I've left university. Academic and developers' communities differ radically by their way of thinking and their way of communication. I'm happy to have chosen my way three years ago, when I started to develop PostSharp: deliberately refuse to look at AspectJ and design a tool as a developer would design it and use it, and not according to the framework of thoughts of the academic community. It indeed was impressing to realize how AspectJ has become the horizon of AOP research, how all problems are stated in terms of AspectJ. However, the way how AspectJ is designed causes problems in itself and it is not always easy, in the academic sphere, to realize that these problems are caused by AspectJ design and might be stated in a different and more fruitful way if only they were abstracted from AspectJ.
+</p><p>And another thought: it's incredible how Microsoft has lost attention from researchers, at least in the AO academic community, and maybe even more generally in the OO academic community. What I'll be trying to say during my speech on Thursday is "now, thanks to PostSharp, you can use the Microsoft .NET Platform for your research work". I guess Microsoft should have sponsored me to participate in this conference and in this evangelization campaign.
+</p><p>It was however very interesting to me to attend this workshop, because it made me face problem that have already emerged in the AOP community, but not yet in the PostSharp one. So let's go back to these problems:
+</p><p><strong>How to make sure that aspects are not applied in a conflicting way, or in a way that damages semantics of the base code?</strong>
+</p><p>Let's take an example: suppose I have an operation GetCustomerInfo, returning private information about customers. We want to apply two non-functional requirements to this operation: we want to cache the method and ensure that only authorized employees access this information. So we apply two aspects: caching and authorization.
+</p><p>The normal behavior of the aspected operation is the following:
+</p><p>Check the current user is authorized to retrieve the requested the piece of information. If not, throw an exception.
+</p><p>If the requested piece of information is in cache, return it immediately <em>without</em> continuing the chain of behaviors.
+</p><p>Retrieve the piece of information.
+</p><p>Store it in cache.
+</p><p>So now, what would happen if the cache aspect was applied <em>before</em> the authorization check? Well, you would have bad surprises. If the requested piece information is present in cache, authorization is simply not performed.
+</p><p>We can state this concrete problem: "caching cannot occur before authorization". And more abstractly: "there cannot be an aspect that interrupts the normal control flow before an authorization aspect".
+</p><p>Here is how the constraint could be expressed:
+</p><p><span style="font-family:Courier New;font-size:10;">[AspectConstraint( ConstraintType.Forbid, AspectPosition.Before, AspectBehaviors.ChangeControlFlow )]
+</span></p><p><span style="font-family:Courier New;font-size:10;">public class AuthorizationAspect : OnMethodBoundaryAspect
+</span></p><p><span style="font-family:Courier New;font-size:10;">{
+</span></p><p><span style="font-family:Courier New;font-size:10;">}
+</span></p><p>The effect of the AspectConstraint custom attribute would be that the weaver should emit code that throws a runtime exception if an aspect tries to change the normal control flow. Ideally, this kind of situation should be discovered at compile-time, but it would require PostSharp to make a static analysis of the aspect implementation to discover if the aspect tries to modify the control flow. It is theoretically possible (and fully described in academic literature), but practically much more demanding than the runtime check.
+</p><p>A similar interesting feature would be to allow these constraints to be applied on methods also. Suppose I have a method that performs authorization imperatively (not using an aspect). I could also want to forbid the method to be transformed by aspects that could bypass it. So it should be possible to apply this custom attribute on method as well.
+</p><p>Needs for dependencies check are of course much larger than this. For instance, there could be a known incompatibility between two aspects. The architect of a development team could write an XML file containing all known incompatibilities, and it would result in compile-time errors if developers try to apply aspects in an incompatible way. This is relatively easy to implement and could be useful in a probable (near?) future when PostSharp will be used in large projects...
+</p></span>

@@ -1,0 +1,168 @@
+---
+layout: post
+title: "Exception Handling and Metrics with PostSharp, Application Insights and Grafana"
+date: 2019-05-21 12:02:00 +02:00
+categories: []
+permalink: /post/exception-handling-telemetry-with-postsharp-application-insights-grafana.html
+---
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/paaop.png" alt="Pattern-aware programming" /><br /><span style="font-size: small;" data-mce-mark="1"><em>PostSharp is a pattern-aware extension for C# which runs during the compilation stage.</em></span></p>
+<p>&nbsp;</p>
+<p>Whether you're just getting started with .NET or have been using it for its lifetime, there are concerns every project has to face eventually. <a href="https://medium.com/dealeron-dev/automating-net-core-services-with-postsharp-and-aspect-oriented-code-a8a51d8d84ec" target="_blank">In a previous article</a>, I discussed how PostSharp can be used to target concerns like Logging and Threading. Today, I will show you how we can apply these same principles to Exception Handling to send real-time telemetry to Application Insights.</p>
+<h2>Remarks</h2>
+<p>Exception handling is a topic with depth far beyond the scope of this article. The code I reference here is not designed to be as fast or as efficient as possible. This is in the interest of showcasing each of the features and creating a usable demonstration which readers can then improve upon for their own purposes. You are always welcome to get in contact with me for clarification or advice on these topics; I also welcome you to point out errors, mistakes, or even make pull-requests to the repository as you see fit.</p>
+<p>My goal is to explore .NET Core cross-platform capabilities and show you how Exception Handling can be integrated with the following tools:</p>
+<ul>
+<li><a href="https://docs.microsoft.com/en-us/aspnet/core/fundamentals/host/generic-host?view=aspnetcore-2.2" target="_blank">.NET Generic Host</a> is an all-in-one package for handling configuration, dependency injection, logging, and other app startup concerns. If you want to host async services, then you can do it out of the box now with very little setup time. For us it will simplify a lot of the boilerplate needed to prototype interesting <a href="https://en.wikipedia.org/wiki/Aspect-oriented_programming" target="_blank">AOP</a> use-cases.</li>
+</ul>
+<ul>
+<li><a href="https://docs.microsoft.com/en-us/azure/azure-monitor/app/app-insights-overview" target="_blank">Azure Application Insights</a> is a big suite of services which focus on monitoring performance in real-time. You can send events, metrics, and all sorts off custom measurements up to Azure and then immediately query it through <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/log-query-overview" target="_blank">Log Analytics</a>. The goal here will be to handle our exceptions by logging them up in the cloud where we can get regular snapshots of the application&rsquo;s state.</li>
+</ul>
+<ul>
+<li><a href="https://grafana.com/" target="_blank">Grafana</a> is a wonderful <a href="https://github.com/grafana/grafana" target="_blank">open-source</a> tool for creating dashboards which track metrics or visualize data as graphs. You can host it yourself but there is also a free and paid cloud-hosted option. The free option is ideal for prototyping and has all of the features we need for now.</li>
+</ul>
+<p>Using the power of a pattern-aware compiler, this cross-cutting concern can be seamlessly hooked up to an external monitoring service without adding `try {} catch {}` blocks everywhere in your codebase. This lack of clutter helps to keep your code clear and understandable and reduces the number of concerns placed upon your team.</p>
+<p>&nbsp;</p>
+<h2>Before We Begin</h2>
+<p>Readers who wish to follow along should take the following steps to set up their environment:</p>
+<ul>
+<li>Download the <a href="https://dotnet.microsoft.com/download" target="_blank">.NET Core SDK and Runtime</a>. I will be using VS 2017 on .NET Core SDK 2.2.106</li>
+<li>Download the latest stable PostSharp Extension <a href="https://marketplace.visualstudio.com/items?itemName=PostSharpTechnologies.PostSharp" target="_blank">from the VS Marketplace</a>. Version 6.1.18 is used here.</li>
+<li>Clone the Semantic branch of&nbsp;<a href="https://github.com/AlexanderJohnston/SharpCrafting/tree/Semantic" target="_blank">my SharpCrafting repository</a> or follow my <a href="https://medium.com/dealeron-dev/automating-net-core-services-with-postsharp-and-aspect-oriented-code-a8a51d8d84ec" target="_blank">previous article</a> to build your own threaded Generic Host.</li>
+</ul>
+<p>&nbsp;</p>
+<h2>Understanding Pattern-Aware Exception Handling</h2>
+<p>An exception handler typically requires you to use some form of `try { } catch { } finally { }` statements which require every class to know its own context well enough to either bubble up, swallow, or handle an exception which occurs from within. An incorrectly handled exception can easily cause a service interruption or similarly poor experience for an end-user. This puts a burden of documentation and knowledge on any development team to understand the overall error-handling architecture outside the scope of any specific feature.</p>
+<p>For example, in one solution alone I have found several hundred instances of `try { }` blocks. This can be rough if you run distributed, remote workers because the Exception may need to cross many boundaries without losing its original caller and state. Among those hundreds of `try { }` blocks there will &nbsp;undoubtedly be one or two which fail to handle as originally intended due to the slow feature creep of business needs. If those need ever change significantly then there is a risk that any one of handlers will be overlooked for compatibility. This can cause swallowed exceptions or an undecipherable call stack. The possibility of incorrectly handling exceptions becomes a major obstacle against refactoring and thus a tough sell for teams and project managers.</p>
+<p>This is where aspect-oriented designs step in to provide a solution by consolidating your logic into a common place.</p>
+<p><a href="https://doc.postsharp.net/exception-handling" target="_blank">Handling Exceptions</a> is a primary feature of the PostSharp namespace and I recommend reading it before continuing. The following objects are provided to us for a basic implementation:</p>
+<ul>
+<li>The <a href="https://doc.postsharp.net/t_postsharp_aspects_onexceptionaspect" target="_blank">OnExceptionAspect</a> class which lives in <a href="https://doc.postsharp.net/n_postsharp_aspects" target="_blank">PostSharp.Aspects</a>. This defines an exception handler around a method which will intercept any thrown exceptions and can handle them at a higher level.</li>
+<li>The <a href="https://doc.postsharp.net/t_postsharp_aspects_methodexecutionargs" target="_blank">MethodExecutionArgs</a> class which provides arguments containing advice for your handler. You can use these arguments to get the original exception, the arguments provided by the original caller to the intercepted method, and the flow behavior for execution.</li>
+</ul>
+<p>The official <a href="https://samples.postsharp.net/f/PostSharp.Samples.ExceptionHandling/" target="_blank">PostSharp samples for Exception Handling</a>&nbsp;are a great source to keep open alongside any documentation. I will borrow from the samples to show you an example of this implementation in action.</p>
+<p>The first example is the "Add Context On Exception" <a href="https://samples.postsharp.net/f/PostSharp.Samples.ExceptionHandling/AddContextOnExceptionAttribute.cs.html" target="_blank">Attribute</a>. When an exception is intercepted by this attribute it will append the value of value of parameters to the exception. Having access to the argument values when reading over the exception later in the logs can save time debugging. This is an exceptional feature to have if you&rsquo;re dealing with a bug that can&rsquo;t be reproduced easily. In many cases it would have saved me hours of time to just know which arguments caused an exception in the first place.</p>
+<p>This class has a few points of interest:</p>
+<ul>
+<li>First, it inherits the <a href="https://doc.postsharp.net/t_postsharp_aspects_onexceptionaspect">OnExceptionAspect</a> class which provides an exception handler.</li>
+<li>Next, it intercepts exceptions thrown with `OnException( MethodExecutionArgs args )` and tracks their state with the `MethodExecutionArgs` mentioned earlier.</li>
+<li>Last, it builds a string containing the context including arguments, declaring type, generics, and method name. These are added to the Exception's `"Context"` index on the <a href="https://docs.microsoft.com/en-us/dotnet/api/system.exception.data?view=netcore-2.2" target="_blank">Data property</a>.</li>
+</ul>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/c8ade0c2640c91abd27d6b6eb5b7e0d2.js"></script>
+<p>&nbsp;</p>
+<p>The second example from the official samples is the "Report And Swallow Exception" Attribute. This one interacts directly with the previous attribute by reading the `"Context"` added by the handling peformed in the `AddContextOnException` attribute. A few things to note:</p>
+<ul>
+<li>The aspect declares an `[AspectTypeDependency]` which is <a href="https://doc.postsharp.net/aspect-dependencies" target="_blank">a way to handle aspect dependencies</a> on the same target. In this case it declares that it must come after the `AddContextOnException` attribute if applied to the same target.</li>
+<li>It checks to see if there is an `additionalContext` by checking the Exception's `Data` property for any information added earlier on via the `StringBuilder`.</li>
+</ul>
+<p>&nbsp;</p>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/737521ac83ac41919a45588cdc062e6e.js"></script>
+<p>&nbsp;</p>
+<h2>Applying Our Understanding With Azure</h2>
+<p>While these samples may seem basic, this is all you need to immediately integrate your applications with third party tools. I find that Application Insights is perfectly suited for a task like this since it is designed to have a low barrier to entry with a simple API. Let's go over the next steps to see what our goals are and how we can implement them.</p>
+<ol>
+<li>An Azure account will be needed for this, but <a href="https://azure.microsoft.com/en-us/free/" target="_blank">luckily it comes with a free trial</a> and is quick to setup. If this is your first time then <a href="https://azure.microsoft.com/en-us/resources/videos/sign-up-for-microsoft-azure/" target="_blank">I recommend this video</a> which shows you how to complete the entire process in just a few seconds.</li>
+</ol><ol start="2">
+<li>Create a new Application Insights resource through Azure. Grab the "Instrumentation Key" from the Overview page.</li>
+</ol><ol start="3">
+<li>Copy down your "Application ID" from the "API Access" menu of your Application Insights resource.</li>
+</ol><ol start="4">
+<li>Create an API key and copy it down as well. This can be done in the same "API Access" menu. Provide it all three options `[Read Telemetry, Write Annotations, and Authenticate SDK]`.</li>
+</ol>
+<p>&nbsp;</p>
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/application_id.png" alt="Example of the Azure API key for Application ID." /><br /> <em>Example of the Azure API key for Application ID.</em></p>
+<p>&nbsp;</p>
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/instrumentation_keya.png" alt="Example of the Azure API key for Instrumentation and Subscription." /><br /> <em>Example of the Azure API key for Instrumentation and Subscription.</em></p>
+<p>&nbsp;</p>
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/api_key.png" alt="Example of creating an API key in Azure." /><br /> <em>Example of creating an API key in Azure.</em></p>
+<p>We'll use these pieces of information later to integrate our real-time metrics with Grafana. For now, store those keys in a safe place and let's revisit our code.</p>
+<p>&nbsp;</p>
+<h2>Integrating PostSharp With Azure</h2>
+<p>The goal here will be to write custom events to Azure describing an exception every time one is handled. We can restrict this to just two classes, one for Azure and one for the Exception Handler, by utilizing the <a href="https://doc.postsharp.net/t_postsharp_aspects_onexceptionaspect" target="_blank">OnExceptionAspect</a> which we learned about earlier from the PostSharp samples. First, let's write an Aspect to do the following:</p>
+<ul>
+<li>Catch an exception.</li>
+<li>Read the arguments.</li>
+<li>Read the target name.</li>
+<li>Read the Exception type and its message.</li>
+<li>Mark a custom event with these properties on Azure and log them locally.</li>
+</ul>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/d36aeda5406f3ace9044f9ac001b007e.js"></script>
+<p>&nbsp;</p>
+<p>Let's break down this class to see where Azure was included specifically:</p>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/190f57737dde2c3ef4ad53b5a2dada7c.js"></script>
+<p><em>The MarkCustomEvent class separated out from the rest of the code. This prepares events for Azure.</em></p>
+<p>&nbsp;</p>
+<p>We can see here that the Azure integration allows us to pass a dictionary of properties (similar to a JSON structure) into the custom event and all we have to do is give it a context. In this case the context is an "Exception". That's all there is to it! The only other configuration we need to connect to Azure is to add two files to our project. `Monitor.cs` and `ApplicationInsights.config`</p>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/f5c792ec122c5f2d2706b1526f68224f.js"></script>
+<p><em>The Monitor class separated from the repository. This sends events to Azure.</em></p>
+<p>&nbsp;</p>
+<p>In the above code we just need to replace "Your Key Here" with the Instrumentation Key we pulled from Azure earlier. Then we add this `ApplicationInsights.config` file to the folder containing our `.csproj`.</p>
+<p>Developer mode will allow the telemetry to be uploaded in near real-time so that we can test it quickly.</p>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/5e3b21b93cff389b15ff54fec229be0f.js"></script>
+<p><em>The Application Insights configuration file.</em></p>
+<p>&nbsp;</p>
+<p>Again, replace "Your Key Here" with the &ldquo;Instrumentation Key&rdquo; provided by Azure. <strong>Please note</strong>: readers should store their keys in User Secrets or somewhere more secure; this code is used for examples only.</p>
+<p>At this point the aspect is ready to send data to Application Insights. Decorate any method with `[ ServiceExceptionDetour ]` if you're using the code provided here and then throw an exception from that decorated method. For example:</p>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/6888d72320b22fcac51fec00d9ec6510.js"></script>
+<p>&nbsp;</p>
+<p>Here you can see that I am using the lovely `ExceptionGremlin` from the <a href="https://github.com/houseofcat/Library" target="_blank">HouseOfCat Library</a>. <a href="https://houseofcat.io/">The author</a> provides a number of useful tools in there like basic exception fuzzing. Every time I throw from within this method, `CauseException`, it will be routed through the Exception Handler and have its data passed to Azure. You will also notice that it is decorated as an `[ EntryPoint ]` which means that it is safely entered from many threads in an actor model despite being private. It is important to <a href="https://doc.postsharp.net/aspect-lifetime" target="_blank">understand the lifetime and scope of aspects</a> when used in this way. For our purposes though we can disregard any performance issues because Exceptions are already expensive and we're not trying to be graceful here.</p>
+<p>&nbsp;</p>
+<h2>Log Analytics</h2>
+<p>&nbsp;</p>
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/customdima.png" alt="How to reach Log Analytics from an Azure resource" /><br /> <em>This image shows how to reach Log Analytics from an Azure resource.</em></p>
+<p>&nbsp;</p>
+<p>If you navigate to <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/log-query-overview" target="_blank">Log Analytics</a> on your Application Insights resource then you'll be able to query the `customEvents` table to see if everything worked. You should have `customDimensions` on each record which contains the data you attached to the event from the Exception when it was handled.</p>
+<p>&nbsp;</p>
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/analyticsa.png" alt="Example data structure for an Application Insights custom event." /><br /><em>An example data structure for an Application Insights custom event.</em></p>
+<p>&nbsp;</p>
+<p>If you are new to Log Analytics then I recommend checking out the official <a href="https://app.pluralsight.com/library/courses/kusto-query-language-kql-from-scratch/table-of-contents" target="_blank">Kusto Query Language (KQL) From Scratch</a> tutorial on Pluralsight. Here is an example query for our current set of custom events:</p>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/6b9a7e676aee8e362fec425e3f17b3fb.js"></script>
+<p><em>An example query using Kusto Query Language.</em></p>
+<p>&nbsp;</p>
+<h2>Grafana</h2>
+<p>Finally, we can integrate our Log Analytics store with Grafana to produce beautiful, real-time dashboards for our exceptions. If you're new to Grafana then you can <a href="https://grafana.com/get?signup" target="_blank">sign up for a free instance</a> which is hosted as a container up in the company's cloud. You can also host an instance on your own machine if you'd like to make it a dedicated resource.</p>
+<p>Once you have signed up then you will need to set up your dashboard to work with Azure.</p>
+<ol>
+<li>Install the Azure Monitor plugin on your instance of Grafana.</li>
+</ol><ol start="2">
+<li>Open your dashboard and navigate to Configuration &gt; Data Sources. Add a data source for Azure Monitor.</li>
+</ol><ol start="3">
+<li>Fill out the two fields "API Key" and "Application ID" for Application Insights. We retrieved these keys earlier when we set up our Azure resource.</li>
+</ol><ol start="4">
+<li>Click "Save &amp; Test" to check if the connection is working.</li>
+</ol>
+<p>From here you can begin utilizing KQL queries to make new visualizations. Here are some examples of what can be constructed alongside the queries and settings I used to build them.</p>
+<p>&nbsp;</p>
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafanaa.png" alt="Example of Grafana visuals showing a stable system." /><br /><em>An example of Grafana visuals showing a stable system.</em></p>
+<p>&nbsp;</p>
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafana2a.png" alt="Example of Grafana visuals displaying an unstable system." /><br /><em>An example of Grafana visuals displaying an unstable system.</em></p>
+<p>&nbsp;</p>
+<p><img src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafana3a.png" alt="This example image shows what a critical alert might look like." /><br /><em>This example image shows what a critical alert might look like.</em></p>
+<p>&nbsp;</p>
+<p>Bar Chart:</p>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/38d57e5849b617a9ca5850119fc220f5.js"></script>
+<p><em>A KQL query which works for building a bar chart data series.</em></p>
+<p>&nbsp;</p>
+<p>Gauge &amp; Annotation:</p>
+<script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/5b744a61fd908fd7c805b95833dc0117.js"></script>
+<p><em>A KQL query which works for building a gauge with annotation data series.</em></p>
+<p>&nbsp;</p>
+<h2>Where Can I Go From Here?</h2>
+<p>At this point you can watch your data flow into the Grafana dashboard in real-time! This pipeline can now be used to track any sort of metric you want. PostSharp has a comprehensive suite of tools for you to <a href="https://doc.postsharp.net/method-decorator" target="_blank">inject behaviors before and after execution</a> on <a href="https://doc.postsharp.net/method-interception" target="_blank">methods</a>, <a href="https://doc.postsharp.net/location-interception" target="_blank">properties / fields</a>, and <a href="https://doc.postsharp.net/event-interception" target="_blank">events</a>. Anywhere you want to gather metrics without re-writing your old classes is a place to consider using an Aspect to provide that advice.</p>
+<p>Instead of writing out to Log Analytics, consider writing your events to <a href="https://eventstore.org/" target="_blank">EventStore</a> which allows you to build an immutable timeline to be used as a source of truth later to reason about your events. The overhead on EventStore is exceptionally low to the point where it may be easier to scale this form of Exception Handling by writing to EventStore and then reading it into Azure from a separate service.</p>
+<p>While there are many unconventional options, the goal here is simply to automate the boring stuff. Rather than chase down exceptions you can instead intercept them and handle them deterministically with advice provided by Attributes. How you handle them is up to your situation and needs.</p>
+<p>&nbsp;</p>
+<h2>Credit</h2>
+<p><a href="https://www.nuget.org/packages?q=totem" target="_blank">Totem</a> was used in this repository. It provides a way to host your assemblies on an event-sourcing timeline and integrates with most common development scenarios. This package is still in preview right now but I recommend you add it to your favorites and keep an eye on it.</p>
+<p><a href="https://github.com/houseofcat/Library" target="_blank">HouseOfCat Library</a> was used for exception generation here. I recommend checking out their Rabbit MQ library if you utilize message queues regularly.</p>
+<p>&nbsp;</p>
+<h2>Final Remarks</h2>
+<p>I will attach the <a href="https://github.com/AlexanderJohnston/SharpCrafting/tree/Semantic" target="_blank">source code</a> for this entire project below if you&rsquo;d like to clone it and play around with the solution. Feel free to modify or redistribute it as needed. You can always find a copy of it on the Semantic branch.</p>
+<p>Hopefully this article conveyed the power of Aspect Oriented Programming in the .NET Core architecture. This is a learning process for all of us and I invite you to share or collaborate any time. Thank you for taking the time to read.</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
+<h3 style="text-align: center; margin-bottom: 10px;">About the author, Alexander Johnston</h3>
+<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/2019-05-21-exception_handling_telemetry_with_postsharp_applic/alexander johnston2.jpg" alt="Alexander Johnston" />
+<p style="margin-bottom: 10px;">Alexander is a .NET engineer who began writing code on Visual Basic 6.0 when he was ten years old. He spent the following ten years building online communities, hosting both Linux and Windows servers, and learning how to lead volunteer development teams. By the time he was in college he had contributed code full-time to several games and dropped out to pursue a career as a software engineer. His main focus is automating solutions to everyday problems by writing software with empathy for the user. <a href="https://medium.com/@alexanderj.roaming" target="_blank">Blog</a> | <a href="https://www.linkedin.com/in/alexander-johnston-net/" target="_blank">LinkedIn</a></p>
+</div>
+</div>

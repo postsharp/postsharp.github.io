@@ -1,0 +1,94 @@
+---
+layout: post
+title: "Nice Domain Objects on Client &amp; Server Side using PostSharp4EF"
+date: 2008-04-17 16:49:00 +02:00
+categories: [General]
+permalink: /post/nice-domain-objects-on-client-amp-server-side-using-postsharp4ef.html
+---
+<p class="t-left">
+ It&#39;s time again to have a look at
+ <a href="http://www.codeplex.com/efcontrib">PostSharp4EF</a>, a project of 
+ the excellent <a href="http://www.sitechno.com/Blog">Ruurd Boeke</a>. 
+ PostSharp4EF turns your plain C# or VB classes into full-featured domain 
+ objects for client-server applications backed by an SQL database. Once you 
+ understand what it means, you understand it is actually very cool.</p>
+ <h3>
+ What is PostSharp4EF?</h3>
+ <p class="t-left">
+ So what is it all about?
+ </p>
+ <p class="t-left">
+ On the server side, PostSharp4EF binds your domain objects to the database. 
+ It uses the
+ <a href="http://msdn2.microsoft.com/en-us/library/aa697427(VS.80).aspx">
+ ADO.NET Entity Framework</a> for that job, but implements automatically all 
+ the plumbing code during the project build. The result: you can use clean 
+ and lean C# or VB classes as your first-class asset. And since the plumbing 
+ code is generated at compile time, you still benefit from excellent 
+ performance.</p>
+ <p class="t-left">
+ On the client side, the challenge is different. We don&#39;t need domain objects 
+ to be bind to the database, but to user interface components. And GUI 
+ components have two requirements to domain objects: they should be editable 
+ (the interface IEditableObject makes it possible to accept or reject 
+ changes), and they should be observable (interface INotifyPropertyChanged). 
+ Additionally, we want the domain objects to remember that they have been 
+ modified, so we can send them back to the server when we press the &#39;Save&#39; 
+ button. So we are actually in a disconnected, stateless model.
+ </p>
+ <p class="t-left">
+ Well, if you have to implement IEditableObject and INotifyPropertyChanged by 
+ hand, it&#39;s again a lot of plumbing code!</p>
+ <p class="t-left">
+ Of course -- as you&#39;ve guessed -- PostSharp4EF rescue us by implementing the 
+ interfaces automatically.</p>
+ <h3>
+ How does it work?</h3>
+ <p class="t-left">
+ We&#39;ve seen that the server and the client have different requirements to the 
+ domain objects. So PostSharp simply adds different aspects for the 
+ server-side assembly (persistence aspects) than from the client-side 
+ assembly (GUI aspects). That is, from the same source code, two different 
+ assemblies are created.</p>
+ <h3>
+ Clean C# code as first-class artifacts</h3>
+ <p>
+ What I like with PostSharp4EF is that it shows how aspect-oriented 
+ programming can let your domain objects really clean. If all binding code is 
+ &quot;outsourced&quot; as an aspect, what&#39;s left? Well, simply: the real domain object 
+ definition and the real business logic! So
+ <span style="font-size: large; color: #8CA3D8">C# code can be a first-class 
+ artifact, even for domain objects</span>.</p>
+ <h3>
+ The Economics of AOP</h3>
+ <p>
+ Another thing this project illustrates is how you can actually save money in 
+ your company with aspects. If you don&#39;t agree that it costs less to have 
+ tools generate the plumbing code, stop reading here. But if you agree with 
+ me so far, go on.</p>
+ <p>
+ Of course, AOP has some costs. One of these are the cost of developing the 
+ aspect. Ruurd has done a great work, but I know it was a demanding one. A 
+ software shop with all the overhead of design documentation, meetings and 
+ reports would take maybe one month to implement that feature. So it&#39;s not 
+ exactly cheap. But what was produced exactly? Actually, Ruurd has produced a
+ <span style="font-size: large; color: #8CA3D8">great production asset: a 
+ tool that makes the process of software production less expensive</span> and 
+ of higher quality... So it&#39;s just like when a company invests in a new 
+ machine: yes, it costs some money to acquire it; yes, it costs some time to 
+ learn it; yes, there are risks. But how much money the machine will allow 
+ you to save, during the whole lifetime of your product family, by reducing 
+ development effort and improving quality?
+ <span style="font-size: large; color: #4F6AD7">The job of a software 
+ engineer is to improve the process of software production, and aspects are 
+ one of the tools he should consider!</span></p>
+ <p>
+ With PostSharp4EF, you have that production asset for free: both PostSharp 
+ and PostSharp4EF are open source.</p>
+ <p>
+ But even in case that this particular project does not fit your needs, think 
+ one minute about what kind of code production could be appropriately 
+ replaced by an aspect-oriented tool.</p>
+ <p class="t-left">
+ Happy PostSharping!</p>
+ <p>Gael</p>

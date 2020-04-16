@@ -1,0 +1,116 @@
+---
+layout: post
+title: "Deeper Into Aspect Inheritance"
+date: 2008-12-01 21:31:56 +01:00
+categories: [General]
+permalink: /post/deeper-into-aspect-inheritance.html
+---
+<p>As introduced in the previous post, aspect inheritance allows you to apply an aspect to an abstract or virtual method and to have the aspect automatically get propagated to any method overriding the initial method.</p>
+<p>The functionality is implemented inside the &#8220;custom attribute multicasting&#8221; mechanism, so you can use aspect inheritance even for your custom aspects developed using PostSharp Core.</p>
+<p>Note that, by default, aspects are not inherited. You have to explicitly enable inheritance on aspect-definition or -usage level (see below).</p>
+
+<h3>Lines of Inheritance</h3>
+<p>Aspect inheritance is supported on the following elements:</p>
+<ul>
+<li>When applied on <strong>interfaces</strong>, aspects will be propagated to any class implementing this interface or any other interface deriving this interface.</li>
+<li>When applied on unsealed <strong>classes</strong>, aspects will be propagated to any class derived from this class.</li>
+<li>When applied on <strong>abstract or virtual methods</strong>, aspects will be propagated to any method implementing or overriding this method.</li>
+
+<li>When applied on <strong>interface methods</strong>, aspects will be propagates to any method implementing that interface semantic.</li>
+<li>When applied on <strong>parameter or return value of an abstract, virtual or interface method</strong>, aspects will be propagated to the corresponding parameter or to the return value of derived methods using the method-level rules described above.</li>
+<li>When applied on an <strong>assembly</strong>, aspects will be propagated to all assemblies referencing (directly or not) this assembly.</li>
+</ul>
+<p>Read between the lines: aspect inheritance is not supported on events and properties, but it is supported on event and property accessors. The reason of this limitation is that there is actually nothing like &#8220;event inheritance&#8221; or &#8220;property inheritance&#8221; in MSIL (events and properties have nearly no existence for the CLR: these are pure metadata intended for compilers). Obviously, aspect inheritance is not supported on fields.</p>
+
+<p>Again, I always talk of &#8220;aspect inheritance&#8221;, but I should talk of custom attribute inheritance.</p>
+<h3>Enabling Aspect Inheritance</h3>
+<p>As I said, aspects are not inherited by default. You have to enable inheritance explicitly. This can be done on the level of the aspect class itself using the <strong>MulticastAttributeUsageAttribute</strong>: all usages of this aspect will have inheritance enabled.</p>
+<p>The following example is an attribute that can be applied on parameters or return values, but that is &#8220;inherited&#8221;:</p>
+<div>
+<pre style="font-size: 8pt; margin: 0em; overflow: visible; width: 100%; color: black; line-height: 12pt; font-family: consolas, 'Courier New', courier, monospace; background-color: #f4f4f4; border-style: none; padding: 0px;">[AttributeUsage(AttributeTargets.Parameter | AttributeTargets.ReturnValue]
+[MulticastAttributeUsage(MulticastTargets.Parameter | MulticastTargets.ReturnValue,
+    Inheritance = MulticastInheritance.Strict)]
+[RequirePostSharp(<span style="color: #006080">"Torch.DesignByContract"</span>, <span style="color: #006080">"Torch.DesignByContract.CheckNonNull"</span>)]
+
+<span style="color: #0000ff">public</span> <span style="color: #0000ff">class</span> NonNullAttribute : MulticastAttribute
+{
+}</pre>
+</div>
+<p>Alternatively, it can be done at usage-level. If the <strong>Inheritance</strong> property is not defined at aspect definition level, you can specify it when you apply the custom attribute:</p>
+<div>
+<pre style="font-size: 8pt; margin: 0em; overflow: visible; width: 100%; color: black; line-height: 12pt; font-family: consolas, 'Courier New', courier, monospace; background-color: #f4f4f4; border-style: none; padding: 0px;">[Transaction(AttributeInheritance=MulticastInheritance.Strict)]
+<span style="color: #0000ff">public</span> <span style="color: #0000ff">abstract</span> <span style="color: #0000ff">void</span> DeleteCustomer( <span style="color: #0000ff">int</span> id );</pre>
+
+</div>
+<p>Note that, once the <strong>MulticastAttributeUsageAttribute.Inheritance</strong> property has been set, it cannot be overwritten. The deliberate objective of this limitation is to allow aspect developers to specify how their aspect is legally used.</p>
+<h3>Strict and Multicast Inheritance</h3>
+<p>As you noticed, the type of properties <strong>Inheritance</strong> and <strong>AttributeInheritance</strong> is the enumeration <strong>MulticaseInheritance</strong>. This enumeration defines three values: <strong>None</strong> (no inheritance), <strong>Strict</strong> and <strong>Multicast</strong>.</p>
+
+<p>To understand the difference between strict and multicast inheritance, remember the original role of <strong>MulticastAttribute</strong>: to propagate custom attributes along the lines of containment. So, if you apply a method-level attribute to a type, the attribute will be propagated to all the methods of this types (some methods can be filtered out using specific properties of <strong>MulticastAttribute</strong> or <strong>MulticastAttributeUsageAttribute</strong>).</p>
+<p>The difference between strict and multicasting inheritance is that, with multicasting inheritance (but not with strict inheritance), even <em>inherited </em>attributes are propagated along the lines of containment.</p>
+<p>Consider the following piece of code, where <strong>A</strong> and <strong>B</strong> are both method-level aspects.</p>
+
+<div>
+<pre style="font-size: 8pt; margin: 0em; overflow: visible; width: 100%; color: black; line-height: 12pt; font-family: consolas, 'Courier New', courier, monospace; background-color: #f4f4f4; border-style: none; padding: 0px;">[A(AttributeInheritance = MulticastInheritance.Strict)]
+[B(AttributeInheritance = MulticastInheritance.Multicast)]
+<span style="color: #0000ff">public</span> <span style="color: #0000ff">class</span> BaseClass
+{
+  <span style="color: #008000">// Aspect A, B.</span>
+  <span style="color: #0000ff">public</span> <span style="color: #0000ff">virtual</span> <span style="color: #0000ff">void</span> Method1();
+}
+
+
+<span style="color: #0000ff">public</span> <span style="color: #0000ff">class</span> DerivedClass : BaseClass
+{
+  <span style="color: #008000">// Aspects A, B.</span>
+  <span style="color: #0000ff">public</span> <span style="color: #0000ff">override</span> <span style="color: #0000ff">void</span> Method1() {}
+  <span style="color: #008000">// Aspect B.</span>
+
+  <span style="color: #0000ff">public</span> <span style="color: #0000ff">void</span> Method2();
+}</pre>
+</div>
+<p>If you just look at <strong>BaseClass</strong>, there is no difference between strict and multicasting inheritance. However, if you look at <strong>DerivedClass</strong>, you see the difference: only aspect <strong>B</strong> is applied to <strong>MethodB</strong>.</p>
+
+<p>The multicasting mechanism for aspect <strong>A</strong> is the following:</p>
+<ol>
+<li>Propagation along the lines of containment from <strong>BaseClass</strong> to <strong>BaseClass::Method1</strong>.</li>
+<li>Propagation along the lines of inheritance from <strong>BaseClass::Method1</strong> to <strong>DerivedClass::Method</strong>.</li>
+
+</ol>
+<p>For aspect <strong>B</strong>, the mechanism is the following:</p>
+<ol>
+<li>Propagation along the lines of containment from <strong>BaseClass</strong> to <strong>BaseClass::Method1</strong>.</li>
+<li>Propagation along the lines of inheritance from <strong>BaseClass::Method1</strong> to <strong>DerivedClass::Method2</strong>.</li>
+
+<li>Propagation along the lines of inheritance from <strong>BaseClass</strong> to <strong>DerivedClass</strong>.</li>
+<li>Propagation along the lines of containment from <strong>DerivedClass</strong> to <strong>DerivedClass::Method1 </strong>and <strong>DerivedClass::Method2</strong>.</li>
+</ol>
+
+<p>In other words, the difference between strict and multicasting inheritance is that multicasting inheritance applies containment propagation rules to inherited aspects; strict inheritance does not.</p>
+<h3>Avoiding Duplicate Aspects</h3>
+<p>If you read again the multicasting mechanism for aspect <strong>B</strong>, you will notice that the aspect <strong>B</strong> is actually applied twice to <strong>DerivedClass::Method1</strong>: one instance comes from the inheritance propagation from <strong>BaseClass::Method1</strong>, the other instance comes from containment propagation from <strong>DerivedClass</strong>. To avoid surprises, PostSharp implements a mechanism to avoid duplicate aspect instances. The rule: <em>if many paths lead from the same custom attribute usage to the same target element, only one instance of this custom attribute is applied to the target element</em>. Attention: you can still have many instances of the same custom attribute on the same target element if they have different origins (i.e. they originate from different lines of code, typically). From PostSharp 1.0, you can enforce uniqueness of custom attribute instances by using <strong>MulticastAttributeUsage.AllowMultiple.</strong></p>
+
+<h3>Inheritance Across Assemblies</h3>
+<p>All of the above works of course even if the base element (say <strong>BaseClass</strong>) is defined in another assembly than the derived element (say <strong>DerivedClass</strong>). Easier to say than to implement!</p>
+<h3>Under The Hood</h3>
+<p>From the point of view of performance, there was two problems to address:</p>
+<ol>
+<li>Build-time performance: we cannot afford completely scanning every referenced assembly, even indirectly, to see if it does not contain, by chance, an aspect that has to be inherited.</li>
+<li>Assembly size: inheritance can cause an attribute to be applied dozens or hundreds of time&#8230; If the original aspect has to be duplicated for every of its targets, this would result in a huge assemblies.</li>
+
+</ol>
+<p>Let&#8217;s start with the second problem.</p>
+<p>If you use a Laos aspect using PostSharp Laos 1.0, you maybe noticed (using Reflector or System.Reflection) that the aspect is not represented as a custom attribute in the transformed assembly. It is, indeed, most of the time useless to have a custom attribute since what you want is a modification of the method behavior. It was possible to change this behavior and force PostSharp to store the custom attribute using <strong>MulticastAttributeUsageAttribute.PersistMetaData</strong>. But most of the time, this property was false, so the custom attribute was simply not written to the target assembly.</p>
+<p>Things are a little more complex with inherited attributes. In order to keep build-time performance to an acceptable level,we do not want to evaluate all multicasting rules for all referenced assemblies again and again. Once we know that an element has an inheritable attribute, we want this custom attribute to be present on the target elements. That&#8217;s where the assembly size problem enters the stage: why having dozens of identical copies of the same custom attribute?</p>
+<p>So the second problem is addressed by defining (when we can, i.e when <strong>PersistMetaData</strong> is false) every attribute <em>once</em>, then to use <em>references</em> to this custom attribute. It does not look like standard .NET, and indeed it is not: if you open the assembly using Reflector and goes to a target element, you will see the custom attribute <strong>[HasInheritedAttribute( 1234 )]</strong>. This is the reference. Where is the definition? Look on the class named &#8220;<strong>&lt;&gt;MulticastImplementationDetails</strong>&#8220;. This class has no code, just a list of custom attributes with identifiers. So PostSharp reads this list of custom attributes at build-time and indexes it so that it can resolve references.</p>
+
+<p>The attribute <strong>HasInheritedAttributes</strong> has a second role related to our first problem: compile-time performance. The last thing we want is to scan all assemblies for types or methods that may have inheritable aspects. Instead of that, we make a progressive search. The <strong>HasInheritedAttributes</strong> custom attribute (used without constructor) serves like a flag that means that the assembly has <em>at least one </em>inheritable attribute. So if a referenced assembly does <em>not</em> define <strong>HasInheritedAttributes</strong>, we do not consider it at all. Then, we only look at classes that are actually the <em>direct ancestor</em> of classes defined in our current assembly. If this class has a <strong>HasInheritedAttributes</strong> attribute, we should scan methods. The same with methods: if it has an <strong>HasInheritedAttribute</strong>, we should scan parameters.</p>
+
+<p>The custom attribute <strong>HasInheritedAttributes</strong> has thus two roles. When applied to a target (assembly, type, method, parameter):</p>
+<ul>
+<li>it means that at least one target under that target has an inheritable attribute, and therefore helps the discovery process,</li>
+<li>when one or any integers are passed to its constructor, it serves as a reference to a a custom attribute defined under <strong>&lt;&gt;MulticastImplementationDetails</strong>.</li>
+</ul>
+<p>Now that you have read all these details, you can fully understand that aspect inheritance is not only one of the most powerful features of PostSharp, but also one of its more complex!</p>
+<p>Happy PostSharping!</p>
+

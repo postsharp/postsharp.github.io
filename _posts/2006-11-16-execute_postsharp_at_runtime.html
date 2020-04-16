@@ -1,0 +1,30 @@
+---
+layout: post
+title: "Execute PostSharp at runtime"
+date: 2006-11-16 21:00:00 +01:00
+categories: [General]
+permalink: /post/execute-postsharp-at-runtime.html
+---
+Like week-end I have been working on a breaking feature of PostSharp: the possibility to use it <strong>at runtime</strong>. So PostSharp is not <em>only</em> a post-compiler any more.
+
+Of course, the core technology is still and will stay MSIL manipulation. When I say that PostSharp can be used at runtime, I mean that .NET modules can be woven just before they are loaded by the Virtual Runtime Engine (VRE). After they have been loaded, they cannot be modified. Obviously.
+
+<span style="font-weight: bold;">Why at runtime?</span>
+
+Weaving an assembly at runtime makes sense principally within <span style="font-weight: bold;">application servers</span>. These servers typically offer services like transactions or persistence. These aspects may be defined, for instance, at deployment time in a management console. So they have to be woven <span style="font-style: italic;">outside</span> the development environment.
+
+<span style="font-weight: bold;">How does it work?
+
+</span>If you liked the Platform Infrastructure (what makes PostSharp really different from an ordinary IL reader/writer), you will have another reason to be satisfied: the same infrastructure is now available at runtime. It has been redesigned to make no difference between runtime and compile-time use. The MSBuild task and the command-line utility have been corrected to use the new design.
+
+Concretely, I defined a new object <span style="font-weight: bold;">PostSharpObject</span> that is the entry point for the Platform Infrastructure. You can create an instance (either in the current AppDomain either in a private one) using the <span style="font-weight: bold;">PostSharpObjectFactory</span> -- in any case you will only get the interface <span style="font-weight: bold;">IPostSharpObjectFactory</span>. This interface has a single method <span style="font-weight: bold;">InvokeProjects</span>, that allows to execute a set of project. Each project has its own source module and its own properties. This satisfies most compile-time scenarios and even some runtime ones!
+
+Things become more interesting when you need to weave assembly in <span style="font-style: italic;">deep-first order</span>. That means that you need to weave <span style="font-style: italic;">referred </span>assemblies first, then <span style="font-style: italic;">referring</span>. This is typically the case when you need to change the public interface of assemblies (for instance change fields into properties). In this case, you have to implement the new <span style="font-weight: bold;">IPostSharpHost</span> interface. This interface is called every time an assembly reference should be resolved. You get the opportunity to tell how assemblies should be processed, i.e. you can ask there to transform it using a project and given parameters.
+
+On the other extreme, <span style="font-style: italic;">lazy weaving</span> of assemblies (weave just before the assembly is required by the VRE) needs a more complex interaction between the host and PostSharp. The host has to implement the AppDomain.AssemblyResolve event.
+
+<span style="font-weight: bold;">Do you want to try?</span>
+
+The changes have been merged in the trunk of the SVN repository. I have built a prerelease of the <a href="http://www.postsharp.org/projects/postsharp/releases/1.0-Beta-1">1.0 Beta 1</a> version. It is largely documented and I wrote a sample.
+
+Feedback welcome!

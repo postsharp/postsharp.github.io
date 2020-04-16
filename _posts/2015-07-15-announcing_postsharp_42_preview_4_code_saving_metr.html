@@ -1,0 +1,85 @@
+---
+layout: post
+title: "Announcing PostSharp 4.2 Preview 4: Code Saving Metrics"
+date: 2015-07-15 15:42:00 +02:00
+categories: []
+permalink: /post/announcing-postsharp-42-preview-4-code-saving-metrics.html
+---
+<p>It has been one more successful iteration (we&rsquo;re on a 3-week cycle here) and&nbsp;on&nbsp;Monday&nbsp;we&rsquo;ve successfully released PostSharp 4.2 Preview 4, available for download <a href="https://www.postsharp.net/downloads/postsharp-4.2">on our website</a> and on NuGet (make sure to enable the pre-release option as usually). This should be our last Preview release for PostSharp 4.2; we&rsquo;re now heading toward the RC.</p>
+<h2>What&rsquo;s new in PostSharp 4.2</h2>
+<p>In the <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-1">previous</a> <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-3">blog posts</a>, I already announced the following improvements included in previous previews of PostSharp 4.2:</p>
+<ul>
+<li>Support for Visual Basic</li>
+<li>Ready-made patterns: amazing performance improvements</li>
+<li>Ready-made patterns: support for System.Collections.Immutable</li>
+<li>Ready-made patterns: support for programmatic rules</li>
+<li>Thread-safety policy</li>
+<li>INotifyPropertyChanged: support for INotifyPropertyChanging</li>
+<li>Module initializers</li>
+<li>OnAspectsInitialized advice</li>
+</ul>
+<p>Today, I&rsquo;m announcing the following new features:</p>
+<ul>
+<li>Code saving metrics</li>
+<li>Manual code metrics</li>
+<li>Customizable advice descriptions</li>
+</ul>
+<h2>Code Metrics</h2>
+<p>How much code do you really save using PostSharp? This is a central question: indeed, the total cost of ownership of custom-built software is roughly in linear dependence to its number of lines of code. <a href="http://www.postsharp.net/blog/post/How-much-code-do-you-REALLY-save-with-PostSharp">We tried to answer this question</a> statistically and very approximately based on data from our CEIP data and discovered it was not uncommon to save 20%. But yet, there were too many guesses, and we weren&rsquo;t satisfied with the answer.</p>
+<p>So we decided to bake code metrics directly into PostSharp, so <em>you</em> can know how much you save with PostSharp.</p>
+<p>There are two locations where you can see code savings in Visual Studio: in tooltips, and in a new tool window.</p>
+<h3>Code Savings in Tooltips</h3>
+<p>The first location where you will find code saving metrics is in the PostSharp-augmented tooltip. You will find detailed information about how individual aspects and advices affect the current piece of code:</p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/tooltip2.png" alt="" /></p>
+<h3>Code Metrics Tool Window</h3>
+<p>Tooltips are great when you want a detailed view, but sometimes you also need to get the big picture. That&rsquo;s why we&rsquo;re also displaying project-level metrics in a separate tool window. To open it, click on PostSharp / PostSharp Metrics in the Visual Studio menu.</p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/menu2.png" alt="" /></p>
+<p>You can then see how much manual lines of code you have in each project, and how much additional code you would have to write if you didn&rsquo;t use PostSharp:</p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/toolwindow2.png" alt="" /></p>
+<h3>About Lines of Code</h3>
+<p>Developers generally hate lines of code as a metric. I think there are two elements we need to address in this criticism: the <em>intended use</em> of the metric, and the <em>algorithm</em> used to compute the metric.</p>
+<p>There are many bad uses of software metrics. Comparing productivity of individual developers is one of the worse. However, lines of source code is a decent metric to estimate the size of a project. Empirical studies show, ex post, a strong correlation between the number of lines of code and the total development effort. The intended use of metrics computed by PostSharp is to let you evaluate how efficiently you&rsquo;re using aspects in your project.</p>
+<p>People often argue that the LOC metric is highly sensitive to coding style (text formatting). PostSharp&rsquo;s algorithm is absolutely insensitive to formatting. PostSharp does not directly counts lines of code in your text files, it actually sums the following:</p>
+<ul>
+<li><strong>Debugging sequence points:</strong> every possible location of a breakpoint (or any possible step of an F10) is considered a line of code (minus two points per method, which are for the opening and closing brackets and don&rsquo;t really map to source code). This is a very logical and natural way of computing the size of a program. It is quite close to the number of instructions.</li>
+<li><strong>Declarations</strong>: we count one line of code per type, method, field, property, property getter, property setter, event, event adder, event remover &ndash; unless the declaration is compiler-generated. Abstract members are also counted because they should also be considered source code. Property and event accessors without body are not counted. Custom attributes are not counted because they are considered as modifiers, like <em>readonly</em> or <em>private</em>.</li>
+</ul>
+<p>Therefore we can say that PostSharp computes the number of <em>logical lines of code</em> in your project. I believe it&rsquo;s the best size metric possible.</p>
+<h3>Ready-Made Patterns</h3>
+<p>We added code saving information to all our ready-made patterns. It was sometimes difficult&nbsp;to take a decision on how many LOC to put because automatic code generation strategies greatly differ from manual generation strategies. When putting LOC numbers, we tried to answer the question: &ldquo;How much code would I have to write if I had to implement the feature manually with the fewest number of LOC possible?&rdquo;. This gives us much lower numbers than what we actually inject.</p>
+<p>In general, you can consider that the code saving estimates for ready-made patterns are a very conservative estimate. You can convince yourself by looking at the tooltips: you will see that we actually do <em>not</em> push LOC saving for most advices.</p>
+<p>You may be surprised to see how much code is generated by thread-safety aspects. First let me repeat that the estimate displayed in Visual Studio is <em>very</em> conservative for thread safety. However, much of this code is used by run-time validation, which is typically included in debug builds but not in release builds. For instance, for our PostSharp Tools solution, PostSharp saves 16% of code in debug build but only 8% in release build. That means that 8% is an overhead added to the debug build in order to deterministically&nbsp;detect potential model violations (and prevent data races). Does it mean that these 8% have no value? No of course, they do have enormous value, because they guarantee the thread safety of our release build.</p>
+<h3>Adding Code Saving Information to Your Aspects</h3>
+<p>Ready-made aspects are just a part of the story. Your custom aspects also participate in avoiding boilerplate code. To benefit from accurate code saving information, you will need to tell PostSharp how much lines are avoided every time your aspect is used.</p>
+<p>The easiest way is to add the <em>[LinesOfCodeAvoided]</em> attribute to your aspect class.</p>
+<pre>[LinesOfCodeAvoided(2)]
+public sealed class DispatchedMethodAspect : MethodInterceptionAspect
+{<br />  // Details skipped.<br />}</pre>
+<p>The <em>[LinesOfCodeAvoided(2)]</em> custom attribute above instructs PostSharp to consider that 2 lines of code have been saved every time <em>DispatchedMethodAspect</em> is applied to a method.</p>
+<p>If you have composite aspects in your code (the ones composed from several advices of the <em>PostSharp.Aspects.Advices</em> namespace), you can get more precise estimates by specifying how many lines of code are saved every time an <em>advice</em> is applied.&nbsp; Simply set the <em>LinesOfCodeAvoided</em> property of the advice custom attribute.</p>
+<pre>[OnLocationSetValueAdvice(LinesOfCodeAvoided = 2)]
+[MethodPointcut( "SelectFields" )]
+public void OnFieldSet( LocationInterceptionArgs args )
+{
+  // Details skipped.
+}
+</pre>
+<p>In the code above, PostSharp will consider that 2 lines of code have been avoided every time that the <em>OnFieldSet</em> advice has been applied to a field.</p>
+<h2>Customizable Advice Descriptions</h2>
+<p>In the screenshots above, you can see that the description of advices now makes sense: the text actually says what the advice is doing. In previous versions of PostSharp, you would have got some text like &ldquo;the field is intercepted by OnFieldSet&rdquo;, which was not very useful if you didn&rsquo;t write the aspect yourself. Now, you can add a custom description to your advices so the tooltips make sense.</p>
+<p>To add a custom description to your advices, simply set the <em>Description</em> of the advice custom property. For instance:</p>
+<pre>[OnLocationSetValueAdvice(LinesOfCodeAvoided = 2, 
+                           Description = "Validates that the current thread has access to the object")]
+[MethodPointcut( "SelectFields" )]
+public void OnFieldSet( LocationInterceptionArgs args )
+{
+  // Details skipped.
+}
+</pre>
+<h2>Summary</h2>
+<p>Lies, damned lies, and code metrics. Counting logical lines of code is pretty straightforward and reliable, but it&rsquo;s much more difficult and controversial to estimate how much code you avoided writing manually thanks to PostSharp. We understand there isn&rsquo;t one right way to compute this estimate so we tried at least an educated but conservative guess.</p>
+<p>We hope it will give you an idea of how PostSharp is useful in your projects.</p>
+<p>However, keep in mind that reducing boilerplate is just one of the many benefits of PostSharp. According to most long-time customers, PostSharp&rsquo;s first benefit is that source code is simpler, easier to read and understand &ndash; especially by new team members. And this is much more difficult to quantify.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+<p>&nbsp;</p>

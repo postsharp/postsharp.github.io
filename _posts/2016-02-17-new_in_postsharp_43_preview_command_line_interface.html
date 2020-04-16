@@ -1,0 +1,41 @@
+---
+layout: post
+title: "New in PostSharp 4.3 Preview: Command-Line Interface"
+date: 2016-02-17 13:55:00 +01:00
+categories: []
+permalink: /post/new-in-postsharp-43-preview-command-line-interface.html
+---
+<p>At PostSharp we have a strong bias for building against communicating. Between PostSharp 4.2 RTM and now, we’ve already released <em>four </em>previews of PostSharp 4.3. Let’s have a look at the first feature that we almost completed: the command-line interface.</p>
+<p>It is now possible to bypass NuGet and MSBuild integration and <strong>invoke PostSharp as an executable</strong>. This feature was supported up to PostSharp 2.1 and then removed in PostSharp 3. We are including it back because of <a href="https://postsharp.uservoice.com/">popular demand</a>.</p>
+<h1>Why to use the command-line interface?</h1>
+<p>PostSharp has been primarily designed as an extension to the C# and VB languages that automates the implementation or validation of patterns. Most patterns need to be present for the application to work. Think for instance of INotifyPropertyChanged.&nbsp; It does not make sense to have a build of your application that does not implement INotifyPropertyChanged. Therefore, the best way to invoke PostSharp is to use the default MSBuild integration.</p>
+<p>However, if you think of instrumentation aspects like logging, the situation is different. It is perfectly valid to add logging to an existing assembly. In this case, MSBuild is not the good option.</p>
+<p>You can use the command-line interface in the following situations:</p>
+<ol>
+<li>When you have access to the source code of a project but you don’t want to add instrumentation into the normal C#/VB project file, but as a separate step.</li>
+<li>When you don’t have access to the source code of the assembly you want to instrument. (Legal disclaimer: in this case, make sure your license allows you to modify the assembly)</li>
+</ol>
+<h1>Example: instrumenting DotNetty</h1>
+<p>To demonstrate a typical use of the command-line, let’s take some random open-source project: <a href="https://github.com/Azure/DotNetty">DotNetty</a>, a network stack used by the Azure platform. To keep the example simple, let’s add logging to the <strong>Echo.Client</strong> assembly.</p>
+<h2>Step 1. Download and extract the ZIP distribution</h2>
+<p>If you want to run PostSharp as a stand-alone executable, you will likely prefer to download the <em>zip</em> distribution of PostSharp instead of the NuGet packages. The zip distributions is one of the good things of PostSharp 2.1 that disappeared in PostSharp 3 and that we are bringing back. To download the zip distribution, go to <a title="https://www.postsharp.net/downloads/postsharp-4.3" href="https://www.postsharp.net/downloads/postsharp-4.3">https://www.postsharp.net/downloads/postsharp-4.3, </a>then download the file named <strong>PostSharp-&lt;version&gt;.zip</strong> and extract it to your local machine.</p>
+<h2>Step 2. Create a PostSharp project file</h2>
+<p>Create a file named <strong>postsharp.config</strong> (any file name will work) and add the following content:</p>
+<pre class="lang-bsh">&lt;Project xmlns="http://schemas.postsharp.org/1.0/configuration"&gt;<br><br>  &lt;Property Name="Input" Value="Echo.Client.exe" /&gt;<br>  &lt;Property Name="Output" Value="Echo.Client2.exe" /&gt;<br>  &lt;Property Name="LoggingBackend" Value="Console" /&gt;<br><br>  &lt;Multicast&gt;<br>    &lt;LogAttribute xmlns="clr-namespace:PostSharp.Patterns.Diagnostics;assembly:PostSharp.Patterns.Diagnostics" /&gt;<br>  &lt;/Multicast&gt;<br><br>&lt;/Project&gt;</pre>
+<p>Note that you can add <em>any</em> aspect to the assembly using this project file. For details, see <a href="http://doc.postsharp.net/configuration-system">our documentation</a>.</p>
+<h2>Step 3. Invoke PostSharp</h2>
+<p>PostSharp executables are located under the <strong>tools</strong> folder. There are a lot of files in this directory, but you should focus on two: <strong>postsharp-net40-x64-native.exe</strong> and <strong>postsharp-net40-x86-native.exe</strong>. Use the first executable to transform x64 projects and the second to transform anything else.</p>
+<p>Type the following command:</p>
+<pre>c:\PostSharp\tools\postsharp-net40-x86-native.exe postsharp.config</pre>
+<h2>Step 4. Run the instrumented program</h2>
+<p>First, copy file <strong>Echo.Client.exe.config</strong> to <strong>Echo.Client2.exe.config </strong>so that the new executable will find its configuration.</p>
+<p>Then execute <strong>Echo.Client2.exe </strong>and… enjoy the logging!</p>
+<p><img alt="" src="/assets/2016-02-17-new_in_postsharp_43_preview_command_line_interface/dotnetty.png"></p>
+<h1>Summary</h1>
+<p>With PostSharp 4.3, we are bringing back a few good features of PostSharp 2.1 that disappeared in PostSharp 3: the zip distribution and the command-line executable.</p>
+<p>You can use the command-line executable whenever you want to add instrumentation to an assembly without having to recompile it – whether or not you have its source code.</p>
+<p>Is it useful for your scenario? How can we improve? Please let us know!</p>
+<p>Happy PostSharping,</p>
+<p>-gael</p><p>P.S. This post is the first in a series dedicated to the new features of PostSharp 4.3:<ol><li>Command-Line Interface;
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-Preview-Improved-Debugging-Experience">Improved Debugging Experience;</a>
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-43-An-alternative-to-NuGet">Alternative to NuGet deployment</a>.</li></ol>

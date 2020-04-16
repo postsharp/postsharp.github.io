@@ -1,0 +1,115 @@
+---
+layout: post
+title: "Announcing PostSharp 4 RTM"
+date: 2014-10-22 07:00:00 +02:00
+categories: [Announcements]
+permalink: /post/announcing-postsharp-40-rtm.html
+---
+<p>Today we&rsquo;re excited to announce the general availability of PostSharp 4, the newest version of our 100%-compatible productivity extension to C# and VB. PostSharp allows developers and architects to automate the implementation of design patterns by encapsulating them into reusable components named <em>aspects</em>. Unlike other development productivity tools, PostSharp does not just make it easier to <em>type</em> code, but results in a smaller codebase that is easier to understand and has fewer defects.</p>
+<p>You can <a href="http://www.postsharp.net/download">download PostSharp 4</a> today from Visual Studio Gallery and update your projects using NuGet.</p>
+<p>PostSharp 4 applies the success of pattern-driven development to the realm of multithreaded applications and provides a <strong>thread-safe extension to C# and VB</strong>. Application developers can annotate their classes with custom attributes such as <em>[Immutable]</em>, <em>[Actor]</em> or <em>[Synchronized]</em> and have their code automatically validated against the model. Any violations result in build-time errors or run-time exceptions instead of data corruptions.</p>
+<p>PostSharp 4 makes it incredibly easy to implement <strong>undo/redo</strong> in desktop and mobile applications by automatically recording changes in model objects. Additionally, it includes more than 15 other improvements and enhancements.</p>
+<p class="MsoNormal">Information in this release announcement includes:</p>
+<ul>
+<li><a href="#2014_10_22_threading_models">Threading Models;</a></li>
+<li><a href="#2014_10_22_undo_redo">Undo/Redo</a>;</li>
+<li><a href="#2014_10_22_aggregation">Aggregation and Composition</a>;</li>
+<li><a href="#2014_10_22_other">Other Improvements</a>;</li>
+<li><a href="#2014_10_22_free_express">More Free Aspects in PostSharp Express;</a></li>
+<li><a href="#2014_10_22_new_platforms">Platforms Newly Supported;</a></li>
+<li><a href="#2014_10_22_deprecated_platforms">Platforms No Longer Supported</a>.</li>
+</ul>
+<h2 id="2014_10_22_threading_models">Threading Models</h2>
+<p>When comparing modern object-oriented programming to assembly language, one can see that notions like classes, fields, variables or methods really simplify developers&rsquo; lives and increase their productivity. But when it comes to multithreading, one cannot state that object oriented programming (OOP) delivers so much value. As a result, multithreading is still being addressed at a low level of abstraction with locks, events or interlocked accesses. The resulting cost for the industry, in terms of development effort and number of defects, is enormous.</p>
+<p>Alternatives to OOP like functional programming and actor programming have been proposed to address the challenges of multithreading. However, these paradigms are not as appropriate as OOP for business and mobile applications. They have failed to gain wide adoption, existing only in narrow niches where high performance wins over high development cost.</p>
+<p>Instead of trying to replace OOP, PostSharp 4 extends the C# and VB languages with custom attributes like <em>[Immutable]</em>, <em>[ThreadAffine]</em>, <em>[Synchronized]</em> or <em>[Actor]</em>, which allow developers to assign a <em>threading model</em> to a class. Based on these custom attributes, the compiler extension validates the code against the model and generates synchronization or dispatching instructions.</p>
+<p>PostSharp 4 implements the following threading models:</p>
+<ul>
+<li>Immutable and Freezable;</li>
+<li>Synchronized and Reader-Writer Synchronized;</li>
+<li>Actor;</li>
+<li>Thread Affine and Thread Unsafe.</li>
+</ul>
+<h3>What are the benefits?</h3>
+<p>Thanks to threading models, source code is safer and simpler. Threading models bring the same kind of productivity gains than the stricter C#/VB memory model brought to C++. Source code is more concise and easier to reason about and there are far fewer chances for non-deterministic data races. Threading models make it easier for everyone on the team, not just for multithreading experts, to build robust business applications.</p>
+<h3>Why is this a significant innovation?</h3>
+<p>We believe that our approach to multithreading is innovative in many ways, and that its significance exceeds the scope of the PostSharp community. Points of interest include the focus on business applications and average developers (instead of critical software and expert developers); the idea that several threading models can co-exist in the same application as an extension of a mainstream language (instead of requiring a rewrite in a specialized language); and the use of UML aggregation as a foundation to select the synchronization granularity.</p>
+<p>See our <a href="http://j.mp/1rqp0KS">technical white paper</a> for more details about our approach. We think this new approach could be applied to other object-oriented languages and environments.</p>
+<h3>Additional Resources</h3>
+<p>For more information, see:</p>
+<ul>
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-Immutable-and-Freezable-Done-Well">Blog post: Immutable and Freezable Done Well</a></li>
+<li><a href="http://j.mp/1rqp0KS">Technical White Paper: A Thread-Safe Extension to Object-Oriented Programming</a></li>
+<li><a href="http://doc.postsharp.net/threading-library">Reference Documentation: PostSharp Threading Pattern Library</a></li>
+</ul>
+<h2 id="2014_10_22_undo_redo">Undo/Redo</h2>
+<p>A feature that always scores at the top of each the wish list of each application is undo/redo. Oddly enough, the feature usually remains unaddressed for years because it is awfully painful to implement using conventional technologies. It simply generates too much boilerplate code.</p>
+<p>PostSharp 4 takes the boilerplate code out of way. Just add the <em>[Recordable]</em> attribute to your model classes, and they will start appending any change into a <em>Recorder</em>. You can then use the <em>Undo</em> and <em>Redo</em> methods of the <em>Recorder</em>, or add the off-the-shelf WPF buttons to your toolbar.</p>
+<h3>What are the benefits?</h3>
+<p>PostSharp 4 makes undo/redo affordable for virtually any application, even line-of-business software that typically has a large object model and a small user base. Previously, the feature had a prohibitive cost and would pay off only in simple applications or software with a large customer base.</p>
+<p>The <em>Recordable</em> pattern offers more flexibility than the traditional <em>Memento</em> pattern, and its implementation can be completely automated by the compiler. It demonstrates how better compiler technologies can lead to simpler source code and reduced development effort.</p>
+<h3>Additional Resources</h3>
+<p>For more information, see:</p>
+<ul>
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">Blog post: Undo/Redo &ndash; part 1</a>, <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-2">part 2</a>, <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-3">part 3</a>, <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-4">part 4</a></li>
+<li><a href="http://doc.postsharp.net/undoredo">Reference Documentation: Implementing Undo/Redo</a></li>
+</ul>
+<h2 id="2014_10_22_aggregation">Aggregation and Composition</h2>
+<p>When we built our threading models and undo/redo feature, we realized that we needed a notion of parent-child relationships. When we kept thinking deeper about that, it became clear that most object designs actually relied on this notion. It&rsquo;s not surprising if one considers that aggregation and composition are core concepts of the UML specification. Yet, it&rsquo;s a pity it has not been implemented in programming languages. We needed to fix that.</p>
+<p>Classes that can be involved in parent-child relationships must be annotated with the <em>[Aggregatable]</em> custom attribute, or with any other attribute that implicitly provides the Aggregatable aspect. Then fields that hold a reference to another object must be annotated with <em>[Child]</em>, <em>[Reference]</em> or<em> [Parent]</em>.</p>
+<p>The principal role of the Aggregatable aspect is simply to automatically set the parent property when a child is assigned to a parent and to implement a child visitor.</p>
+<p>For more information, see:</p>
+<ul>
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-Aggregation-and-Composition-Patterns">Blog post: Aggregation and Composition Patterns</a></li>
+<li><a href="http://doc.postsharp.net/aggregatable">Reference Documentation: Implement Parent/Child Relationships</a></li>
+</ul>
+<h2 id="2014_10_22_other">Other Improvements</h2>
+<p>In addition to the previously described new features, we significantly enhanced the PostSharp Aspect Framework and worked on other components as well:</p>
+<ul>
+<li>4x runtime performance enhancement on our NotifyPropertyChanged aspect.</li>
+<li>Improved reliability and scope of our deadlock detection policy.</li>
+<li>Dynamic advices: see <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_iadviceprovider">IAdviceProvider</a>, <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_introduceinterfaceadviceinstance">IntroduceInterface</a>, <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_importlocationadviceinstance">ImportLocation</a>, <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_importmethodadviceinstance">ImportMethod</a>, <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_introducemethodadviceinstance">IntroduceMethod</a>.</li>
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-40-Aspect-Repository">Aspect Repository and Late Validation</a>.</li>
+<li><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-40-OnInstanceConstructedAdvice">OnInstanceConstructed advice</a>.</li>
+<li>Faster advice state lookup: see <a href="http://doc.postsharp.net/p_postsharp_aspects_adviceargs_declarationidentifier">DeclarationIdentifier</a>.</li>
+</ul>
+<h2 id="2014_10_22_free_express">More Free Aspects in PostSharp Express</h2>
+<p>PostSharp 4 generalizes the idea of giving our ready-made pattern libraries for free for small projects. PostSharp Express 4 now includes the following features for free &ndash; for up to 10 classes per Visual Studio project:</p>
+<ul>
+<li>NotifyPropertyChanged</li>
+<li>Recordable, EditableObject (undo/redo)</li>
+<li>Aggregatable, Disposable</li>
+<li>Threading (threading models, dispatching)</li>
+<li>Code Contracts</li>
+<li>Logging (up to 50 methods)</li>
+</ul>
+<p>If you like the new features and want to use them more, you can buy them as a part of PostSharp Ultimate or as an individual product. More on our <a href="http://www.postsharp.net/purchase">pricing page</a>.</p>
+<h2 id="2014_10_22_new_platforms">Platforms Newly Supported</h2>
+<p>PostSharp 4 adds full support for:</p>
+<ul>
+<li>Win RT both on Windows 8 (the previous support was error-prone and needed a complete redesign) and Windows Phone 8.1.</li>
+<li>Windows Phone 8.1 &ldquo;Silverlight&rdquo;.</li>
+<li>C++ &ldquo;mixed mode&rdquo; assembly references.</li>
+</ul>
+<h2 id="2014_10_22_deprecated_platforms">Platforms No Longer Supported</h2>
+<p>We decided that new releases of PostSharp would not support platforms for which Microsoft no longer provides <em>mainstream support</em> at the time of a PostSharp RTM release.</p>
+<p>On <em>development workstations and build machines</em>, PostSharp 4 no longer supports:</p>
+<ul>
+<li>Windows XP (Vista, 7 or 8 is required).</li>
+<li>Visual Studio 2010 (2012 or 2013 is required).</li>
+<li>.NET Framework 4.0 (4.5 is required).</li>
+</ul>
+<p>On <em>end-user devices</em>, PostSharp 4 no longer supports:</p>
+<ul>
+<li>.NET Framework 2.0 (3.5, 4.0 or 4.5 is required).</li>
+<li>Windows Phone 7 (8 or 8.1 is required).</li>
+<li>Silverlight 4 (5 is required).</li>
+</ul>
+<p>Note that PostSharp 3.1 still supports these platforms.</p>
+<h2>Summary</h2>
+<p>While Microsoft has lately been catching up with its competitors in the consumer market, enterprise developers may feel neglected. At PostSharp, our focus is to increase productivity of large .NET development teams. It&rsquo;s only when you start counting lines of code with 6 or 7 digits &ndash; and you realize that every line may cost your employer between $10 and $20 &ndash; that you appreciate and receive the full benefits of automating design patterns.</p>
+<p>PostSharp 4 marks a significant innovation in the realm of multithreading. It raises the level of abstraction by defining models so the machine can do more and humans must think less. But instead of requiring developers to switch to a different language, it respects their investments in C# and VB and extends the environment in a backward compatible fashion.</p>
+<p>PostSharp 4 includes plenty of important new features including undo/redo, parent-child relationships, performance improvements, new advices and more.</p>
+<p>It&rsquo;s an exciting time to be a developer.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

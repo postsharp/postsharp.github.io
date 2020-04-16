@@ -1,0 +1,155 @@
+---
+layout: post
+title: "New in PostSharp 4.0: OnInstanceConstructedAdvice"
+date: 2014-10-13 14:46:00 +02:00
+categories: []
+permalink: /post/new-in-postsharp-40-oninstanceconstructedadvice.html
+---
+<p>As we&rsquo;re progressing in the RC cycle of PostSharp 4.0, I would like to shed some light on a feature that has been often requested in the past, and is finally available in PostSharp 4.0: <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_oninstanceconstructedadvice">OnInstanceConstructedAdvice</a>.</p>
+<p>The objective of this advice is to provide a way for the aspect to execute code when instances of the target class are &ldquo;fully constructed&rdquo;. What does that mean to be &ldquo;fully constructed&rdquo;? In short, it means that all instance constructors in the chain have been invoked. Note that it is <em>not</em> the same as having an <em>OnSuccess</em> advice on the public constructor: such advice would be executed even if the current constructor is not the last in the chain.</p>
+<h2>Example</h2>
+<p>Let&rsquo;s see this on a simple example.Here&rsquo;s an aspect that has both kinds of advices:</p>
+<pre>[PSerializable]
+class MyAspect : InstanceLevelAspect
+{
+    private Type appliedTo;
+
+    public override void CompileTimeInitialize(Type type, AspectInfo aspectInfo)
+    {
+        this.appliedTo = type;
+    }
+
+    [OnInstanceConstructedAdvice]
+    public void OnInstanceConstructed()
+    {
+        Console.WriteLine("OnInstanceConstructed({0})", this.appliedTo);
+    }
+
+    [OnMethodSuccessAdvice, MulticastPointcut(MemberName = ".ctor")]
+    public void OnSuccess(MethodExecutionArgs args)
+    {
+        Console.WriteLine("OnSuccess({0})", this.appliedTo);
+    }
+}</pre>
+<p>And here is some testing code:</p>
+<pre>[MyAspect]
+class Foo
+{
+    public Foo()
+    {<br />       Console.WriteLine("Foo()");
+    }
+
+    public Foo(int foo) : this()
+    {<br />        Console.WriteLine("Foo(int)");
+    }
+}
+
+static class Program
+{
+    public static void Main()
+    {
+       Foo foo = new Foo(0);
+    }
+}
+
+</pre>
+<p>The program is instantiating Foo by invoking a constructor that chains another constructor. Its output is the following:</p>
+<pre>Foo()
+OnSuccess(ConsoleApplication7.Foo)
+Foo(int)
+OnSuccess(ConsoleApplication7.Foo)
+OnInstanceConstructed(ConsoleApplication7.Foo)
+</pre>
+<p>As you can see, the <em>OnSuccess</em> advice has been invoked twice because two constructors were chained. However, <em>OnInstanceConstructed</em> was invoked only once after the <em>last</em> constructor completed.</p>
+<p>Let&rsquo;s have a more complex example:</p>
+<pre>[MyAspect]
+class Bar : Foo
+{
+    public Bar() 
+    {<br />       Console.WriteLine("Bar()");
+    }
+
+    public Bar(int bar) : this()
+    {   <br />        Console.WriteLine("Bar(int)");
+    }
+}
+
+static class Program
+{
+    public static void Main()
+    {
+        Bar bar = new Bar(0);
+    }
+}
+</pre>
+<p>The output is the following:</p>
+<pre>Foo()
+OnSuccess(ConsoleApplication7.Foo)
+Bar()
+OnSuccess(ConsoleApplication7.Bar)
+Bar(int)
+OnSuccess(ConsoleApplication7.Bar)<br />OnInstanceConstructed(ConsoleApplication7.Foo)
+OnInstanceConstructed(ConsoleApplication7.Bar)
+
+</pre>
+<p>As expected, <em>OnSuccess</em> is invoked twice. It may be more surprising to see <em>OnInstanceConstructed</em> invoked twice. The reason is that the method is actually called only once, but once for each instance of the aspect, and here we have two instances of <em>MyAspect</em>: one on <em>Foo</em>, and the other on <em>Bar</em>.</p>
+<p>If you want to have a single execution of the logic, you have to make it conditional to <em>this.appliedOnType</em>:</p>
+<pre>[OnInstanceConstructedAdvice]
+public void OnInstanceConstructed()
+{
+    if (this.appliedTo == this.Instance.GetType())
+    {
+        Console.WriteLine("OnInstanceConstructed({0})", this.appliedTo);
+    }
+}
+</pre>
+<h2>How does it work?</h2>
+<p>The <em>OnInstanceConstructed</em> advice needs to &ldquo;know&rdquo; that the constructor is the last in the chain.</p>
+<p>Let&rsquo;s look at the code after it has been transformed by PostSharp:</p>
+<pre>internal class Bar : Foo
+{
+    public Bar() : this(ConstructorDepth.Zero)
+    {
+    }
+
+    protected Bar(ConstructorDepth __depth) : base(__depth.Increment())
+    {
+        Console.WriteLine("Bar");
+        this.&lt;&gt;z__aspect2.OnSuccess(null);
+        if (__depth.IsZero)
+        {
+            this.OnInstanceConstructed();
+        }
+    }
+
+    public Bar(int bar) : this(bar, ConstructorDepth.Zero)
+    {
+    }
+
+    protected Bar(int bar, ConstructorDepth __depth) : this(__depth.Increment())
+    {
+        Console.WriteLine("Bar(int)");
+        this.&lt;&gt;z__aspect2.OnSuccess(null);
+        if (__depth.IsZero)
+        {
+            this.OnInstanceConstructed();
+        }
+    }
+
+    protected override void OnInstanceConstructed()
+    {
+        base.OnInstanceConstructed();
+        this.&lt;&gt;z__aspect2.OnInstanceConstructed();
+    }
+}
+</pre>
+<p>As you can see, PostSharp does three things with every user-defined constructor:</p>
+<ul>
+<li>Add an argument of type <em>ConstructorDepth</em> to the original constructor.</li>
+<li>Create a new constructor with the original constructor signature, which invokes the original constructor (with the modified signature) with the parameter <em>ConstructorDepth.Zero</em>.</li>
+<li>In the constructor chain, add the argument <em>__depth.Increment()</em> to the original invocation.</li>
+</ul>
+<p>Therefore, we know when the current constructor depth is zero and we&rsquo;re able to invoke <em>OnInstanceConstructed</em>. If you&rsquo;re looking at your code with <em>System.Reflection</em>, you will see that there are twice as many constructors. Naturally, you should invoke only the public or internal constructors, which have the original signature and initialize the depth to zero. Except reflection, the modification is harmless to user code.</p>
+<h2>Summary</h2>
+<p>The <em>OnInstanceConstructed</em> advice is the only reliable way to execute logic in the aspect only once after the instance has been fully constructed. We needed this feature to implement Aggregatable, Undo/Redo and Threading Models in PostSharp 4.0, and made it in a way that can be useful to everybody.</p>
+<p>Happy PostSharping!</p>

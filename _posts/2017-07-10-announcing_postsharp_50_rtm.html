@@ -1,0 +1,157 @@
+---
+layout: post
+title: "Announcing PostSharp 5.0 RTM"
+date: 2017-07-10 08:27:00 +02:00
+categories: [Announcement]
+permalink: /post/announcing-postsharp-50-rtm.html
+---
+<p>We&rsquo;re excited to announce that PostSharp 5.0 RTM is out and ready for <a href="https://www.postsharp.net/download">download</a> on Visual Studio Gallery and NuGet. The long awaited new version adds support for .NET Core 1.1, Visual Studio 2017 and C# 7.0. It also introduces brand new features like the OnInvokeAsync advise, the [Cache] aspect, or the [Command] and [DependencyProperty] aspects for XAML applications. And the Logging feature has been completely revamped, now fully customizable and faster than ever.</p>
+<p>As in any major version, PostSharp 5.0 is the opportunity for us to do some clean up at the cost of a few <a href="http://doc.postsharp.net/5.0/breaking-changes-50">breaking changes</a>. We&rsquo;re also updating our product line, renaming products and regrouping features differently. The most disruptive change will affect PostSharp Express users.</p>
+<h1>New Platforms</h1>
+<p><strong>Visual Studio 2017 &ndash; </strong>We support the new MSBuild project format, side-by-side installations of VS, lightweight solution loads, and achieved significant performance improvements.</p>
+<p><strong>C# 7.0</strong> &ndash; We tested and fixed all aspects with the new features of C# 7.0, including value-typed tasks and multiple return values.</p>
+<p><strong>.NET Core 1.1</strong> &ndash; You can now build applications that run on .NET Core 1.1, but you can still only build and debug them on a Windows machine running Visual Studio. Support for .NET Core is a long-term project and you will see gradual improvements in future versions.</p>
+<p><strong>.NET Standard 1.3</strong> &ndash; Support for .NET Core is achieved through .NET Standard, so you can use PostSharp in your own .NET Standard class libraries.</p>
+<h1>New Features</h1>
+<p><strong>Async support in aspects</strong> &ndash; We&rsquo;ve closed the gaps in the support for async methods in aspects <a href="http://doc.postsharp.net/5.0/t_postsharp_aspects_onmethodboundaryaspect">OnMethodBoundary</a>, so ReturnValue and FlowBehavior are now properly supported. In MethodInterceptionAspect, we&rsquo;ve added an advice method <a href="http://doc.postsharp.net/5.0/m_postsharp_aspects_methodinterceptionaspect_oninvokeasync_5ba43ce6">OnInvokeAsync</a> to handle async methods.</p>
+<p><strong>Caching</strong> &ndash; We've added a brand new ready-made caching framework, which includes not only a caching aspect, but also a cache invalidation aspect. PostSharp Caching 5.0 comes with support for MemoryCache and Redis. See&nbsp;<a href="http://doc.postsharp.net/5.0/caching">Caching</a>&nbsp;reference documentation for details.</p>
+<p><strong>Logging</strong> &ndash; That's a complete rewrite! The new PostSharp Logging is fully customizable and faster than ever. See&nbsp;<a href="http://doc.postsharp.net/5.0/logging">Logging</a>&nbsp;reference documentation for details.</p>
+<p><strong>XAML</strong> &ndash; If you're writing XAML applications, you probably wrote a lot of boilerplate code for commands and dependency properties. We've created new aspects to automate that. See&nbsp;<a href="http://doc.postsharp.net/5.0/xaml">XAML</a>&nbsp;reference documentation for details.</p>
+<p><strong>Code Contracts</strong> &ndash; It is now possible to add code contracts to return values and&nbsp;out&nbsp;or&nbsp;ref&nbsp;parameters. The values are validated when the method succeeds.</p>
+<p><strong>Architecture Framework</strong> &ndash; We&rsquo;re adding <a href="http://doc.postsharp.net/5.0/t_postsharp_constraints_namingconventionattribute">NamingConventionAttribute</a>, <a href="http://doc.postsharp.net/5.0/t_postsharp_constraints_parametervalueconstraint">ParameterValueConstraint</a>&nbsp; and &nbsp;<a href="http://doc.postsharp.net/5.0/t_postsharp_constraints_referenceconstraint">ReferenceConstraint</a>.</p>
+<h1>Deprecated Platforms</h1>
+<p><strong>Windows Phone, WinRT, Silverlight</strong> &ndash; These platforms have never got any traction among PostSharp users and we will no longer support them.</p>
+<p><strong>Portable Class Libraries</strong> &ndash; An evil that&rsquo;s no longer necessary. We&rsquo;re glad to deprecate them too.</p>
+<p><strong>Xamarin</strong> &ndash; We still believe in Xamarin but had to make choices to reach the 5.0 finish line. We chose to suspend support for Xamarin. Our intention is to get back to work on this platform, but to support it through .NET Standard.</p>
+<h1>Changes in the Product Line and Licensing</h1>
+<p>In PostSharp 5.0, we&rsquo;re reshaping our product line:</p>
+<ul>
+<li>PostSharp Professional becomes <strong>PostSharp Framework</strong> and now includes everything you need to automate the implementation or validation of your own patterns, including the Architecture Framework which used to be a part of PostSharp Ultimate. However, PostSharp Diagnostics is removed. PostSharp Professional customers will be offered a free subscription to PostSharp Diagnostics for the whole duration of their PostSharp Professional subscription that has already been paid for. Please contact our sales team if you&rsquo;re interested. Support for the license server is also removed. Please contact us if you&rsquo;re impacted.</li>
+</ul>
+<ul>
+<li>PostSharp Ultimate now has a big brother named <strong>PostSharp Enterprise</strong>. PostSharp Ultimate will still be an &ldquo;all you can eat&rdquo; version: the difference is that PostSharp Enterprise will address the typical non-technical requirements of large companies, namely custom license agreement, on-premises license server, and blueprint source code license. Please contact us if you have a PostSharp Ultimate license and are using the license server.</li>
+</ul>
+<ul>
+<li>PostSharp Model becomes <strong>PostSharp XAML</strong>, the must-have companion to your XAML development. Besides NotifyPropertyChanged, undo/redo and code contracts, we&rsquo;re adding command and dependency property aspects.</li>
+</ul>
+<ul>
+<li>PostSharp Diagnostics now has a free edition named <strong>PostSharp Diagnostics Developer Edition</strong> and no longer has any project size limitation. It means you can now add logging to your whole solution for free. There is however a time limitation: your applications will stop logging one day after they have been built. If you need logging, you have to rebuild them. That&rsquo;s why we call it the Developer Edition.</li>
+</ul>
+<ul>
+<li>PostSharp Express is renamed <strong>PostSharp Essentials</strong>. PostSharp Essentials is a free but limited edition of PostSharp. You can use all the features of PostSharp Ultimate, but the number of enhanced classes is limited to 10 per project or 50 per solution as in PostSharp 4.3. Additionally, it includes the time-limited PostSharp Diagnostics Developer Edition. We have removed the licensing mode that enabled for backward compatibility with PostSharp 2.0-4.2.</li>
+</ul>
+<p>The next table summarizes the licensing changes:</p>
+<table style="border-collapse: collapse;">
+<tbody>
+<tr>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p><strong>New Product</strong></p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p><strong>Previous Product</strong></p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p><strong>Changes</strong></p>
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp Enterprise</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp Ultimate</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>Tiered licensing, min. 50 licenses.</p>
+<p>More enterprise licensing options.</p>
+<p>Source code blueprint license added.</p>
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>PostSharp Ultimate</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>PostSharp Ultimate</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>Support for the license server removed.</p>
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp Framework</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp Professional</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>PostSharp Diagnostics removed.</p>
+<p>PostSharp Achitecture Framework added.</p>
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp Essentials</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp Express</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>Backward-compatibility mode with PostSharp 4.2 licensing removed.</p>
+<p>PostSharp Diagnostics Developer Edition added.</p>
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp Diagnostics</p>
+</td>
+<td style="border: 1px solid;" valign="top" width="192">
+<p>PostSharp Diagnostics</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>Tiered licensing.</p>
+<p>Totally revamped product.</p>
+<p>Code contracts added.</p>
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp XAML</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" valign="top" width="192">
+<p>PostSharp Model</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>Command and dependency properties added.</p>
+</td>
+</tr>
+<tr>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>PostSharp Threading</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>PostSharp Threading</p>
+</td>
+<td style="border: 1px solid; padding-left: 5px;" width="192">
+<p>Code contracts added.</p>
+</td>
+</tr>
+</tbody>
+</table>
+<p>&nbsp;</p>
+<h1>So you&rsquo;re now asking money for a feature that used to be free?</h1>
+<p>We hate Orwellian language just as you do. Yes. We&rsquo;re removing free features from PostSharp Express. We have decided to move from a licensing concept based on feature limitations to a concept based on scale limitations. We have made a first step in August 2016 with PostSharp 4.3, but since it was a minor release, we did not want to break backward compatibility. Therefore, we still included (but did not document) a backward-compatible licensing mode in PostSharp 4.3. We&rsquo;re now removing this mode. PostSharp 5.0 works exactly as PostSharp 4.3 was advertised to work, minus the backward compatibility with PostSharp 2.0-4.2.</p>
+<p>What if you&rsquo;ve been using PostSharp Express for a long time and you don&rsquo;t fit within the limitations of PostSharp Essentials? I understand you wish to continue the same features for free in PostSharp 5.0 and may feel pushed into the corner by the new licensing model. You have several options:</p>
+<ol>
+<li>Do not upgrade to PostSharp 5.0. Remember that all PostSharp licenses, except evaluation licenses, are <em>perpetual</em>. We are not withdrawing your right to use any prior version of PostSharp. Staying with PostSharp 4.3 may be a perfectly viable option, but remember we will not implement support for new versions of frameworks, languages, or Visual Studio.</li>
+<li>Remove PostSharp from your project: use a competitor product or rewrite the boilerplate manually.</li>
+<li>Purchase a commercial edition of PostSharp 5.0.</li>
+</ol>
+<p>I&rsquo;m sure there is going to be some emotions out there, and we&rsquo;re likely to see some angry reactions on social media. But I&rsquo;m also convinced the best service we can render to the community of PostSharp users is to build a healthy, forward-looking, prosperous company, which implies to discontinue business models that have proved unsuccessful. Our decision will perhaps be unpopular, but this is a healthy, data-based one.</p>
+<h1>Summary</h1>
+<p>PostSharp 5.0 is a major release, adding support for .NET Core, Visual Studio 2017, C# 7.0, and introducing exciting new features such as a fully new logging framework, much improved support for async methods, a caching aspect, command and dependency property aspects, and much more.</p>
+<p>We couldn&rsquo;t have implemented all these new functionalities without doing a few <a href="http://doc.postsharp.net/5.0/breaking-changes-50">breaking changes</a>, which I suggest you double check before you upgrade.</p>
+<p>PostSharp 5.0 is also the opportunity for us to reshape our product line. We&rsquo;ve renamed our products, sharpened their positioning, and moved the boundaries between them. Most commercial customers will not be affected, but if you think you are losing functionalities because of these changes, please contact us to find a solution.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

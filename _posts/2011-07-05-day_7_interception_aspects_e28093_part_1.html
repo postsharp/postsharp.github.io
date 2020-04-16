@@ -1,0 +1,253 @@
+---
+layout: post
+title: "PostSharp Principles: Day 7 Interception Aspects – Part 1"
+date: 2011-07-05 15:17:00 +02:00
+categories: [Tutorial]
+permalink: /post/day-7-interception-aspects-e28093-part-1.html
+---
+<p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>  <p>Today we’re going to look at two interception aspects, MethodInterceptionAspect and LocationInterceptionAspect. Due to the nature of these aspects we will break it into two parts. Today we’ll focus on using them and tomorrow we’ll look under the hood and cover chaining.</p>  <h3>Interception</h3>  <p>Interception aspects are a bit different from the other aspects we’ve looked at. OnExceptionAspect and OnMethodBoundaryAspects essentially wrap the original method body while interception aspects actually replace the method body with a call to the aspect, then moves the original body elsewhere. A simple diagram will help to visualize the process.</p>  <p><a href="/assets/2011-07-05-day_7_interception_aspects_e28093_part_1/image_14.png"><img width="496" height="248" title="image" style="border-width: 0px; padding-top: 0px; padding-right: 0px; padding-left: 0px; display: inline; background-image: none;" alt="image" src="/assets/2011-07-05-day_7_interception_aspects_e28093_part_1/image_thumb_14.png" border="0"></a></p>  <p>There are many beneficial processes that can be implemented using interception such as wait/retry, automatic thread delegation, lazy loading and validation.</p>  <h3>MethodInterceptionAspect: Adding Multi-Thread Support</h3>  <p>Our demo project has a problem of freezing the UI when doing a search. To fix this we must move the call to retrieve the data from the UI thread into its own thread. But, when dealing with the UI, controls cannot be accessed by any thread other than the thread they were created. This is a problem because we are updating a list control with the results of our query. We would get a cross-thread exception if we just moved the whole process to a new thread. We have to make sure that controls are updated on the correct thread.</p>  <p>Add a new file called WorkerThread.cs and add the following code</p>  <pre>[Serializable]
+public class WorkerThread : MethodInterceptionAspect
+{
+    public override void OnInvoke(MethodInterceptionArgs args)
+    {
+        BackgroundWorker bw = new BackgroundWorker();
+        bw.DoWork += new DoWorkEventHandler(
+            (object sender, DoWorkEventArgs e) =&gt;
+            {
+                args.Proceed();
+            }
+        );
+
+        bw.RunWorkerAsync();
+    }
+        
+}</pre>
+
+<p>Now add a new file called UIThread.cs and add the following code</p>
+
+<pre>[Serializable]
+public class UIThread : MethodInterceptionAspect
+{
+    private delegate void InvokeDelegate();
+
+    public override void OnInvoke(MethodInterceptionArgs args)
+    {
+        Form main = (Form)args.Instance;
+
+        if (main.InvokeRequired)
+        {
+            main.BeginInvoke(new Action(args.Proceed));
+                
+        }else {
+            args.Proceed();
+        }
+    }
+}</pre>
+
+<p>Our WorkerThread aspect is going to move our method call into a worker thread and execute it so our UI will no longer freeze. UIThread will take the method call and invoke it on the UI thread if it isn’t already on the UI thread so that we don’t receive cross-thread exceptions. </p>
+
+<p>Open the ContactManager.cs code behind and apply the WorkerThread aspect to UpdateContactList() and UIThread to PopulateContactsList(). </p>
+
+<pre>[WorkerThread]
+private void UpdateContactList()
+{
+…
+}
+
+[UIThread]
+private void PopulateContactsList(IQueryable<contact> contacts)
+{ 
+…
+}</contact></pre>
+
+<p>UpdateContactList() is where our query is called from so we want this to run in its own thread as to not interfere with the UI. PopulateContactList() handles manipulation of the control so we have to have the operations done on the UI thread.</p>
+
+<p>Now run the application. As expected, the UI no longer locks up when doing a search.</p>
+
+<h4>MethodInterceptionAspect.OnInvoke</h4>
+
+<p>MethodInterceptionAspect provides a virtual method, OnInvoke, for us to implement. This method is called in place of the target method call. It is here where we determine if and how the target method is going to be invoked. We do this using the provided MethodInterceptionArgs.</p>
+
+<h4>MethodInterceptionArgs</h4>
+
+<p>MethodInterceptionArgs provides us with a few things such as access to the arguments passed to the method, the return value, the instance on which the method is being invoked and the method info just as we saw with MethodExecutionArgs when using OnMethodBoundaryAspect. </p>
+
+<p>Since OnInvoke is called instead of the target method, MethodInterceptionArgs also provides ways to continue or change the invocation of the target method</p>
+
+<h4>MethodInterceptionArgs.Proceed</h4>
+
+<p>The body of the target method is moved into a new method which we can call using MethodInterceptionArgs.Proceed(). As in our threading aspects we made a call to MethodInterceptionArgs.Proceed() inside of our delegate to continue the invocation of the original method on our new thread. Execution will continue passing in the arguments held in MethodInterceptionArgs.Arguments and storing the return value in MethodInterceptionArgs.ReturnValue.</p>
+
+<h4>MethodInterceptionArgs.Invoke</h4>
+
+<p>When changes to the invocation are required, we can use the MethodInterceptionArgs.Invoke() method to pass in a different set of arguments to the target method. </p>
+
+<h3>LocationInterceptionAspect</h3>
+
+<p>Whereas the name MethodInterceptionAspect implies its usage, LocationInterceptionAspect does not. LocationInterceptionAspect is meant to be used on properties and fields. Just in case you’re wondering, the PostSharp documentation explains the ‘Location’ part of the name as</p>
+
+<p>…called locations because they [fields &amp; properties] both have the semantics of a slot where a value can be stored and retrieved.</p>
+
+<h3>How does it work?</h3>
+
+<p>LocationInterceptionAspect uses a pattern similar to the MethodInterceptionAspect which is replacing the body of the getter and setter methods (remember, in .Net properties are turned into a get and set method at compile-time) and replacing it with a call to the aspect’s OnGetValue and OnSetValue methods respectively.</p>
+
+<p>After reading that last paragraph you might be thinking how that is supposed to work on fields (which don’t have getters and setters). When aspects based on LocationInterceptionAspect are applied to fields, they are turned into properties of the same name, scope and visibility as the original field. </p>
+
+<h3>Simple example</h3>
+
+<p>To clear up any confusion, let’s go through a trivial example. We’ll build an aspect and a simple class with a single property to demonstrate. We’ll start with the aspect. </p>
+
+<pre>[Serializable]
+public class DemoAspect : LocationInterceptionAspect
+{
+    public override void OnGetValue(LocationInterceptionArgs args)
+    {
+        Debug.WriteLine("Get interception by aspect on " + args.LocationName);
+        args.ProceedGetValue();
+    }
+
+    public override void OnSetValue(LocationInterceptionArgs args)
+    {
+        Debug.WriteLine("Set interception by aspect on " + args.LocationName);
+        args.ProceedSetValue();
+    }
+}</pre>
+
+<p>All we’re doing is writing to the console when we reach a specific point in the process. Now let’s write a test class and apply our aspect.</p>
+
+<pre>public class TestClass
+{
+    private int _myProperty;
+    [DemoAspect]
+    public int MyProperty 
+    {
+        get { Debug.WriteLine("Get MyProperty"); return _myProperty; }
+        set { Debug.WriteLine("Set MyProperty"); _myProperty = value; } 
+    }
+
+    public void Test()
+    {
+        MyProperty = 1; //Set the property value
+        int x = MyProperty; //Get the property value
+    }
+}</pre>
+
+<p>With the aspect applied to our property, any call to the getter or setter will be intercepted and our aspect will take over. The output from calling the Test method on our class will be</p>
+
+<pre>Set interception by aspect on MyProperty
+Set MyProperty
+Get interception by aspect on MyProperty
+Get MyProperty</pre>
+
+<h3>LocationInterceptionAspect: IoC Resolution</h3>
+
+<p>One of the great uses I’ve found for LocationInterceptionAspect is lazy loading. Lazy loading can be used to initialize an object only when it’s first requested. Initialization can be a simple new-up or it can also be from an IoC container. The advantages of using an aspect to lazy load from an IoC container are </p>
+
+<p>1. Fields &amp; properties do not have to be public.</p>
+
+<p>2. IoC ignorance. Cleanliness as the IoC specific code is no longer in the class.</p>
+
+<h4>What you need</h4>
+
+<p>Before you start, you will need to install an IoC container. We’re going to use StructureMap which you can download <a href="https://github.com/structuremap/structuremap/downloads">here</a>. If you’re not familiar with IoC containers, that’s ok. We won’t cover what and why concerning IoC containers, but we will walk through setting up StructureMap and using it. Once you’ve downloaded StructureMap, reference it in the demo project.</p>
+
+<h4>Build It</h4>
+
+<p>The first thing we need to do is to register a type with the IoC container. We’ll just do this in the Main method in Program.cs</p>
+
+<pre>static void Main()
+{
+	ObjectFactory.Initialize(x =&gt;
+	{
+		x.For(typeof(IContactRepository)).Use(typeof(InMemoryDataStore));
+	});
+
+	Application.EnableVisualStyles();
+	Application.SetCompatibleTextRenderingDefault(false);
+	Application.Run(new ContactManager());
+}</pre>
+
+<p>All we’re doing is telling the container that whenever we request a type of IContactRepository, we want to get back an instance of InMemoryDataStore class. Simple as that.</p>
+
+<p>Now we build our aspect. Add a new file called IoCResolution.cs and add the following code</p>
+
+<pre>[Serializable]
+public class IoCResolution : LocationInterceptionAspect
+{
+    public override void OnGetValue(LocationInterceptionArgs args)
+    {
+        args.ProceedGetValue();
+        if (args.Value == null)
+        {
+            object obj = ObjectFactory<br>                            .GetInstance(args.Location.PropertyInfo.PropertyType);
+            args.Value = obj;	
+	    args.ProceedSetValue();
+        }
+        
+    }          
+}</pre>
+
+<p>Lazy load needs to happen when the field/property is requested for read so we implement the OnGetValue method to do our work. We start off by making a call to args.ProceedGetValue which will populate args.Value with the current value of the field/property. If args.Value is null then we request a new instance of the property type from the IoC container and then we set args.Value with our new object. A call to args.ProceedSetValue to finalize the change and we’re done.</p>
+
+<p>Now that our aspect is done we need to make some small changes to ContactManager.cs code behind. First, apply our new aspect to the declaration of the contactRepository and then remove the instantiation of contactRepository from the ContactManager constructor. </p>
+
+<pre>[IoCResolution]
+IContactRepository contactRepository;
+private string searchCriteria = string.Empty;
+
+public ContactManager()
+{
+	InitializeComponent();
+}</pre>
+
+<p>Notice Visual Studio puts a blue squiggle under contactRepository to show that its default value will always be null (this is because Visual Studio does not detect an instantiation anywhere). </p>
+
+<p>Go ahead and run the application. As expected, the application makes queries using contactRepository even though we have not explicitly instantiated it.</p>
+
+<h4>LocationInterceptionAspect: OnGetValue, OnSetValue</h4>
+
+<p>When building aspects based on LocationInterceptionAspect you’ll implement OnGetValue and/or OnSetValue to intercept a get request or set request respectively. Just with MethodInterceptionAspect, the body of the getter and setter are moved to a binding and is replaced with a call to the aspect’s OnGetValue from the getter or OnSetValue from the setter.</p>
+
+<h4>LocationInterceptionArgs</h4>
+
+<p>Both methods give you access to LocationInterceptionArgs which you will use to manipulate the invocation and the field/property.</p>
+
+<h5>LocationInterceptionArgs.GetCurrentValue</h5>
+
+<p>Gets the current value of the field/property by invoking the next node in the chain.</p>
+
+<h5>LocationInterceptionArgs.ProceedGetValue</h5>
+
+<p>Invokes the Get accessor of the next node in the chain. If a single interception aspect is applied, then the body of the getter will be invoked. This method stores the field/property value in LocationInterceptionArgs.Value.</p>
+
+<h5>LocationInterceptionArgs.SetNewValue</h5>
+
+<p>Sets the field/property to a different value by invoking the next node in the chain. </p>
+
+<h5>LocationInterceptionArgs.ProceedSetValue</h5>
+
+<p>Invokes the Set accessor of the next node in the chain. If a single interception aspect is applied, then the body of the setter will be invoked. Then new field/property value is set to the value LocationInterceptionArgs.Value.</p>
+
+<h5>LocationInterceptionArgs.Index</h5>
+
+<p>Index is provided when the property takes parameters. This usually means an indexer. Index is of type arguments and can be iterated over to get the index values passed. This is not for properties of an array or collection type.</p>
+
+<h5>LocationInterceptionArgs.Instance</h5>
+
+<p>Instance is a reference to the instance from which the invocation is occurring. This property is null if the field or property is static.</p>
+
+<h5>LocationInterceptionArgs.Location</h5>
+
+<p>Location contains all of the reflection data for the field/property. A LocationInfo wraps a PropertyInfo or FieldInfo.</p>
+
+<h5>LocationInterceptionArgs.Value</h5>
+
+<p>In the OnGetValue method, args.Value is null until a call to ProceedGetValue(). After ProceedGetValue() returns, args.Value will contain the current value of the field/property. In the OnSetValue method, args.Value will contain the proposed value provided by the caller.</p>
+
+<h3>Conclusion<a name="_GoBack"></a></h3>
+Now that we went over two great examples of interception, we need to understand what happens under the hood, especially when multiple interception aspects are combined on a single target. Tomorrow we’ll grab our shovels and dig deep into how PostSharp implements our interception aspects. 
+
+<p>&nbsp;</p>
+
+<div style="padding: 10px 0px;"><a href="/assets/2011-07-05-day_7_interception_aspects_e28093_part_1/self573_thumb[1].jpg"><img width="66" height="66" title="self573_thumb[1]" align="left" style="border-width: 0px; margin: 0px 5px 0px 0px; padding-top: 0px; padding-right: 0px; padding-left: 0px; float: left; display: inline; background-image: none;" alt="self573_thumb[1]" src="/assets/2011-07-05-day_7_interception_aspects_e28093_part_1/self573_thumb[1]_thumb.jpg" border="0"></a>Dustin Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

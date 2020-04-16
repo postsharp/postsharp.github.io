@@ -1,0 +1,58 @@
+---
+layout: post
+title: "A few words about relicensing"
+date: 2008-02-27 11:03:00 +01:00
+categories: [General]
+permalink: /post/a-few-words-about-relicensing.html
+---
+<p>I have been quite laconic in the release announcement about relicensing. Much 
+more was said on the <a href="http://www.postsharp.org/about/license/">licensing 
+page</a>, but yet I got some feedback that it was not clear.</p>
+<p>The summary of PostSharp licensing is: <strong>Runtime libraries are released 
+under the non-viral LGPL license; compile-time components are released under 
+GPL.</strong></p>
+<p>The first thing to realize is that
+<span style="font-size: medium; color: #6182D1"><strong>chances are great that 
+relicensing changes nothing to your life</strong></span>. Indeed, programs that
+<em>are transformed</em> by PostSharp are <em>not</em> contaminated by GPL, 
+since they reference only runtime libraries of PostSharp. Basically, if your 
+program does not need the library <em>PostSharp.Core.dll</em> to be present on 
+your customer&#39;s computer, using PostSharp does not affect your program&#39;s 
+licensing scheme at all. And I&#39;m pretty sure it&#39;s the case of 99% of users.</p>
+<p>So who is impacted by the GPL license? Well, people who develop programs that 
+use PostSharp to modify other assemblies. In other words: if your program 
+transform the programs of your customers, read on. </p>
+<p>Anyway, what kind of programs modify other programs? There are two typical 
+families of products that fall in that category: O-R mappers, obfuscators, 
+optimizers, code generators are the first one; they are typically deployed only 
+on development machines. Another family includes application servers offering 
+aspect-oriented services (AFAIK there is <em>none</em> for .NET, but in the Java 
+world it&#39;s quite common for an application server to have an integrated AOP 
+engine). Of course a special member of that family is the still-unreleased 
+Starcounter object database server; deploying .NET assemblies to this server 
+will make classes &quot;magically&quot; persistent in a server environment.</p>
+<p>What if your program uses core parts of PostSharp? Actually, you are not 
+automatically infected by GPL. You have the following options:</p>
+<ul>
+ <li>If you don&#39;t distribute your work outside of your company, you are not 
+ infected. So if you make an in-house plug-in, you are okay.</li>
+ <li>You can release your work under any license approved by the
+ <a href="http://www.opensource.org/">Open Source Initiative</a>. Well, 
+ attention: all your work, and not only the assembly directly referencing 
+ PostSharp.</li>
+ <li>You can acquire a commercial license, which is basically a GPL exemption 
+ for your products. Exemptions will be provided on an individual, per-product 
+ basis. Since the number of customer of these licenses is quite small, 
+ exemptions will be given as a part of a partnership program including 
+ support and NDA. The idea there is to have a few good customers with a 
+ strong relationship. The &quot;masses&quot; have the product for free (anyway with a 
+ level of support often quoted as better than commercial one).</li>
+</ul>
+<p>An important point is that <strong>the licensing itself is in &#39;candidate&#39; 
+phase</strong>. If it makes you feel badly, do not hesitate to react. The point 
+is that, given the size and the complexity of the product, it is not possible 
+any more to develop and support it exclusively during free time, so I must raise 
+some money. I would like the product to be supported by few key partners having 
+a strong interest in PostSharp, and let it free for most (99%) people.</p>
+<p>Happy PostSharping!</p>
+<p>Gael</p>

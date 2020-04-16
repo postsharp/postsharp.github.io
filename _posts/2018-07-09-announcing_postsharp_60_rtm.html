@@ -1,0 +1,30 @@
+---
+layout: post
+title: "Announcing PostSharp 6.0 RTM"
+date: 2018-07-09 13:35:00 +02:00
+categories: []
+permalink: /post/announcing-postsharp-60-rtm.html
+---
+<p>Today we're excited to announce the general availability of PostSharp 6.0. You can download PostSharp 6.0 from our <a href="https://www.postsharp.net/download">web site</a>, from <a href="https://marketplace.visualstudio.com/items?itemName=PostSharpTechnologies.PostSharp">Visual Studio Marketplace</a>, or from the stable channel of NuGet.org.</p>
+<p>While the list of new features seems modest, PostSharp 6.0 is actually the biggest refactoring since the 2.0 version released in July 2010. Most of the work went into supporting .NET Core 2.0 the right way, i.e. natively, without the dirty and increasingly unstable tricks we used in previous versions. This refactoring opens the road to running PostSharp on non-Windows platforms, but this will be for a future version.</p>
+<p>We also aligned our <a href="https://www.postsharp.net/support/policies">versioning and support policies</a> with the ones of Microsoft to cope with the faster release pace of the technologies we're building on (especially .NET Core and Visual Studio). PostSharp 6.0 is meant to replace PostSharp 5.0, so PostSharp 5.0 will stop being supported on September 9th, 2018. PostSharp 4.3 has been marked an LTS release and will be supported one year after the next LTS is released. Note that PostSharp 6.0 is not yet considered an LTS release.</p>
+<h1>New Platforms</h1>
+<p><strong>Support for .NET Core 2.0-2.1 and .NET Standard 2.0&nbsp;</strong>- PostSharp now runs natively under .NET Core 2.0 or later, which means that .NET Core projects are no longer cross-compiled from .NET Framework. Note that PostSharp 6.0 will still build only under Windows.</p>
+<p><strong>Support for Portable PDB - </strong>We now support portable PDB files as well as "embedded" portable PDBs.&nbsp;</p>
+<p><strong>Support for C# 7.2 -&nbsp;</strong>The new&nbsp;<em>in</em> parameters and&nbsp;<em>ref struct</em> types are now properly handled. Note that the latest C# version (7.3) is not supported because it was released too shortly before our RC.</p>
+<p><strong>Support for CPS-based project systems in Visual Studio </strong>-&nbsp;The new project systems, which work with simpler project files and include built-in support for NuGet package references, are now properly supported.</p>
+<h1>New Features</h1>
+<p><strong>Robust logging</strong> - A defect in the logging feature (whether in your code, in PostSharp, or in the logging framework) will not cause a failure of your application. By default, exceptions open the circuit breaker of the logging subsystem, therefore disabling logging for the rest of the application lifetime. See the <a href="http://doc.postsharp.net/6.0/logging-exception-handling">documentation of this feature</a> for details.</p>
+<p><strong>Flexible logging initialization </strong>- It is no longer necessary to initialize PostSharp.Patterns.Diagnostics before the first logged type is hit.</p>
+<p><strong>Cache locking </strong>- You can prevent concurrent executions of the same methods with the same arguments using the new cache locking facility. We provide an implementation for local (in-process) locking, and an open API to implement distributed locking. See the <a href="http://doc.postsharp.net/6.0/cache-locking">documentation</a> for details.</p>
+<p><strong>Versioning hell solved </strong>- Different projects of a solution can now reference a different builds of PostSharp within the same major version, as long as "referencing" projects use a higher PostSharp version than "referenced" projects. We added a test battery to verify structural backward compatibility (compatibility of public APIs and serialization details).</p>
+<p><strong>GDPR compliance </strong>- We no longer: require your name and email address to register a trial or free license; use non-resettable device ids in our CEIP program; transfer data over unsecure HTTP; transfer personally-identifiable information when we open the web browser from Visual Studio or from our UI. (More work was done on our website to ensure GDPR compliance.)</p>
+<h1>Deprecated Platforms</h1>
+<p><strong>Deprecation of support for Visual Studio 2012 </strong>- Please update to VS 2013 or later.</p>
+<p><strong>Deprecation of support for .NET Core SDK 1.1 </strong>- You can still build projects targeting .NET Core 1.1, but using .NET Core SDK 2.0 or later.</p>
+<h1>Summary</h1>
+<p>We're confident that the future of .NET resides in .NET Core and .NET Standard, and we're excited to say that with PostSharp 6.0 we've finally really caught up and we're ready to keep pace with Microsoft much better than before.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+<p>P.S. Oops, it seems the ducks started the release party without us.</p>
+<p style="text-align: center;"><img src="/assets/2018-07-09-announcing_postsharp_60_rtm/20180709_164100_lo.jpg" alt="" /></p>

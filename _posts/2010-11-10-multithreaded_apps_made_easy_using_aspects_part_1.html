@@ -1,0 +1,112 @@
+---
+layout: post
+title: "Multithreaded Apps Made Easy Using Aspects - Part 1"
+date: 2010-11-10 19:54:39 +01:00
+categories: []
+permalink: /post/multithreaded-apps-made-easy-using-aspects-part-1.html
+---
+<p><em>Following my previous post where I compare how AOP and C# 5.0 approach asynchronous programming, I am republishing, in two parts, an article where I explain how to aspect-oriented programming (and specifically PostSharp) make multithreaded programming easier.</em></p>  <p>Any non-trivial graphical application has to perform long operations such as reading and saving large files from disk, accessing the network, and carrying out expensive computations. However, implementing long operations without taking care of multithreading would utterly jeopardize user satisfaction.</p>  <p>Indeed, the graphical subsystem of Windows (on the top of which both .NET WinForms and WPF are built) is intrinsically single-threaded. It is based on a message queue where individual actions (processing a button click or rendering the dialog box) are executed one after the other. Therefore, when a button event handler executes, the progress bar cannot be rendered, even if its value has been updated. Neither can the user interface react properly to a click of the Cancel button. </p>  <p>Consequently, a golden rule for graphical programming is to never do anything long in the GUI thread. A few dozen milliseconds is the maximum we can afford to block the message queue, if we want users to be satisfied. And we do want this satisfaction.</p>  <p>The commonly used solution is to execute long operations in a worker thread. In the .NET Framework, it is generally considered best practice not to create a new thread for every operation, but instead, to queue a work item into the thread pool. This operation used to be difficult, but C# 2.0 and anonymous methods have fortunately made it easier.</p>  <p>The following piece of code handles clicks by using the Save button. It queues the I/O operation for asynchronous execution on a worker thread.</p>  <pre>private void OnApplyClick(object sender, RoutedEventArgs e)
+{
+    ThreadPool.QueueUserWorkItem( () =&gt; this.contact.Save() );
+}</pre>
+
+<p>Now, what if we want to display a message after the contact has been saved? Since the graphical subsystem is single-thread, we cannot invoke the <b>MessageBox.Show</b> method from the worker thread. Therefore, we have to dispatch it to the GUI thread. With WPF, we have to use a dispatcher object, as demonstrated in the following code sample:</p>
+
+<pre>private void OnApplyClick(object sender, RoutedEventArgs e)
+{
+    ThreadPool.QueueUserWorkItem( 
+     delegate 
+        { 
+        this.contact.Save();
+        this.Dispatcher.BeginInvoke(DispatcherPriority.Normal, 
+          new Action( () =&gt; MessageBox.Show(Window.GetWindow(this),&quot;Contact Saved!&quot;) ));
+       });
+}</pre>
+
+<p>As can be seen, multithreading quickly makes the code unreadable and error-prone. Fortunately, there is a superior solution. What if we have the possibility to mark the affinity of methods directly to the worker thread, or GUI thread, and eliminate the plumbing code? It seems unrealistic, doesn’t it? But with PostSharp and aspect-oriented programming, it is not.</p>
+
+<p>So let’s dream on. What we want are two custom attributes: the <b>OnWorkerThreadAttribute,</b> when the method should be executed asynchronously on a worker thread; and the <b>OnGuiThreadAttribute,</b> when the method should be executed on the GUI thread. </p>
+
+<p>The above piece of code would look like this:</p>
+
+<pre>[OnWorkerThread]
+private void OnApplyClick(object sender, RoutedEventArgs e)
+{
+   this.contact.Save();
+   this.ShowMessage(&quot;Contact Saved!&quot;);
+}
+
+[OnGuiThread]
+private void ShowMessage(string message)
+{
+    MessageBox.Show(Window.GetWindow(this), message);
+}</pre>
+
+<h2>Implementing the OnWorkerThread and OnGuiThread Attributes</h2>
+
+<p>If you are not already familiar with PostSharp, you may find it strange that custom attributes can actually change the behavior of methods. Indeed, these new custom attributes will have the effect of modifying the methods to which they are applied. But PostSharp is not an ordinary library: it is a tool that inserts itself in the build process and enhances the assemblies after the compiler did its job.</p>
+
+<p>So the first thing to do is to download PostSharp and install it. Next, add <b>PostSharp.dll</b> to your project references.</p>
+
+<p>We are now ready to develop our two aspects.</p>
+
+<p>Both custom attributes will be derived from the class <b>PostSharp.Aspects.MethodInterceptionAspect</b>. They will intercept calls to the method to which they are applied.</p>
+
+<p>Our first custom attribute, <b>OnWorkerThreadAttribute</b>, is trivial:</p>
+
+<pre>using System;
+using System.Threading;
+using PostSharp.Aspects;
+
+namespace ContactManager.Aspects
+{
+    [Serializable]
+    public class WorkerThreadAttribute : MethodInterceptionAspect
+    {
+        public override void OnInvoke(MethodInterceptionArgs args)
+        {
+            ThreadPool.QueueUserWorkItem( args.Proceed );
+        }
+    }
+}</pre>
+
+<p>In this attribute, we implemented the method <b>OnInvoke</b> instead of the intercepted method.</p>
+
+<p>The statement<b> args.Proceed()</b> then proceeds with the invocation of the intercepted method. As can be seen, the implementation of this aspect simply queues the execution of the intercepted method into the thread pool.</p>
+
+<p>The implementation of the <b>OnGuiThreadAttribute</b> is a little more complex, because we first need to check if we are already on the GUI thread. If we are not, we need to invoke the intercepted method through <b>Dispatcher.Invoke</b>.</p>
+
+<pre>using System.Windows.Threading;
+using PostSharp.Aspects;
+
+namespace ContactManager.Aspects
+{
+  [Serializable]
+  public class OnGuiThreadAttribute : MethodInterceptionAspect
+  {
+      public DispatcherPriority Priority { get; set; }
+
+      public override void OnInvoke(
+              MethodInterceptionArgs args)
+    {
+        DispatcherObject dispatcherObject = (DispatcherObject) args.Instance;
+
+        if (dispatcherObject.CheckAccess())
+        {
+            // We are already in the GUI thread. Proceed.
+            args.Proceed();
+        }
+        else
+        {
+            // Invoke the target method synchronously.  
+            dispatcherObject.Dispatcher.Invoke(this.Priority, new Action(args.Proceed));
+        }
+    }
+  }
+}</pre>
+
+<p>The <b>args</b> parameter contains everything we need to know about the intercepted method. Here, we are interested in the target instance of the method, because we need to cast it and retrieve its dispatcher.</p>
+
+<p>These two very simple custom attributes can have a significant impact on the way you think about multithreading. You can now forget about the thread pool and the WPF message dispatcher. All you have to think about is where the method should be executed: can it run asynchronously on a worked thread, or does it require a GUI thread? Using these two simple aspects makes your code easier to read and less error-prone.</p>
+
+<p>Putting operations on threads is only one side of the equation, and arguably the easiest one. What is much more difficult, is to avoid conflicts when accessing resources that are shared by different threads. This is what I will address in the <a href="http://www.sharpcrafters.com/blog/post/Multithreaded-Apps-Made-Easy-Using-Aspects-Part-2.aspx" target="_blank">second part</a>.</p>

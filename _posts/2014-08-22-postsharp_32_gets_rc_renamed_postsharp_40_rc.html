@@ -1,0 +1,63 @@
+---
+layout: post
+title: "PostSharp 3.2 gets RC, renamed PostSharp 4.0 RC"
+date: 2014-08-22 07:56:00 +02:00
+categories: [Announcement]
+permalink: /post/postsharp-32-gets-rc-renamed-postsharp-40-rc.html
+---
+<p>When we announced PostSharp 3.2 Preview, many of you shared your experience about the new features &ndash; especially threading models and undo/redo. We found it was such a significant release it would deserve a major version increase. So today, we&rsquo;re proud to announce the availability of PostSharp 4.0 RC. There will be no PostSharp 3.2 release. PostSharp 3.2 has just been renumbered 4.0.</p>
+<p>You can download PostSharp 4.0 RC <a href="http://www.postsharp.net/download">from our web site</a>. After you install the Visual Studio Extension, you can update your existing projects using NuGet Package Manager, by enabling the &ldquo;pre-release&rdquo; option.</p>
+<h2>What&rsquo;s New in PostSharp 4.0?</h2>
+<h3>Write thread-safe code in C# and VB using threading design patterns</h3>
+<p>Multithreading is difficult because we are reasoning about it at an absurdly low level of abstraction. Functional programming languages attempt to solve this problem by forcing you into a specific threading design pattern: Immutable Object. However, object-oriented programming is the right paradigm for most business applications.</p>
+<p>PostSharp 4.0 brings the benefits of threading patterns to C# and VB. Instead of migrating your whole project to a different language, mark individual classes with one of the following custom attributes: [Actor], [Immutable], [Freezable], [Synchronized], [ReaderWriterSynchronized], [ThreadAffine] or (the anti-model) [ThreadUnsafe]. PostSharp will then ensure that your code is correct against the model, and will block you deterministically if this is not the case.</p>
+<p>For more information, read <a href="http://doc.postsharp.net/threading-models">Working with Threading Models</a> in our documentation.</p>
+<h3>Implement Undo/Redo at model level</h3>
+<p>Undo/redo is one of the most-wanted features, but it is often absent from custom applications because it is so expensive to implement. There is no longer an excuse. The new [Recordable] aspect causes any change to your classes to be recorded, so they can be undone at any time. We provide ready-made buttons for WPF, but you can also build your own easily for Windows Phone or Windows 8.</p>
+<p>For more information, read <a href="http://doc.postsharp.net/undoredo">Implementing Undo/Redo</a> in our documentation.</p>
+<h3>Aggregatable and Disposable Patterns</h3>
+<p>Aggregation &ndash; the parent/child relationship &ndash; is a fundamental concept of object-oriented design and a part of the original UML specification. Several design patterns rely on object aggregation. Despite its importance, the idea has not been implemented into programming languages, and is therefore the cause of much boilerplate code in most business applications.</p>
+<p>For more information, read <a href="http://doc.postsharp.net/aggregatable">Implementing Parent/Child Relationships</a> in our documentation.</p>
+<h3>Other enhancements in PostSharp Pattern Libraries</h3>
+<h4><em>NofityPropertyChanged performance</em></h4>
+<p>We optimized performance of our famous NotifyPropertyChanged aspect. It is now 4 times faster at runtime.</p>
+<h4><em>Improved deadlock detection </em></h4>
+<p>The policy now also detects deadlocks involving synchronous calls to the WPF dispatcher.</p>
+<h3>Enhancements in PostSharp Aspect Framework</h3>
+<h4><em>Dynamic Advices</em></h4>
+<p>In PostSharp 3.1, some advices were purely &ldquo;static&rdquo;. Either they were in the aspect, either they were not. In PostSharp 4.0, an aspect can take decisions dynamically about which advices must be added to the target class and members by implementing the <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_iadviceprovider">IAdviceProvider</a> interface. The interface allows to provide instances of one of the following advices: <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_introduceinterfaceadviceinstance">IntroduceInterface</a>, <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_importlocationadviceinstance">ImportLocation</a>, <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_importmethodadviceinstance">ImportMethod</a>, <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_introducemethodadviceinstance">IntroduceMethod</a>.</p>
+<h4><em>Aspect Repository</em></h4>
+<p>It is now possible for an aspect to know which other aspects have been added to any declaration thanks to the <a href="http://doc.postsharp.net/t_postsharp_aspects_iaspectrepositoryservice">IAspectRepositoryService</a>. Plus, the <a href="http://doc.postsharp.net/e_postsharp_aspects_iaspectrepositoryservice_aspectsdiscoverycompleted">AspectDiscoveryComplete</a> event allows to run execute logic (typically for validation) after all aspects have been discovered.</p>
+<h4><em>Initialization Advices</em></h4>
+<p><a href="http://doc.postsharp.net/t_postsharp_aspects_advices_oninstanceconstructedadvice">OnInstanceConstructedAdvice</a> lets you execute code after all constructors of a method have completed. We also added <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_initializeaspectinstanceadvice">InitializeAspectInstanceAdvice</a>, which extends RuntimeInitializeInstance with a parameter telling for which reason the aspect instance is being initialized.</p>
+<h4><em>Faster advice state lookup</em></h4>
+<p>Thanks to the <a href="http://doc.postsharp.net/p_postsharp_aspects_adviceargs_declarationidentifier">DeclarationIdentifier</a> property, it is easier to uniquely identify a member within a type. State can now be stored in an array instead of a dictionary, which makes lookups much faster. We use this feature to persist analysis results at build time and consume them at runtime.</p>
+<h3>Enhancements in PostSharp Core</h3>
+<h4><em>Support for C++ assembly references</em></h4>
+<p>We solved issues where it was not generally possible to add aspects to a C#/VB assembly that referenced a C++ .NET assembly. The previous workaround (which was to use the managed host) is no longer necessary.</p>
+<h4><em>Support for WinRT and Windows Phone 8.1</em></h4>
+<p>We completely redesigned our support for .NETCore (the intimate name for .NET on Windows 8 and Windows Phone 8.1), and this is now much more reliable than before.</p>
+<h2>What did we drop in PostSharp 4.0?</h2>
+<p>Since we&rsquo;re following the rules of semantic versioning, a new major release is an opportunity to abandon support for features that caused tension in our design and engineering processes. Therefore, we discontinued the following features:</p>
+<ul>
+<li>Silverlight,&nbsp; Windows Phone 7 and Windows Phone 7.5 are no longer supported by the PostSharp Model Pattern Library. The platforms are still supported by the core product itself (PostSharp.dll).</li>
+<li>The IReaderWriterSynchronized interface has been fully deprecated.</li>
+</ul>
+<p>PostSharp 3.1 will remain supported for a while and minor bugs will still be fixed. Issues that require important redesign will no longer be addressed in PostSharp 3.1.</p>
+<h2>Status of PostSharp 4.0 RC</h2>
+<p>We take the word <em>release candidate</em> seriously at PostSharp. The RC milestone means that the following criteria were fulfilled:</p>
+<ul>
+<li>All planned features are implemented.</li>
+<li>All new APIs have been reviewed and we predict no breaking change will be necessary, even with regard to other envisioned features.</li>
+<li>All features have been tested internally.</li>
+<li>A zero-defect point was reached at the time of release.</li>
+<li>API documentation and tutorials are complete; testers did not report discrepancies or ambiguities in the documentation.</li>
+</ul>
+<p>The ball is now in your camp; we need you to try to update your solutions (in a prototype branch) to the new version, run your test suite and report any issue. We will gather feedback during several weeks and promote the release to <em>stable</em> after community testing.</p>
+<h2>Summary</h2>
+<p>PostSharp 4.0 proposes a realistic approach to thread-safe object-oriented applications. We believe the significance of this innovation exceeds the scope of PostSharp and perhaps even .NET, since the concepts, if proven successful, could be implemented in other programming languages by a new generation of compilers. We&rsquo;re obviously very proud of this achievement, and can&rsquo;t wait to get feedback from the field.</p>
+<p>Additionally, Windows and Windows Phone developers can now add undo/redo to their application with minimal effort thanks to our new Recordable pattern &ndash; a powerful alternative to the Memento pattern.</p>
+<p>To realize these two new major features, we had to build new abilities in our aspect framework. You can now rely on these new types of advices to build automation for your own patterns.</p>
+<p>We need your feedback to move this release to the <em>stable</em> milestone. Please download it <a href="http://www.postsharp.net/download">from our web site</a> and let us know what you think.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

@@ -1,0 +1,211 @@
+---
+layout: post
+title: "PostSharp Principles: Day 14 – Introducing Members and Interfaces, Part 1"
+date: 2011-07-14 15:28:00 +02:00
+categories: [Tutorial]
+permalink: /post/postsharp-principals-day-14-e28093-introducing-members-and-interfaces-part-1.html
+---
+<p>Today we continue our descent into the depths of the PostSharp framework to expose even greater powers to utilize in our projects.</p>
+<h3>Introduction</h3>
+<p>No, not the &ldquo;Hello, my name is Dustin!&rdquo; kind of introduction, but the &ldquo;injection&rdquo; type. What does that mean? PostSharp gives us the power to implement an interface on a class&hellip;at build time. We can also add (introduce) members to that class such as fields/properties, events and methods too. These members are injected at build time and are available at run time.</p>
+<p>Why would you want to do this? As in most cases when applying aspect-oriented programming, you would use this to implement required interfaces that are little more than boilerplate code. One of the most popular examples of interface introduction is the NotifyPropertyChanged aspect which automatically introduces the INotifyPropertyChanged interface and required members. Anyone who has worked with WPF and the MVVM pattern would love to not have to write all of that scaffolding code just to get change notification. Since that aspect uses features we have not yet covered, we will not cover it today. If you&rsquo;re feeling adventurous, you can check it out <a href="http://www.sharpcrafters.com/solutions/notifypropertychanged">here</a>.</p>
+<h3>Member Introduction</h3>
+<p>Member introduction allows us to add properties, events and methods to a class. Let&rsquo;s start off by creating an aspect to introduce a property and a method.</p>
+<pre>[Serializable]
+public class IntroduceAspect : InstanceLevelAspect
+{
+    [IntroduceMember]
+    public int ID { get; set; }
+
+    [IntroduceMember]
+    public void SomeMethod(int param1)
+    {
+        Console.WriteLine("Inside of introduced method");
+    }
+
+}</pre>
+<p>And now our target class</p>
+<pre>[IntroduceAspect]
+public class TargetClass
+{
+
+}</pre>
+<p>You might be laughing at our test class, but don&rsquo;t worry, our aspect will do the work for us. When we look at the compiled assembly with ILSpy, we see that instead of a blank class we have a few more members than we started with, including the members we wanted to introduce.</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_20.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_20.png" border="0" alt="image" width="509" height="486" /></a></p>
+<p>Amongst the aspect related code, we have our ID property and our SomeMethod method. Notice that the getter and setter of ID are delegated to our aspect and so does our method. This is important to keep in mind because when implementing members, they must be marked as public inside of the aspect (because our target class has to access them). However, if you happen to forget, PostSharp will remind you with a compiler error</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_21.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_21.png" border="0" alt="image" width="628" height="40" /></a></p>
+<p>But what happens if you don&rsquo;t want the introduced members to be public in the target class? Have no fear, PostSharp thought of that too. Let&rsquo;s have a look at the IntroduceMember attribute.</p>
+<h3>IntroduceMember attribute</h3>
+<p>By default, using IntroduceMember by itself will use public visibility and will cause compiler errors if a member with the same signature is already part of the class. We can control the behavior of how the member is implemented by changing the following parameters.</p>
+<h4>Visibility</h4>
+<p>By default, PostSharp will introduce the member to the target class with public visibility. We can specify one of the enumerations from PostSharp.Reflection.Visibility to control what visibility the member will have in the target class. Available values are</p>
+<p>&middot; <strong>Public</strong> (Default) &ndash; Is publically available.</p>
+<p>&middot; <strong>Family</strong> &ndash; Is available to the class and any derived classes. Same as protected.</p>
+<p>&middot; <strong>Assembly</strong> &ndash; Is publicly available within the assembly. Same as internal.</p>
+<p>&middot; <strong>FamilyOrAssembly</strong> &ndash; Is available to the class and any derived classes, but only within the assembly. Same as protected internal.</p>
+<p>&middot; <strong>FamilyAndAssembly</strong> &ndash; Protected types inside the assembly. There is no C# equivalent.</p>
+<p>&middot; <strong>Private</strong> &ndash; Only visible to the class.</p>
+<h4>OverrideAction</h4>
+<p>There is a chance that the target class already has a member with the same signature. By default, there will be a compiler error if this scenario is encountered. To change the behavior, we can provide one of the enumerations from PostSharp.Aspects.Advices.MemberOverrideAction.</p>
+<p>&middot; <strong>Default</strong> &ndash; Fails with a compiler error.</p>
+<p>&middot; <strong>Fail</strong> &ndash; Fails with a compiler error.</p>
+<p>&middot; <strong>Ignore</strong> &ndash; Continues on, without trying to introduce the member.</p>
+<p>&middot; <strong>OverrideOrFail</strong> &ndash; Tries to override the member with our own implementation. If the existing member is defined in a base class and is sealed or non-virtual, it will fail with a compiler error.</p>
+<p>&middot; <strong>OverrideOrIgnore</strong> &ndash; Tries to override the member with our own implementation. If the existing member is defined in a base class and is sealed or non-virtual, it will ignore the member introduction and continue on.</p>
+<h5>IsVirtual</h5>
+<p>If you would like to introduced member to be virtual (overridable in derived classes) then you can set IsVirtual to true. The member signature in the base class will be marked as virtual.</p>
+<h4>CopyCustomAttributesAttribute</h4>
+<p>Sometimes members need to be decorated with attributes. An example of this would be decorating members of a DataContract with DataMember. However, when introducing members from an aspect, any attributes applied to the member in the aspect will not be introduced along with the member in the target. We can use CopyCustomAttributes attribute in addition to the IntroduceMember attribute to introduce the attributes along with the member. Let&rsquo;s look at an example.</p>
+<pre>[Serializable]
+public class IntroduceAspect : TypeLevelAspect
+{
+    [IntroduceMember]
+    [DataMember(IsRequired=true)]
+    public int ID { get; set; }
+}
+
+[IntroduceAspect]
+[DataContract]
+public class TargetClass
+{
+    [DataMember]
+    public string FirstName { get; set; }
+}</pre>
+<p>Our aspect is introducing a member, ID, which is decorated with DataMember. Let&rsquo;s look at the result in ILSpy</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_22.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_22.png" border="0" alt="image" width="405" height="255" /></a></p>
+<p>The DataMember attribute is not present on ID. Let&rsquo;s update the aspect to use CopyCustomAttributes.</p>
+<pre>[Serializable]
+public class IntroduceAspect : TypeLevelAspect
+{
+    [IntroduceMember, CopyCustomAttributes(typeof(DataMemberAttribute), 
+            OverrideAction = CustomAttributeOverrideAction.MergeReplaceProperty)]
+    [DataMember(IsRequired=true)]
+    public int ID { get; set; }
+
+}</pre>
+<p>In the constructor for CopyCustomAttributes we pass in the base type for the desired attribute and then we set the override action with a value from the CustomAttributeOverrideAction enumeration. When we look at the end result in ILSpy, we see that the attribute was introduced along with the member.</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_23.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_23.png" border="0" alt="image" width="512" height="293" /></a></p>
+<h5>CustomAttributeOverrideAction</h5>
+<p>CustomAttributeOverrideAction is an enum that lets us tell PostSharp how to handle a situation when an attribute of the same type already exists on the target member.</p>
+<p>&middot; <strong>Default</strong> &ndash; Fails with a compile time error.</p>
+<p>&middot; <strong>Fail</strong> &ndash; Fails with a compile time error.</p>
+<p>&middot; <strong>Ignore</strong> &ndash; Ignores the attribute introduction and does not generate an error.</p>
+<p>&middot; <strong>Add</strong> &ndash; Adds the attribute as defined, even if it already exists on the target. This could cause duplicate attributes on the target.</p>
+<p>&middot; <strong>MergeAddProperty</strong> &ndash; Combines the existing attribute with the attribute being introduced. Any properties defined by the existing attribute will remain. No override will occur. Any properties defined by the introduced attribute will be added to the existing attribute.</p>
+<p>&middot; <strong>MergeReplaceProperty</strong> &ndash; Same as MergeAddProperty except that any properties defined by the existing attribute will overridden by the introduced attribute.</p>
+<h3>Interface Introduction</h3>
+<p>When introducing an interface via an aspect, the interface must be implemented on the aspect itself. The type will expose the interface at run time, but the aspect actually implements it. Let&rsquo;s have a look at our interface:</p>
+<pre>public interface IFriendlyName
+{
+    string Name { get; set; }
+    void PrintName();
+}</pre>
+<p>And now our aspect:</p>
+<pre>[Serializable]
+[IntroduceInterface(typeof(IFriendlyName))]
+public class IntroduceAspect : InstanceLevelAspect, IFriendlyName
+{
+    #region IFriendlyName Members
+
+    public string Name { get; set; }
+        
+    public void PrintName()
+    {
+        Console.WriteLine(this.Name);
+    }
+
+    #endregion
+}</pre>
+<p>Our test class remains the same, empty</p>
+<pre>[IntroduceAspect]
+public class TestClass
+{
+
+}</pre>
+<p>When we look at the compiled result we see our interface has been implemented</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_24.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_24.png" border="0" alt="image" width="628" height="405" /></a></p>
+<p>Notice that we didn&rsquo;t use the IntroduceMember attribute on the interface members. Also notice that the resulting implementations of the interface members are private. To make the interface members public we have to apply the IntroduceMember attribute to the members</p>
+<pre>[Serializable]
+[IntroduceInterface(typeof(IFriendlyName))]
+public class IntroduceAspect : InstanceLevelAspect, IFriendlyName
+{
+    #region IFriendlyName Members
+
+    [IntroduceMember]
+    public string Name { get; set; }
+
+    [IntroduceMember]
+    public void PrintName()
+    {
+        Console.WriteLine(this.Name);
+    }
+
+    #endregion
+}</pre>
+<p>And now the compiled result shows two implementations of our members</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_25.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_25.png" border="0" alt="image" width="628" height="405" /></a></p>
+<p>Looking at the PrintName method, the explicit interface implementation is private, but we&rsquo;ve introduced a public version which the interface method calls.</p>
+<h3>IntroduceInterface attribute</h3>
+<p>To tell PostSharp that we want to introduce an interface, we decorate the aspect with the IntroduceInterface attribute. To tell PostSharp which interface to implement, we pass in a type using typeof(IFriendlyName). Just like the IntroduceMember attribute, there are parameters to control the behavior of the introduction.</p>
+<p>&middot; OverrideAction &ndash; Exactly the same as IntroduceMember. Determines what to do when the target already implements the interface. Default is to fail with a compiler error.</p>
+<p>&middot; IsProtected &ndash; If set to true, the interface is not directly implemented by the type. Instead, the type exposes the interface through the IProtectedInterface&lt;T&gt;. Since protected interfaces are considered obsolete, you should leave this as false (default).</p>
+<p>&middot; AncestorOverrideAction &ndash; Defines the behavior of the introduction when and ancestor of the interface is already applied to the target class. See example below. Available enumerations in the PostSharp.Aspects.Advices.InterfaceOverrideAction are Default (Fail), Fail and Ignore.</p>
+<h3>Extended Example</h3>
+<p>Let&rsquo;s finish up with a bit more in-depth example using some of the behavior parameters.</p>
+<pre>public interface IIdentifiable
+{
+    Guid ID { get; set; }
+}
+
+public interface IFriendlyName : IIdentifiable
+{
+    string Name { get; set; }
+    void PrintName();
+}
+
+[IntroduceAspect]
+public class TargetClass : IIdentifiable
+{
+    #region IFriendlyNameBase Members
+
+    public Guid ID { get; set; }   
+
+    #endregion
+
+    string Name { get; set; }
+
+    public void PrintName()
+    {
+        throw new NotImplementedException();
+    }
+}
+
+[Serializable]
+[IntroduceInterface(typeof(IFriendlyName), <br />                   AncestorOverrideAction=InterfaceOverrideAction.Ignore)]
+public class IntroduceAspect : InstanceLevelAspect, IFriendlyName
+{
+    #region IFriendlyName Members
+    [IntroduceMember(OverrideAction=MemberOverrideAction.Ignore)]
+    public Guid ID { get; set; }   
+
+    [IntroduceMember(OverrideAction=MemberOverrideAction.Ignore)]
+    public string Name { get; set; }
+
+    [IntroduceMember(OverrideAction=MemberOverrideAction.OverrideOrFail)]
+    public void PrintName()
+    {
+        Console.WriteLine(this.Name);
+    }
+
+    #endregion
+}</pre>
+<p>We define two interfaces. IFriendlyName implements IIdentifiable. Our test class implements IIdentifiable and also has a PrintName method which throws an exception. Our aspect specifies the introduction of IFriendlyName and also implements the required interface members. We specify that we should ignore any implementation of an ancestor (IIdentifiable) of the introduced interface (IFriendlyName). We also specify that we want to ignore the member introduction on the two properties if they exist in the target class. We mark PrintName with the OverrideOrFail because we want to force our own implementation of the PrintName method. The end result looks like this</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_26.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_26.png" border="0" alt="image" width="628" height="405" /></a></p>
+<p>First take a look at the PrintName method. Instead of the original method body, which threw an exception, we see that there is a call to our aspect which invokes our implementation of that method.</p>
+<p>Next we see that both interfaces are implemented, but we only have get/set methods for the Name property, not the ID property. This is because PostSharp ignored the implementation of IIdentifiable since it was already implemented on the target class. If we remove InterfaceOverride.Ignore from the IntroduceInterface attribute, we would get a compiler error.</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_27.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_27.png" border="0" alt="image" width="628" height="52" /></a></p>
+<p>If we removed the implementation of IIdentifiable from our test class, we would see get/set methods for ID in the compiled results.</p>
+<p><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_28.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/image_thumb_28.png" border="0" alt="image" width="628" height="405" /></a></p>
+<h3>Conclusion</h3>
+<p>Today we covered some good ground on introducing members and interfaces along with some of the nuances that you have to be aware of. Tomorrow we&rsquo;ll continue with importing members and accessing introduced members at compile time.</p>
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" src="/assets/2011-07-14-postsharp_principals_day_14_e28093_introducing_mem/self573_thumb[1]_thumb_3.jpg" border="0" alt="self573_thumb[1]" width="66" height="66" align="left" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a></div>

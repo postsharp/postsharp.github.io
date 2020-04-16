@@ -1,0 +1,84 @@
+---
+layout: post
+title: "Back from AOSD 2008"
+date: 2008-04-09 09:08:00 +02:00
+categories: [General]
+permalink: /post/back-from-aosd-2008.html
+---
+<p align="center">
+ <img src="http://www.aosd.net/2008/publicity/AOSD.08_Logo.gif" title="AOSD 2008"/>
+ </p>
+ <p>I&#39;m finally back from the AOSD 2008 conference, the principal conference 
+ of the Aspect-Oriented Software Development (AOSD) community. This is an 
+ academic conference, which means that most people are either academic 
+ researchers, either researchers in R&amp;D departments of big companies. So I 
+ was a kind of stranger there, but this time I did not suffer too much from 
+ that.</p>
+ <p>I have delivered my speech on Wednesday 2nd April in the industry track. 
+ Slides are available for
+ <a href="http://download.postsharp.org/slides/AOSD%202008%20-%20PostSharp.pptx">
+ download</a>. Note that the speech was designed for an audience who is 
+ comfortable with AspectJ, which I guess is not the case of the majority of 
+ readers of this blog. You can also
+ <a href="http://download.postsharp.org/slides/PostSharp-AOSD2008.pdf">
+ download the paper</a>, the most systematic and complete description of 
+ PostSharp Laos so far. It was published in the proceedings of the 
+ conference. If you need to convince someone that PostSharp is serious, you 
+ can put the paper on his table!</p>
+ <p>The conference was not only about PostSharp, of course. I mostly attended 
+ to the industry track and to some demonstrations. Here are the topics I was 
+ most interested in:</p>
+ <ul>
+  <li>Daniel Wiese, Software Architect at Siemens Medical Solutions, 
+  presented how AOP was used in a huge project (SORIAN, a Hospital 
+  Information System) of 400 developers spread in 4 different countries. 
+  AOP was used principally to handle the &quot;non-functionals&quot;, i.e. logging, 
+  auditing and so on. What&#39;s interesting with that? Well, the scale of 
+  course! It shows that AOP has already grown from its youth phase when it 
+  was used only in prototypes. Daniel cited some practical problems they 
+  met with AOP, principally the increased build time. The selected 
+  solution was to weave the code only for nightly builds, so developers do 
+  not loose time waiting for the weaver in local builds. Siemens also 
+  wanted to enable/disable aspects after deployment (for instance to 
+  enable monitoring in a part of the solution when it is in production). 
+  Therefore, they used load-time weaving in WebSphere, a Java application 
+  server. Since the built-in weaving solution of WebSphere was not 
+  satisfying (it was an old version of AspectJ with bad support of 
+  load-time weaving), they developed their own weaver:
+  <a href="http://sourceforge.net/projects/fastaop">FastAOP</a>. Thank you 
+  Daniel for this great show, and let&#39;s hope it will convince companies to 
+  adopt this technology!</li>
+  <li>SAP integrated AOP technologies in the new version of ABAP, the SQP 
+  programming language. True, it is not AOP in the sense we usually mean, 
+  but if SAP is getting interested in AOP, what are all the others waiting 
+  for? Another proof that it&#39;s useful!</li>
+  <li>ASLM, a producer of semiconductors, developed their own solution to 
+  weave hundreds of thousands of lines of code in C.</li>
+  <li>Hitachi developed an AO extension to COBOL. Yes, you read well: the 
+  old good COBOL.</li>
+  <li>Siemens team presented a funny show of Aspect Manager 2010, a 
+  plug-in to Eclipse allowing easy discovery of aspects and their 
+  injection into projects. An excellent source of inspiration for 
+  PostSharp! Indeed, it convinced me that we should design a standard 
+  packaging for aspect libraries to streamline the installation process.</li>
+  <li>
+  <a href="http://www.dawis.wiwi.uni-due.de/forschung/foci/aosd/jpdds/">
+  M4JPDD</a>, a tool to express quite graphically complex pointcut. Very 
+  interesting, although IMHO not backed by a sufficient demand.</li>
+ </ul>
+ <p>The conclusion for me is that there is real interest for AOP in industry, 
+ and AOP has already proved itself in huge projects. Why would the .NET world 
+ make exception? Experience shows that people are currently mostly interested 
+ in the &quot;easy&quot; aspects like caching, auditing, security, and so on. But it is 
+ precisely what PostSharp Laos is good in! So it seems I am on the good 
+ track. On the other side, there is a lot more in AOP than what PostSharp is 
+ able to do! If you follow the blog and the work of
+ <a href="http://www.sitechno.com/Blog/">Ruurd Boeke</a>, you will find out 
+ that PostSharp does not perform well with complex tasks. Of course, you can 
+ do everything you want (which gives an amazing feeling), but it results in 
+ much more aspect code than what would be the case with AspectJ.</p>
+ <p>In other words, the conference was a great opportunity to assess the 
+ design choice of PostSharp Laos: make simple things easy, knowing that the 
+ market is currently at 80% interested in easy things.</p>
+ <p>Happy PostSharping!</p>
+ <p>Gael</p>

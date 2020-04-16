@@ -1,0 +1,50 @@
+---
+layout: post
+title: "Feature Focus: Showing message locations in the source code"
+date: 2012-01-04 16:13:00 +01:00
+categories: [Announcement, Tutorial]
+permalink: /post/feature-focus-showing-message-locations-in-the-source-code.html
+---
+<p>During compilation, PostSharp takes great care in making sure that everything works correctly. When something goes wrong, PostSharp will report it as an error or a warning. Until now, however, whenever an error or a warning occurred, the developer had to manually navigate to that place in code.</p>  <p>We are excited to announce that with <a href="http://www.sharpcrafters.com/postsharp/download">PostSharp 2.1</a> we’ve enhanced the errors and warnings with the exact location information, allowing you to simply double-click on the message and you’ll be taken to the error line!</p>  <p>To enable this feature, go to <strong>Tools – Options – PostSharp</strong>, and under <strong>Experimental</strong>, set <em><strong>Resolve Message Location</strong></em> to <strong>True</strong>:</p>  <p><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="" border="0" alt="" src="/blog/image.axd?picture=12c004394b97e518.png" width="644" height="376" /></p>  <p>Then, simply rebuild your solution, and if there are any warnings or errors, you’ll be able to see exactly where they are:</p>  <p><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="" border="0" alt="" src="/blog/image.axd?picture=53d3d4df1ad21b74.png" width="644" height="481" /></p>  <p>This is accomplished by specifying the member (in this case, the method) that is responsible for the message, in the aspect’s <strong>CompieTimeValidate</strong> method:</p>  <pre>// Validate the attribute usage.
+public override bool CompileTimeValidate( MethodBase method )
+{
+    // Don't apply to constructors.
+    if ( method is ConstructorInfo )
+    {
+        Message.Write( <strong>method</strong>, SeverityType.Error, &quot;CX0001&quot;, 
+                       &quot;Cannot cache constructors.&quot; );
+        return false;
+    }
+
+    MethodInfo methodInfo = (MethodInfo) method;
+
+    // Don't apply to void methods.
+    if ( methodInfo.ReturnType.Name == &quot;Void&quot; )
+    {
+        Message.Write( <strong>method</strong>, SeverityType.Error, &quot;CX0002&quot;, 
+                       &quot;Cannot cache void methods.&quot; );
+        return false;
+    }
+
+    // Does not support out parameters.
+    ParameterInfo[] parameters = method.GetParameters();
+    for ( int i = 0; i &lt; parameters.Length; i++ )
+    {
+        if ( parameters[i].IsOut )
+        {
+            Message.Write( <strong>method</strong>, SeverityType.Error, &quot;CX0003&quot;, 
+                           &quot;Cannot cache methods with return values.&quot; );
+            return false;
+        }
+    }
+
+    return true;
+}</pre>
+
+<p>Aspect developers are encouraged to include the member in error/warning messages. For more information, please refer to the documentation on <a href="http://doc.sharpcrafters.com/postsharp-2.1/##PostSharp-2.1.chm/html/4390e8c1-6437-45ac-971b-b9efe7251572.htm">Working with Errors, Warnings and Messages</a>.</p>
+
+<p>Please note that this is not enabled by default as it is still experimental and might have an impact on performance. Please let us know how it works out for you!</p>
+
+<p>Happy PostSharping!</p>
+
+<p>-Igal</p>

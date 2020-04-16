@@ -1,0 +1,90 @@
+---
+layout: post
+title: "Announcing PostSharp 2.1 CTP 1"
+date: 2011-01-28 15:50:00 +01:00
+categories: [Announcement]
+permalink: /post/announcing-postsharp-21-ctp-1.html
+---
+<p>I&rsquo;m pleased to announce that the first Community Technical Preview of PostSharp 2.1 is available for <a href="http://www.sharpcrafters.com/downloads/postsharp-2.1/ctp-1" target="_blank">download</a>.&nbsp; Note that you have to register to the Early Access Program before you can access download. Registration to the EAP is free for anybody.</p>
+<p>As any CTP, this release is meant for testing and not for production use.</p>
+<p><strong>PostSharp 2.1 is a minor upgrade to PostSharp 2.0, which means that your existing license key should just work.</strong></p>
+<h2>What&rsquo;s New in PostSharp 2.1 CTP 1?</h2>
+<p>This first CTP is all about improving build-time performance, i.e. making PostSharp compile faster.</p>
+<p>Much faster.</p>
+<p>Here are the results measured by Bartek Legiędź and Remigiusz Cieślak, software engineers at <a href="http://www.comarch.com/" target="_blank">Comarch</a> in Poland. Their setup consists of a small number of very large projects (assemblies of several megabytes). As you can see, PostSharp 2.1 is more than five times faster than 2.0.</p>
+<p>The next table compares the time taken by PostSharp while building the solution in two configurations (debug and release). Of course PostSharp itself ran in release mode both times.</p>
+<table class="table" border="0" cellspacing="0" cellpadding="2">
+<tbody>
+<tr>
+<th width="149" valign="top">Build Configuration</th><th width="142" valign="top">2.0 </th><th width="136" valign="top">2.1 </th><th width="132" valign="top">Speedup </th>
+</tr>
+<tr>
+<td width="159" valign="top">Debug Configuration</td>
+<td width="150" valign="top">160,662 ms</td>
+<td width="141" valign="top">21,293 ms</td>
+<td width="136" valign="top">672%</td>
+</tr>
+<tr>
+<td width="162" valign="top">Release Configuration</td>
+<td width="152" valign="top">121,694 ms</td>
+<td width="143" valign="top">23,897ms</td>
+<td width="138" valign="top">571%</td>
+</tr>
+</tbody>
+</table>
+<p>Thanks guys for your time doing this benchmark!</p>
+<p>The performance improvement you will experience with your setup depends on several factors: size and number of projects, number of aspects, and hardware resources. Also, remember that PostSharp is only a part of the build process. After upgrading to PostSharp 2.1, the build time may be dominated by the C# compiler or by Code Contracts.</p>
+<p>I would like to hear about your own experience of performance improvements.</p>
+<p>Here is how to produce benchmark results:</p>
+<ol>
+<li>Wait until the system load is stably low (TortoiseSVNCache.exe and similar processes may load your processor) </li>
+<li>Execute: Msbuild /p:Configuration=Debug /clp:PerformanceSummary /t:rebuild &gt; msbuild-2.0.log </li>
+<li>Upgrade your project to PostSharp 2.1 (see below) </li>
+<li>Execute: Msbuild /p:Configuration=Debug /clp:PerformanceSummary /t:rebuild &gt; msbuild-2.1.log </li>
+</ol>
+<p>The performance report lays near to the end of the log file, above the summary of warnings and errors. For greater accuracy, you should execute MSBuild three times with every version of PostSharp, and take the best results. Then you can send me both performance summaries by email (<a href="mailto:gael@sharpcrafters.com">gael@sharpcrafters.com</a>) so I can see how large are improvements with real-life projects. Frankly, I don&rsquo;t expect 500% improvement for everybody.</p>
+<h2>What Changed in PostSharp 2.1 CTP</h2>
+<p>Most performance improvements were obtained by replacing the component that writes back the assembly to disk. Before version 2.1, PostSharp still used&nbsp; our ol&rsquo; good text-based writer, backed by Microsoft&rsquo;s ILASM. This required a lot of I/O just to create the text IL file (some customers reported files of several hundreds of megabytes), then ILASM required a lot of CPU and memory to process it. Fortunately, this was not that bad and there were excellent reasons to keep this writer. Now we have our own assembly writer, coded by your servant himself, and tuned with all the obsession and passion he is able of.</p>
+<p>You should normally not observe any difference from PostSharp 2.0, except of compilation speed. Debugging support may be a little improved because I integrated some bits of the Microsoft CCI PDB reader/writer into PostSharp, but this debugging support is still to be fine-tuned.</p>
+<p>So except this, there&rsquo;s no change in this CTP, no addition of feature.</p>
+<h2>Redefinition of the Community Edition</h2>
+<p>The Community Edition is being renamed Starter Edition, because the former name did confuse many people.</p>
+<p>We&rsquo;re doing two little changes in the features available to the Starter Edition:</p>
+<ul>
+<li>The Aspect Dependency Framework (PostSharp.Aspects.Dependencies) will not be available any more in the Starter Edition. Frankly, this feature was present by mistake, since it clearly supports &ldquo;pro&rdquo; scenarios. To order aspects, Starter users will have to use the AspectPriority attributes, i.e. they will have to assign an integer to every aspect. </li>
+<li>The Starter Edition will not run from source control. It will have to be installed on the computer. </li>
+<li>Yes, the new build-time performance enhancements are available to the Starter Edition! </li>
+</ul>
+<p>So we add a lot and we remove a little in order to position the Starter Edition as a light tool for individuals, and the Professional Edition as &ndash; well -- a professional tool for teams. <em>We do not push anyone in the corner</em>. You all have workarounds: installing the product or using AspectPriority. We are just getting clearer about the positioning of each edition. We think we&rsquo;re adding more comfort to the Starter Edition than we actually remove.</p>
+<p>And remember: PostSharp is cheap (usually less than one day of bill), and we give a lot of <a href="http://www.sharpcrafters.com/postsharp/purchase/discounts" target="_blank">discounts</a> to students, Microsoft BizSparks members, or influencers.</p>
+<h2>Upgrade to PostSharp 2.1 CTP</h2>
+<p>PostSharp 2.1 CTP can be installed side-by-side with PostSharp 2.0 on the same machine. At build time, the correct version of PostSharp should kick in, according to the version of PostSharp.dll your project is referencing.</p>
+<p>There is one exception to this rule. The Visual Studio Extensions (VSX) cannot be installed side-by-side, so the setup program of PostSharp 2.1 will remove the VSX of PostSharp 2.0 and replace it by the new version. Since it&rsquo;s backward compatible, the VSX 2.1 will work with projects using PostSharp 2.0.</p>
+<p>Once you&rsquo;ve installed PostSharp 2.1 (or copied it to your source control), you can run the <strong>PostSharp 2.1 Conversion Utility</strong> (PostSharp.Convert.exe), a simple application that let you update your references from previous versions to the current one. The utility is also able to prepare your project to run PostSharp from source control, if you prefer not to install it using the setup program. Note that all this utility does is to edit your <strong>csproj</strong> or <strong>vbproj</strong> files.</p>
+<h2>Gotcha: When a project references both PostSharp 2.0 and 2.1</h2>
+<p>What happens if you have a project that has been migrated to PostSharp 2.1, but uses a component (such as Gibraltar aspects) that has not been? The project would have a direct reference to PostSharp.dll version 2.1, and an indirect reference to PostSharp.dll version 2.0.</p>
+<ol>
+<li>Make sure that the old PostSharp.dll dependency is not copied to your final bin directory. At run-time, you will need the version 2.1. </li>
+<li>Install the <a href="http://www.sharpcrafters.com/downloads/postsharp-2.0/hot-fixes" target="_blank">last hot fix</a> of PostSharp 2.0. </li>
+<li>Add the following code to your application configuration file: </li>
+</ol>
+<pre>&lt;configuration&gt;
+  &lt;runtime&gt;
+    &lt;assemblyBinding xmlns="urn:schemas-microsoft-com:asm.v1"&gt;
+      &lt;dependentAssembly&gt;
+        &lt;assemblyIdentity name="PostSharp" publicKeyToken="b13fd38b8f9c99d7" <br />                          culture="neutral"  /&gt;
+        &lt;bindingRedirect oldVersion="2.0.0.0" newVersion="2.1.0.0"  /&gt;
+      &lt;/dependentAssembly&gt;
+    &lt;/assemblyBinding&gt;
+  &lt;/runtime&gt;
+&lt;/configuration&gt;</pre>
+<p>Therefore, our partners don&rsquo;t need to recompile their product for every of our minor version, and you can always use the version of PostSharp you would like.</p>
+<h2>What&rsquo;s Next?</h2>
+<p>We did our best to address the major painful point reported by users: building time. We tested the new PE writer on large and complex assemblies like those forming the .NET framework itself. Now we want to hear from you:</p>
+<ul>
+<li>Does it work for your projects? </li>
+<li>What are the performance gains? </li>
+</ul>
+<p>In the mean time, we&rsquo;ll be working on the next CTP, which should bring some minor new features. Then there&rsquo;ll be the cycle of RC and finally the winner RC will be promoted RTM.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

@@ -1,0 +1,36 @@
+---
+layout: post
+title: "[Recording] Call This Instead: Intercepting Methods"
+date: 2013-05-21 13:08:00 +02:00
+categories: [Webinars]
+permalink: /post/recording-call-this-instead-intercepting-methods.html
+---
+<p>Matthew Groves delivered part 2 of his 5-part live webinar series on AOP in .NET recently to support his upcoming book <a href="http://www.manning.com/groves/">Aspect Oriented Programming in .NET</a>, out from Manning Publications in June.&nbsp; The series covers insights found in his book and a variety of real-world coding examples using PostSharp.</p>
+<p>In part 2, Matt demonstrates the method interception aspect, and looks at a real-world application of the aspect that can help with data transactions &ndash; followed by a lively Q&amp;A session.</p>
+<h2><iframe src="https://player.vimeo.com/video/65892477?title=0&amp;byline=0&amp;portrait=0&amp;loop=1" frameborder="0" width="640" height="460"></iframe></h2>
+<h2>Q&amp;A</h2>
+<p><strong>Q: With the use of Aspect Interceptors, does the behavior of stepping through and debugging the code in either the Interceptor or calling code change?&nbsp; If so, how?</strong></p>
+<p><strong>A:</strong> With PostSharp, debugging works great! When PostSharp rewrites your code with IL manipulation it also makes appropriate changes to the debugging file. Which means, if you set a breakpoint in an aspect or in a method that has an aspect on it, that breakpoint will be hit when expected and you&rsquo;ll get the full stack with that as well.</p>
+<p><strong>Q: Can you put a PostSharp attribute on an aspect&rsquo;s method?</strong></p>
+<p><strong>A: </strong>No.</p>
+<p><strong>Q: Can we apply interceptors globally to all the methods in a class?</strong></p>
+<p><strong>A:</strong> Absolutely. You can apply the attribute to the class and by default it will be applied to every method within that class. There are <a href="http://doc.postsharp.net/postsharp-3.0/Content.aspx/PostSharp-3.0.chm/html/a5abdee8-ade1-45b4-b908-165ca1e03425.htm" target="_blank">lots of customization available</a> with PostSharp. You can customize how you want the attributes to be applied &ndash; even at assembly level.</p>
+<p><strong>Q: Is it possible to apply an aspect to DLL methods to which you don&rsquo;t have the source?</strong></p>
+<p><strong>A:</strong> In theory yes, but this scenario is not supported so you will be on your own in case of problem.</p>
+<p><strong>Q: Can we apply multiple aspects to a given method, and in what order are they executed?</strong></p>
+<p><strong>A:</strong> In some situations, for instance if you have caching and authorization, the order in which the aspect is applied is very important. PostSharp gives us a few ways to deal with that. The simplest one is called <a href="http://doc.postsharp.net/postsharp-3.0/Content.aspx/PostSharp-3.0.chm/html/P_PostSharp_Aspects_Aspect_AspectPriority.htm" target="_blank">AspectPriority</a> where you specify a number to indicate the order in which aspects are run, and there are <a href="http://doc.postsharp.net/postsharp-3.0/Content.aspx/PostSharp-3.0.chm/html/30402cd7-58ab-49ac-8f5c-65f510174daf.htm" target="_blank">more robust features</a> that PostSharp has as well to manage dependencies between aspects and aspect composition.</p>
+<p><strong>Q: What are some other examples of practical uses of aspects?</strong></p>
+<p><strong>A: </strong><a href="http://www.postsharp.net/aspects/examples/logging">Logging</a>, <a href="http://www.postsharp.net/aspects/examples/transaction">data transactions</a>, <a href="http://www.postsharp.net/media/tutorials/caching-1">caching</a>, <a href="http://www.postsharp.net/aspects/examples/inotifypropertychanged">INotifyPropertyChanged</a>, <a href="http://www.postsharp.net/aspects/examples/exception-handling">exception handling</a>, <a href="http://www.postsharp.net/aspects/examples/security">authorization</a>, <a href="http://www.postsharp.net/architecture/custom-architectural-constraints">validation</a>, etc. In fact, <a href="http://www.postsharp.net/purchase">PostSharp Ultimate comes with a whole suite of aspects</a> that have been written for you. It&rsquo;s a new feature in PostSharp 3 so you don&rsquo;t have to spend time writing these aspects and can simply drop them in and start using them right away.</p>
+<p><strong>Q: Can you add an Attribute to a parent object and have it apply to all child objects?</strong></p>
+<p><strong>A: </strong>Yes, using <a href="http://doc.postsharp.net/postsharp-3.0/Content.aspx/PostSharp-3.0.chm/html/42748720-e440-487a-a332-4c6b447d349c.htm" target="_blank">aspect inheritance</a>.</p>
+<p><strong>Q: Will you show how to TDD aspects in this series, and do you show it in your book?</strong></p>
+<p><strong>A:</strong> Not TDD specifically, but I have dedicated an entire chapter of my book to unit testing aspects and episode 5 in the series (May 30th) will focus on that.</p>
+<p><strong>Q: Does the aspect class name need to end with Attribute, as per .NET convention?</strong></p>
+<p><strong>A: </strong>No, it&rsquo;s not necessary. As long as you inherit from the Attribute base class, .NET will recognize it as an Attribute.</p>
+<p><strong>Q: Can you use PostSharp in Windows Phone 7 applications?</strong></p>
+<p><strong>A:</strong> Yes.</p>
+<p><strong>Q: What are the best practices for bringing dependencies into aspects?</strong></p>
+<p><strong>A: </strong>That question will be covered at length during the Unit Testing Aspects episode on May 30th.</p>
+<p><strong>Q: When will your book be published?</strong></p>
+<p><strong>A:</strong> June 14th.</p>
+<p>If you want to ask Matt any question you may have about AOP in .NET and/or PostSharp be sure to sign-up for the series and <a href="https://www3.gotomeeting.com/register/189817950">join us every Thursday throughout the month of May.</a></p>

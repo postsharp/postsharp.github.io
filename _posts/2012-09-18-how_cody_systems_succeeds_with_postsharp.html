@@ -1,0 +1,119 @@
+---
+layout: post
+title: "How CODY Systems Succeeds with PostSharp"
+date: 2012-09-18 08:25:00 +02:00
+categories: []
+permalink: /post/how-cody-systems-succeeds-with-postsharp.html
+---
+<p><em>This is a guest post by Alessandro Federici. Alessandro is a System Architect at <a href="http://www.codysystems.com/">CODY Systems</a>, an industry leader in the collection, analysis, and sharing of critical data for public safety, law enforcement, and intelligence agencies in the United States for over 30 years. </em><i>CODY Systems specializes in integrated public safety software solutions and interoperable vendor-neutral information-sharing for First Preventers.</i></p>  <p><em>Occasionally we’re asked by teams that are evaluating PostSharp to provide examples of organizations using it in real-world scenarios. I understand the request completely. It’s one thing for teams to try a new product that’s backed by loads of documentation and tutorials, but learning how companies from a variety of different industries are using it to successfully produce cleaner, more efficient, code builds trust in a way no other document can.</em></p>  <p><em>In the past, we’ve pointed to success stories such as <a href="http://www.sharpcrafters.com/customers/fullarmor">FullArmor</a>, <a href="http://www.sharpcrafters.com/customers/siemens">Siemens Audiology</a>, <a href="http://www.sharpcrafters.com/customers/thales">Thales Information Systems</a> and <a href="http://www.sharpcrafters.com/blog/post/webinar-real-world-aop-usage-ward-bell-ideablade.aspx">IdeaBlade</a>. In today’s post, Alessandro shows how he and </em><em>his team at CODY are using PostSharp in a variety of ways to reduce code clutter, handle errors, simplify what they write and make their code more readable.</em></p>  <h2>Enter Alessandro</h2>  <p>My interest in Aspect Oriented Programming (AOP) started in 2005, approximately. At the time I was working at RemObjects Software (I was one of the two founders) and we had recently started the development of our compiler. The engineers behind it planned to natively support AOP. I didn't know anything about aspects at the time, but the moment I saw and had a chance to use them I got hooked and I realized their elegance and power. In a way, I think I had the classic &quot;how could I live without them?&quot; moment where you lean back on your chair, stair at the monitor and question decades of your (programming) life.</p>  <p>Years then passed. I left RemObjects Software and I am now System Architect for CODY Systems where we develop applications using exclusively C#. As a Delphi/Oxygene old-timer, I had my moments with C# but I came to love it. Yet, the lack of native AOP features has always bothered me. To use a parallel example, adopting aspects feels like adopting lambda expressions and Where() calls: Once you start using them there's no going back to for-i loops that embed if statements. It gets you to the same end-result, but it just feels and reads sloppy, to me.<b></b></p>  <h2>A client-tier rid of unnecessary code</h2>  <p>CODY is currently working on major enhancements of the infrastructure and picked some of the best-of-breed tools for .NET. PostSharp is definitely one of them and will play a large role in our re-factoring and re-engineering efforts.</p>  <p>Our system is built off of different modules and follows some of the common multi-tier design patterns. We have a client tier, an application-server tier and a data-storage tier. The client-tier is made off of different client applications: Some are written using WPF, one is in Silverlight and others use MVC, depending on the need.</p>  <p>Our WPF and Silverlight clients are all built using the MVVM pattern where the INotifyPropertyChanged interface plays a fundamental role. This is the first place where PostSharp will greatly help us re-factoring leaner and cleaner code. Currently we have hundreds of properties that explicitly fire notification events with code such as this:</p>  <pre>public string FirstName
+{
+    get { return _firstName; }
+    set { ChangeAndNotify<string>(value, ref _firstName, () =&gt; this.FirstName); }
+}</pre>
+
+<p>We have put effort into alleviating the most common problem with INotifyPropertyChanged: We don't use error-prone, &quot;magic&quot; strings to reference property names and we have code snippets that help writing that code. Still, in the end, we continue to have hundreds of lines of code that have nothing to do with business logic and only exist to address what is, in most cases, just a user interface concern.</p>
+
+<p>Thanks to PostSharp, all that baggage will go away and we will be able to use automatic properties where possible and concentrate on the business logic associated to the property.</p>
+
+<p>The code above can now turn into the following:</p>
+
+<pre>[NotifyAspect]
+[CapitalizeNameAspect]
+[StringLength(1, 100)]
+public string FirstName { get; set; }</pre>
+
+<p>&#160;</p>
+
+<p>This new code (which is also one line shorter) does everything the previous one was doing but also adds two new extra “business” operations.<strong> </strong>It's more readable and directly communicates the intent behind FirstName. </p>
+
+<p>I also compared the amount of bytes the old code and new code took on disk: <strong>The new code is less than half of what it used to be. I could also give the new code to non-developers who would have a chance to understand what they got, finally!</strong></p>
+
+<p>But there's more we can do, thanks to the fact PostSharp aspects are implemented through attributes.<b></b></p>
+
+<h2>Self-documenting validation aspects for a discoverable and rock-solid server-tier</h2>
+
+<p>One of the modules of our system generates HTML documentation by using reflection. Any time we add a new domain object, new documentation pages get dynamically generated and provide an English description of all its properties, along with their constraints and other useful information. The data annotation StringLength displays as “The length of FirstName must be between 1 and 100”. CapitalizeAspect displays as “The value assigned to this property will be automatically capitalized”. NotifyAspect only displays when it's not attached to a property, as a reminder of a special case.</p>
+
+<p>In other words, aspects allowed us to first add and later infer <strong>behavior</strong> through the use of simple attributes. All that without having to maintain two separate documents containing such information: the code and manual text just for help files.</p>
+
+<p>This feature is critical for our application server tier. CODY's application server has been openly accessible for years, through simple HTTP calls and XML messages. It's a very important part of our infrastructure for many different reasons. The features we are now adding make this tier much easier to understand, use and test and the self-documenting aspect is of paramount importance in all this.</p>
+
+<p>This brings us to the next use of PostSharp: <strong>ServiceMessageHandlerAspect</strong>. Our API layer is composed of services whose methods receive one request and return one or more responses. For instance, our sample CalculatorService is coded as:</p>
+
+<pre>[Description(&quot;Performs simple mathematical calculations&quot;)]
+public sealed class CalculatorService
+{
+    [...]
+   
+    [ServiceMessageHandlerAspect]
+    [Description(&quot;Sums two integer numbers&quot;)]
+    public SumResponse Sum(SumRequest request)
+    {         
+        return new SumResponse()
+        {
+            Result = request.A + request.B
+        };            
+    }        
+}</pre>
+
+<p>SumRequest is coded as:</p>
+
+<pre>[Description(&quot;A message that contains two operands (A and B) for a sum operation.&quot;)]
+public class SumRequest : ServiceRequest
+{
+    [...]
+
+    [Required]
+    [Range(0, 1000000)]
+    [Description(&quot;Number A&quot;)]
+    public int? A { get; set; }
+
+    [Required]
+    [Range(0, 1000000)]
+    [Description(&quot;Number B&quot;)]
+    public int? B { get; set; }
+}</pre>
+
+<p>&#160;</p>
+
+<p>The implementation of CalculatorService.Sum() only returns a result with the sum of A and B, but ServiceMessageHandlerAspect does a lot more for us, behind the scenes. When this aspect is applied to a method, validation code ensures that all the data annotations bound to SumRequest are satisfied (e.g. A and B are not null and their values are between 0 and 100000) before letting the flow get into the Sum() implementation. If any requirements are not met, the execution of Sum() is skipped and a SumResponse containing error information is returned to the caller.</p>
+
+<p>In other words, <strong>by using this aspect and by defining solid request classes with validation attributes, we can be sure that whenever our service methods are called, their request argument is well formed and contains everything that is needed for it to be processed</strong>. </p>
+
+<p>Among the same lines, responses can also contain validation attributes. ServiceMessageHandlerAspect ensures that whatever output is generated by the method matches such requirements.</p>
+
+<h2>Uniform and standardized access to 3<sup>rd</sup> party products through exception wrapping</h2>
+
+<p>Finally, we have another aspect that greatly helps us in error management: <strong>The WrapExceptionsAspect</strong>.</p>
+
+<p>Like I mentioned before, we picked a number of the best-of-breed tools for the development of our core. We have queuing and caching integrated in the core, for scalability purposes. While these products are very solid and unlikely to disappear from the market, we abstract them and access them only through interfaces. What we cannot abstract easily are the errors these products return. Some might have their own exception types while others might use standard .NET Exception classes. What we wanted, in our wrappers, is to be sure that whenever an error occurs in the current cache implementation, we always get back a CacheException (which then embeds the original exception).</p>
+
+<p>The following code shows how we use the WrapExceptionsAspect:</p>
+
+<pre>public abstract class BaseCache : BaseDisposable, ICache
+{
+   [..] 
+    [WrapExceptionsAspect(typeof(CacheException), null)]
+    void ICache.Store(string key, object value, int? maxMinutes)
+    {
+        if (!InternalStore(key, value, maxMinutes))
+            throw new CacheException(string.Format(&quot;Cannot store item [{0}] in the cache&quot;, key));            
+    }
+   [..] 
+    [WrapExceptionsAspect(typeof(CacheException), null)]
+    bool ICache.TryGet<t>(string key, out T value, int? maxMinutes)
+    {
+        return InternalTryGet<t>(key, out value, maxMinutes);            
+    }
+    [..] 
+}</pre>
+
+<p>&#160;</p>
+
+<p>The above could have been easily accomplished by using a try...catch block around the calls to the Internalxxx methods but that would have meant having that extra code in each of the methods above and in any of the other wrapper classes we have (e.g. Queuing, etc.).</p>
+
+<p>If we were to change how exception interception worked we would have had to touch every method. <strong>With the aspect we built we can be sure that there's one place to touch and all our wrappers immediately change.</strong></p>
+
+<h2>Conclusion</h2>
+
+<p>Any piece of code that performs a function can be written in infinite ways. Many of such implementations will work and will produce the same results, but I strongly believe the result is not all that matters. How you achieve your goal is, many times, just as important. If a certain implementation is hard to read, understand or modify, it will cause problems down the road. Using aspects helps reducing clutter in code. It helps simplifying what we write and, later, what we read. It's a very elegant, simple and effective way to write code that focuses on the real problem, not language or framework needs. </p>

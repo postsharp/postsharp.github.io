@@ -1,0 +1,44 @@
+---
+layout: post
+title: "Announcing PostSharp 4.1 RTM"
+date: 2015-03-30 15:05:00 +02:00
+categories: []
+permalink: /post/announcing-postsharp-41-rtm.html
+---
+<p>PostSharp Technologies is pleased to announce the release of PostSharp 4.1, the latest version of the #1 compiler extension for .NET, adding support for design patterns and thread safety to C# and Visual Basic.</p>
+<p>PostSharp 4.1 focuses on extending the set of supporting platforms by adding Xamarin (both iOS and Android), Visual Studio 2015, Visual Studio Universal Apps to the list of compatible products, and by improving the level of support of Windows 8 and Windows Phone. PostSharp 4.1 will also support new minor platform updates automatically, without requiring any update of PostSharp itself.</p>
+<h2>Xamarin Support</h2>
+<p>This is definitively our biggest headline. PostSharp 4.1 now supports Xamarin at the same level of feature as Windows Phone or Windows Store. Excepted the diagnostics pattern library, all PostSharp features are now strictly cross-platform and have been tested on several physical devices.</p>
+<p>PostSharp 4.1 is an excellent choice to build large and complex applications for mobile devices and will deliver the same economies of scale as for desktop or server applications, possible saving thousands of lines of codes and hundreds of defects.</p>
+<p>Note that Xamarin Studio is not supported. You must build your application on Windows using Visual Studio in order to use PostSharp with Xamarin.</p>
+<p>There&rsquo;s no specific tutorial on how to use PostSharp with Xamarin. <strong>It just works</strong> as usually: open your project in Visual Studio, move your caret on a class and add an aspect from the smart tag (in VS 2013) or light bulb (in 2015).</p>
+<h2>Visual Studio 2015 Support</h2>
+<p>PostSharp Tools have been fully rewritten to take advantage of the new architecture of Visual Studio 2015.</p>
+<p><img style="margin: 20px 0px; border: solid 1px black;" src="http://www.postsharp.net/assets/2015-03-30-announcing_postsharp_41_rtm/lightbulb.png" alt="" /></p>
+<p>Improvements include:</p>
+<ul>
+<li><strong>Light bulbs</strong> are used instead of the smart tags: not only it looks better, but it also better integrates with other vendors such as Microsoft, Resharper or CodeRush.</li>
+<li><strong>Real-time code analysis</strong> detects the most common errors in seconds so you don&rsquo;t even have to recompile.</li>
+<li><strong>Real-time coding guidance</strong> shows you what&rsquo;s the next step to implement more complex patterns like threading models or undo/redo.</li>
+<li>More accurate parsing of C# code, resulting in higher reliability of PostSharp editor integration.</li>
+</ul>
+<h2>PostSharp Tools Improvements</h2>
+<p>Besides VS 2015 support, PostSharp 4.1 includes other significant improvements in the tooling for Visual Studio:</p>
+<ul>
+<li><strong>Universal apps</strong>, the marketing name for shared projects, are now properly supported.</li>
+<li><strong>PostSharp Explorer</strong> is now much more usable and accurate than before.</li>
+<li><strong>Conservative NuGet Versioning</strong> prevents unwanted updates of your NuGet packages. PostSharp will always try to match the version that you&rsquo;re already using in your solution and will politely ask if an update is needed.</li>
+</ul>
+<p><img src="/assets/2015-03-30-announcing_postsharp_41_rtm/explorer.png" alt="" /></p>
+<h2>Other Improvements</h2>
+<ul>
+<li><strong>Windows Phone Get Threading.</strong> Additionally to Xamarin, PostSharp Threading Pattern Library now becomes available for Windows and Windows Phone (both Silverlight and WinRT), so you can build apps that are both thread-safe and cross-platform.</li>
+<li><strong>Code Contracts Localization.</strong> You can now customize the text of exception messages. Please see <a href="http://doc.postsharp.net/contract-localization">the documentation</a> for details.</li>
+<li><strong>No Strong-Name Verification</strong> at build-time. It does not affect strong names at run-time.</li>
+<li><strong>Automatic support of minor platform updates.</strong> Minor updates (like from 4.5 to 4.5.1) should now be automatically supported without any PostSharp update.</li>
+</ul>
+<h2>Summary</h2>
+<p>PostSharp 4.1 is all about new platforms. With complete support for Windows Phone, Android and iOS, you can leverage the boilerplate-cutting power of PostSharp to your mobile applications. And we proved we&rsquo;re ready for Visual Studio 2015, with exciting new features that will improve your productivity.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>
+<p>&nbsp;</p>

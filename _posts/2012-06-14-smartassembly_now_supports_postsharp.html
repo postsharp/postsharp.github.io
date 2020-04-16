@@ -1,0 +1,19 @@
+---
+layout: post
+title: "SmartAssembly now supports PostSharp"
+date: 2012-06-14 05:44:00 +02:00
+categories: []
+permalink: /post/smartassembly-now-supports-postsharp.html
+---
+<p>Red Gate and SharpCrafters are happy to announce that SmartAssembly &ndash; <a href="http://www.red-gate.com/products/dotnet-development/smartassembly/">an obfuscator that protects your application against reverse-engineering, cracking and modifications</a> &ndash; now genuinely supports PostSharp.</p>
+<h2>The Darkness</h2>
+<p>Prior to PostSharp 2.0, running an obfuscator on assemblies enhanced by PostSharp would almost certainly cause runtime issues. The reason, <a href="http://geekswithblogs.net/simonc/archive/2012/05/31/postsharp-obfuscation-and-il.aspx">as Simon Cooper explains extensively in his blog</a>, is that PostSharp includes textual references to methods, and these references are broken when the obfuscator renames these methods.</p>
+<h2>The Battle</h2>
+<p>PostSharp 2.1 attempted to solve this limitation with a feature called &ldquo;obfuscation awareness&rdquo;, which emits additional data structures that could be parsed and re-written during or after the obfuscator. We implemented a post-obfuscation utility that fixed the obfuscated assembly &ndash; with initial support for the gorilla in the room: Dotfuscator. Quite frankly, we were quite disappointed by this effort, first because we&rsquo;ve never received the kickback we hoped from Preemptive, then because the high price point of their product turned people away. Additionally, the post-obfuscation step caused additional friction. So, this feature was a semi failure. Up to now.</p>
+<h2>The Light</h2>
+<p>We&rsquo;re thrilled to announce that the good folks at Red Gate have baked support for PostSharp right into <a href="http://www.red-gate.com/products/dotnet-development/smartassembly/">SmartAssembly</a> (&gt;=6.6.4). No need for an additional build step, a sweeter price point, and a friendly relationship: we and our customers have many reasons to be satisfied!</p>
+<p>Just remember to enable PostSharp obfuscation awareness in each project that requires it:</p>
+<p><img src="/assets/2012-06-14-smartassembly_now_supports_postsharp/1be3b5fe09d0c388.jpg" alt="" /></p>
+<p>&nbsp;</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

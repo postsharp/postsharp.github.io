@@ -1,0 +1,8 @@
+---
+layout: post
+title: "GUI Dispatch"
+date: 2008-12-05 20:43:20 +01:00
+categories: [General]
+permalink: /post/gui-dispatch.html
+---
+<h6>Custom Attribute That Dispatches the Method to the GUI Thread </h6><p style="line-height: normal; font-family: Consolas; font-size: 10pt"><span style="color: blue">public</span><span> <span style="color: blue">class</span> <span style="color: #2b91af">GuiThreadAttribute</span> : <span style="color: #2b91af">OnMethodInvocationAspect<br /></span>{<br /><span style="color: blue">  public</span> <span style="color: blue">override</span> <span style="color: blue">void</span> OnInvocation(<span style="color: #2b91af">MethodInvocationEventArgs</span> eventArgs)<br />  {<br /><span style="color: #2b91af">    DispatcherObject</span> dispatcherObject = (<span style="color: #2b91af">DispatcherObject</span>)eventArgs.Delegate.Target;</span><br /><span style="font-family: Consolas"><span style="color: blue">    if</span> (dispatcherObject.CheckAccess())<br />      eventArgs.Proceed(); <br /><span style="color: blue">    else<br /></span>      dispatcherObject.Dispatcher.Invoke(<span style="color: #2b91af"> DispatcherPriority</span>.Normal,<span style="color: blue"> <br />                                          new</span> <span style="color: #2b91af">Action</span>(() =&gt; eventArgs.Proceed()));<br />  }<br />}</span></p>

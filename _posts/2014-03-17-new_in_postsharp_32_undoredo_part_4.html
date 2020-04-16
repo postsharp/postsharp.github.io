@@ -1,0 +1,135 @@
+---
+layout: post
+title: "New in PostSharp 4.0: Undo/Redo, Part 4"
+date: 2014-03-17 11:01:10 +01:00
+categories: []
+permalink: /post/new-in-postsharp-32-undoredo-part-4.html
+---
+<p>In the last <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">three</a> <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-2">blog</a> <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-3">posts</a>, I introduced our new undo/redo feature and described how to customize it. So far, we’ve lived with the assumption that there
+        is only a single global recorder to which all objects would send their changes. In this post, I will show how to cope with several recorders. Then, I will
+        see how recordable objects can react to undo/redo operations by implementing a callback interface.&nbsp;&nbsp;&nbsp;&nbsp; </p><p><em>This article is part of a series of 5 about undo/redo:</em></p><ol><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">Announcement and introduction</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-2">Getting started – tutorial</a></em></li><li><em><a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo-Part-3">Logical operations, scopes, naming</a></em></li><li><em><strong>Recorders, recorder providers, callbacks</strong></em></li><li><em><a href="http://www.postsharp.net/blog/post/VisualDesigner-or-how-to-build-your-own-domain-specific-PowerPoint">Case study: Visual Designer</a></em></li></ol><p><em>        NOTE: This blog post is about an available pre-release of PostSharp. You can install PostSharp 4.0 only using NuGet by enabling the “Include        pre-release” option. Undo/Redo is implemented in the package PostSharp.Patterns.Model. </em></p>
+    <h1>
+        Coping with several recorders in an application
+    </h1>
+    <p>
+        In my previous examples, the global recorder was automatically and transparently assigned to all new recordable objects. This behavior is the result of the
+        default value of two settings:
+    </p>
+    <ul>
+        <li>
+            <p>
+                The <em>AutoRecord</em> property of the <em>[Recordable]</em> custom attribute (set to <em>true</em> by default,) determines whether the object
+                should be assigned to the ambient recorder upon instantiation.
+            </p>
+        </li>
+        <li>
+            <p>
+                The <em>RecordingServices.RecorderProvider</em> property points to a chain of responsibility that provides recorders to recordable objects. The
+                default implementation unconditionally returns a single global instance.
+            </p>
+        </li>
+    </ul>
+    <p>
+        Note that the <em>RecorderProvider</em> is only used when <em>AutoRecord</em> is set to <em>true</em>. Otherwise, the recorder must be assigned manually,
+        as we will see below.
+    </p>
+    <h1>
+        Overriding the default RecorderProvider
+    </h1>
+    <p>
+        If you want to customize which recorder is being assigned to recordable by default, you need to derive a class from <em>RecorderProvider</em> and implement
+        the <em>GetRecorderImpl</em> method. The parameter contains the object for which the recorder is required. Note that instances of <em>RecorderProvider</em>
+        form a chain of responsibility; if one of the instances return <em>null</em>, the next instance will be invoked.
+    </p>
+    <pre>class CustomRecorderProvider : RecorderProvider
+{
+    public CustomRecorderProvider(RecorderProvider next) : base(next)
+    {
+    }
+
+    protected override Recorder GetRecorderImpl(object obj)
+    {
+    throw new NotImplementedException();
+    }
+}
+</pre>
+    <p>
+        The second step is to add the custom provider to the chain of responsibility:
+    </p>
+    <p>
+        RecordingServices.RecorderProvider = new CustomRecorderProvider(RecordingServices.RecorderProvider);
+    </p>
+    <h1>
+        Assigning recorders manually
+    </h1>
+    <p>
+        Another way to assign recorders to objects is to disable the <em>AutoRecord</em> behavior:
+    </p>
+    <pre>[Recordable(AutoRecord = false)]
+class TableBooking
+{
+    // Details skipped.
+}
+</pre>
+    <p>
+        Then you can attach a recorder to an object using the <em>Recorder.Attach</em> method:
+    </p>
+    <pre>Recorder recorder = new Recorder();
+TableBooking booking = new TableBooking();
+recorder.Attach(booking);
+</pre>
+    <p>
+        The symmetric method is <em>Recorder.Detach</em>. Note that invoking any of the <em>Attach</em> or <em>Detach</em> results in adding the attach or detach
+        operation to the list of undoable operations. This seems a bit unintuitive but is important to conserve the ability to undo consistently.
+    </p>
+    <h1>
+        Recordable and Aggregatable
+    </h1>
+    <p>
+        As a rule, an object must always have the same recorder as its parent, unless the parent has no recorder. Therefore, the parent’s recorder is automatically
+        assigned to any child object. Note that the recorder is <em>not</em> detached from a child when the child is detached from its parent.
+    </p>
+    <p>
+        This rule allows to easily work with real-world object models, where the undo/redo behavior of an object is often derived from its parent.
+    </p>
+    <h1>
+        Undo/redo callbacks
+    </h1>
+    <p>
+        There are situations where you may want to execute custom code before or after an object is affected by an undo or redo operation. For instance, if you
+        have a custom implementation of <em>INotifyPropertyChanged</em>, you may want to raise the <em>PropertyChanged</em> event after undo or redo. This can be
+        done by having your recordable object implement the <em>IRecordableCallback</em> interface.
+    </p>
+    <p>
+        This is illustrated in the following example, where we want to count the number of operations performed on a child list, but we don’t want this counter to
+        be affected by undo/redo operations.
+    </p>
+<pre>[Recordable]
+class IntList : IRecordableCallback
+{
+    [NotRecorded]
+    private bool replaying;
+    [Child]
+    public readonly AdvisableCollection&lt;int&gt; List = new AdvisableCollection&lt;int&gt;();
+        [NotRecorded]
+    public int OperationCount { get; private set; }
+    public IntList()
+    {
+        this.List.CollectionChanged += ListOnCollectionChanged;
+    }
+    private void ListOnCollectionChanged(object sender, NotifyCollectionChangedEventArgs notifyCollectionChangedEventArgs)
+    {<br>       if ( !this.replaying )
+        this.OperationCount++;
+    }
+    void IRecordableCallback.OnReplaying(ReplayKind kind, ReplayContext context)
+    {
+        this.replaying = true;
+    }
+    void IRecordableCallback.OnReplayed(ReplayKind kind, ReplayContext context)
+    {
+        this.replaying = false;
+    }
+}
+</pre>
+
+<h1>Conclusion</h1><p>This is the last of a 4-part blog series about the new undo/redo feature found in PostSharp 4.0. We tried to design it to be super easy to get started with, but customizable enough for real-world applications. Thanks to PostSharp, implementing undo/redo in your own applications should become affordable and reasonably easy.</p><p>You may wonder how we tested the feature. Of course we have dozens of unit tests, but unit tests don’t make good usability tests. Since as a compiler-building company we don’t have any UI application to dogfood, we chose an open-source project and added the undo/redo feature to it. More in my next blog post.</p><p>Happy PostSharping!</p><p>-gael</p><p><em>UPDATE: Change product version from PostSharp 3.2 to PostSharp 4.0.</em></p>

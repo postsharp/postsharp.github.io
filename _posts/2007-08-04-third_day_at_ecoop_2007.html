@@ -1,0 +1,49 @@
+---
+layout: post
+title: "Third Day at ECOOP 2007"
+date: 2007-08-04 19:26:00 +02:00
+categories: [General]
+permalink: /post/third-day-at-ecoop-2007.html
+---
+<span xmlns="">
+<h1>Object Equality, Traits and Non-Nulls.
+</h1>
+<p>The previous two days were full-days workshops on the same topic. Now the main conference has really started, there are a lot more of small topics and a lot more of ideas to pick. Here are some.
+</p>
+<h1>Declarative Object Identity
+</h1>
+<p>The idea presented there is that much effort is spent to develop non-default implementations of the <em>GetHashCode</em> and <em>Equals</em> methods, and empirical studies of these implementations show that this code is either boiler plate code either buggy. So the proposal was to implement these methods automatically so that equality is tested based on the values of 'key' fields in the object. Key fields may be decorated with an [EqualityKey] custom attribute, for instance:
+</p>
+<p><span style="font-family:Courier New;font-size:10;">public class Customer
+</span></p>
+<p><span style="font-family:Courier New;font-size:10;">{
+</span></p>
+<p><span style="font-family:Courier New;font-size:10;">[EqualityKey]
+</span></p>
+<p><span style="font-family:Courier New;font-size:10;">int customerId;
+</span></p>
+<p>
+</p>
+<p><span style="font-family:Courier New;font-size:10;">string firstName, lastName;
+</span></p>
+<p><span style="font-family:Courier New;font-size:10;">}
+</span></p>
+<p>Good idea, and easy to implement in PostSharp using the low-level API.
+</p>
+<p>The problem is that in C# it would not be possible to write so simply "customerA == customerB" to have this equality working. Why? Because, the C# compiler does not generate a call to the <em>Equals</em> method but simply compares both pointers. You need to override the <strong>==</strong> operator. And here it does not help to implement it at post-compile time, because it needs to be present at compile-time in order for the compiler to use it. Another solution would be to replace the "equals" instruction by a call to the Equals method at compile-time, but it is not possible (or too difficult) with the current version of PostSharp, and anyway it is not nice at all.
+</p>
+<p>So we are maybe in front of a problem that is best solved by a code generation technique, before compilation...
+</p>
+<h1>Traits
+</h1>
+<p>A trait is a component that can be inserted into a class. So a class can be assembled from traits and have its own artifacts. No, it does not exists in C#. But say we would have a good support for traits; our problem above with equality checking would find an easy solution. Again, not something for PostSharp.
+</p>
+<h1><a name="non-null-annotations">Non-Null Annotations
+</a></h1>
+<p>It's not common in C# but more and more frequent in Java: you can annotate fields and parameters with a [NonNull] custom attribute. and you get compile-time and runtime errors when you try to assign a null value to such a field or parameter.
+</p>
+<p>The problem is: empirical studies that more than 75% of fields or parameters are meant to be non-null by design. This suggest that the default behavior should be to be non-null...
+</p>
+<p>By the way, who starts writing a static analysis library for .NET and integrate it into PostSharp?
+</p></span>
+<a name="non-null-annotations"></a>

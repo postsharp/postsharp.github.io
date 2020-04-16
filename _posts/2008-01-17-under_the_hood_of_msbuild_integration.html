@@ -1,0 +1,218 @@
+---
+layout: post
+title: "Under the Hood of MSBuild Integration"
+date: 2008-01-17 22:01:00 +01:00
+categories: [General]
+permalink: /post/under-the-hood-of-msbuild-integration.html
+---
+<div>
+All works so magically. Once you have PostSharp installed on your computer, your build process automatically invokes PostSharp when it thinks it should. Most of the cases, it works and it's enough. But if you have a complex build process (especially one that does not use MSBuild), you could ask: how does this work? And how can I integrate PostSharp in my non-MSBuild projects?
+</div>
+<div>
+<h3>Getting Inserted in the MSBuild Process</h3>
+<p>
+Most of the stuff is in the file <strong>PostSharp-1.0.targets</strong>, a file typically installed in the directory <strong>C:\Program Files\PostSharp 1.0</strong>. From the moment you install PostSharp on your system (that is, using the Microsoft Installer package), this file is included in <em>any</em> project.
+</p>
+<p>
+There is absolutely no hack in that; it uses extension points of MSBuild especially designed for this purpose (although badly documented). At the very beginning of the file C:\<strong>Windows\Microsoft.NET\Framework\v2.0.50727\Microsoft.Common.targets</strong>, you will see the following code:
+</p>
+<pre>
+<strong>&lt;PropertyGroup&gt;
+&lt;CustomBeforeMicrosoftCommonTargets Condition=&quot;&#39;$(CustomBeforeMicrosoftCommonTargets)&#39;==&#39;&#39;&quot;&gt;
+   $(MSBuildExtensionsPath)\v2.0\Custom.Before.Microsoft.Common.targets
+&lt;/CustomBeforeMicrosoftCommonTargets&gt;
+&lt;CustomAfterMicrosoftCommonTargets Condition=&quot;&#39;$(CustomAfterMicrosoftCommonTargets)&#39;==&#39;&#39;&quot;&gt;
+  $(MSBuildExtensionsPath)\v2.0\Custom.After.Microsoft.Common.targets
+&lt;/CustomAfterMicrosoftCommonTargets&gt;
+&lt;ReportingServicesTargets Condition=&quot;&#39;$(ReportingServicesTargets)&#39;==&#39;&#39;&quot;&gt;
+  $(MSBuildExtensionsPath)\Microsoft\VisualStudio\v8.0\ReportingServices\Microsoft.ReportingServices.targets
+&lt;/ReportingServicesTargets&gt;
+&lt;/PropertyGroup&gt;</strong></pre>
+<pre>
+<strong>&lt;Import Project=&quot;$(CustomBeforeMicrosoftCommonTargets)&quot; 
+        Condition=&quot;Exists(&#39;$(CustomBeforeMicrosoftCommonTargets)&#39;)&quot;/&gt;
+ <import Project="$(CustomBeforeMicrosoftCommonTargets)" Condition="Exists('$(CustomBeforeMicrosoftCommonTargets)')"/></strong>
+</pre>
+</div>
+<p>
+This means that the build process loads the file <strong>c:\Program Files\MSBuild\v2.0\Custom.After.Microsoft.Common.targets</strong>, if present. He some program wants to be plugged into the standard MSBuild process, it just have to modify this file.  And that's exactly what does PostSharp!
+</p>
+<p>
+Our installer just edits this file and imports our <strong>PostSharp-1.0.targets</strong>, which gives us the opportunity to insert PostSharp tasks in the build process. How? Here also, using quite standard extension points. 
+</p>
+<p>
+Have a look, in the file <strong>Microsoft.Common.targets</strong>, at the 
+target <strong>Compile</strong><em style="font-style: normal">. </em>
+<span style="font-style: normal">All its dependencies are contained in the 
+property <strong>CompileDependsOn</strong>. And we want to modify the 
+compilation process, we modify this property from </span>our <strong>PostSharp-1.0.targets</strong>:</p>
+<pre>&lt;PropertyGroup&gt;
+ &lt;CompileDependsOn&gt;
+  $(CompileDependsOn);
+  PostSharpInspectConstants;
+  PostSharpInspectReferences;
+  PostSharp
+ &lt;/CompileDependsOn&gt;
+   &lt;/PropertyGroup&gt;</pre>
+<p>As you can see, we have inserted three targets <em>after</em> other 
+   compilation targets: <em>PostSharpInspectConstants</em>, <em>
+   PostSharpInspectReferences</em>, and <em>PostSharp</em>.</p>
+<h3>Invoking PostSharp Only Relevantly</h3>
+<p>
+We could invoke PostSharp in every single project you build on your machine, but it would not last a long time before you uninstall it, isn't it? So we have to decide, in some way, whether PostSharp should be invoked.
+This is the role of the targets <em>PostSharpInspectConstants</em> and <em>
+PostSharpInspectReferences</em>. Let&#39;s begin with the last one, which is also 
+the most important.</p>
+<p>
+The objective of the <em>PostSharpInspectReferences</em> target is to enable 
+PostSharp whenever the current project is has direct or indirect references to 
+the assembly <em>PostSharp.Public.dll</em>. The heuristic works in most cases: 
+if your assembly references <em>PostSharp.Public.dll</em>, it&#39;s probably because 
+it uses an aspect, so it requires to be post-processed. But it does not work <em>
+always</em>: if you develop a PostSharp plug-in or aspect library, you will 
+surely reference <em>PostSharp.Public.dll</em>, but your plug-in won&#39;t need to 
+be transformed. True, but if you develop a plug-in or an aspect library for 
+PostSharp, you are more probable to have read the documentation, and you know 
+how to <em>disable</em> automatic enabling of PostSharp based on references.</p>
+<p>
+And this is one of the role of the target <em>PostSharpInspectConstants</em>: 
+detecting the presence of the constant<strong> SkipPostSharp </strong>in your 
+project. So if you want to skip PostSharp in your project, or only in a 
+particular build configuration, simply define the <strong>SkipPostSharp</strong> 
+constant (aka compilation symbol), and you are done!</p>
+<h3>
+PostSharp Has Projects, Too</h3>
+<p>
+Like MSBuild, PostSharp has its own notion of project: <strong>*.psproj</strong> 
+files. And like MSBuild, PostSharp projects are based on tasks and plug-ins: a 
+PostSharp project describes all steps that need to be performed to properly 
+analyze and transform assemblies. You cannot just &quot;execute PostSharp against an 
+assembly&quot;, you always need to provide it a project.</p>
+<p>
+Hopefully, PostSharp comes with a default project: <strong>Default.psproj</strong>. 
+The default project automatically detects what is has to do based on custom 
+attributes present in the assembly. That&#39;s why the default project is so 
+flexible that most users don&#39;t need to be aware of this concept.</p>
+<p>
+But this is an advanced post, so let&#39;s go on.</p>
+<p>
+What&#39;s important here is not how automatic detection of tasks works (it is
+<a href="http://doc.postsharp.org/UserGuide/CoreLibrary/Extensibility/AutoDetect.html">
+documented</a>), but to point out that the default project must take a lot of 
+properties from the environment, in this case from MSBuild. Here are they:</p>
+<table style="width: 100%">
+   <tr>
+      <th>Property</th>
+      <th>Meaning</th>
+   </tr>
+   <tr>
+      <td>Output (required)</td>
+      <td>Full path of the output assembly.</td>
+   </tr>
+   <tr>
+      <td>ReferenceDirectory</td>
+      <td>Directory by reference to which relative paths in the <strong>psproj</strong> 
+      will be resolved. We pass the root directory of the project (i.e. the 
+      directory containing your <strong>csproj</strong><strong style="font-weight: normal"> 
+      file).</strong></td>
+   </tr>
+   <tr>
+      <td>Configuration</td>
+      <td><strong>Debug</strong> or <strong>Release</strong>, typically. It is 
+      not used by <strong>Default.psproj</strong>.</td>
+   </tr>
+   <tr>
+      <td>Platform</td>
+      <td>Any, typically. It is not used by <strong>Default.psproj</strong>.</td>
+   </tr>
+   <tr>
+      <td>SearchPath</td>
+      <td>Comma-separated list of directories that have to be added to the 
+      search path while looking for plug-ins or referenced assemblies. We pass 
+      the output directory (i.e. <strong>bin\debug</strong>) as well as all 
+      reference paths defined in user-level project properties.</td>
+   </tr>
+   <tr>
+      <td>IntermediateDirectory</td>
+      <td>Tells PostSharp where to put its own intermediate stuff. We pass 
+      typically <strong>obj\debug\PostSharp.</strong></td>
+   </tr>
+   <tr>
+      <td>CleanIntermediate</td>
+      <td>Whether PostSharp should clean its intermediate files after execution. 
+      We pass <strong>false</strong>.</td>
+   </tr>
+   <tr>
+      <td>MSBuildFullProjectPath</td>
+      <td>Full path of the MSBuild project file (the <strong>csproj</strong> or
+      <strong>vbproj</strong>). This is to solve relative paths that users could 
+      pass in custom attributes.</td>
+   </tr>
+   <tr>
+      <td>SignAssembly</td>
+      <td>Determines whether the assembly should be signed. We take this value 
+      from MSBuild.</td>
+   </tr>
+   <tr>
+      <td>PrivateKeyLocation</td>
+      <td>Location of the private key. We take this value from MSBuild.</td>
+   </tr>
+</table>
+<p>
+ 
+All this stuff is of course passed automatically to PostSharp, so most of the 
+time you don&#39;t have to worry about this. However, if you need to invoke 
+PostSharp manually, this will surely interest you.</p>
+<h3>
+ 
+Invoking 
+PostSharp Manually</h3>
+<p>
+ 
+If you are not happy with the default integration of PostSharp in the build 
+process, there are many ways to do it differently.</p>
+<p>
+ 
+If your project is built using MSBuild, you have the following options:</p>
+<ul>
+   <li>Do not install PostSharp globally, but insert it manually in each 
+   project. You will have to import <strong>PostSharp-1.0.targets</strong><strong style="font-weight: normal"> 
+   in all C# or VB (or other) project requiring PostSharp. Yup, there is 
+   currently no binary package other than the installer </strong>
+   <span style="font-weight: normal">performing global registration. But you can 
+   do this package yourself by zipping <strong>C:\Program Files\PostSharp 1.0</strong> 
+   -- simply!.</span></li>
+   <li>Do not use our MSBuild targets, but use our
+   <a href="http://doc.postsharp.org/ClassRef/html/0f4db677-8ca6-cc09-47a5-112b6a5f2a80.htm">
+   MSBuild task</a>. </li>
+   <li>Use the command-line utility (see below).</li>
+</ul>
+<p>If you don&#39;t use MSBuild you can use the command line utility. And there is 
+   already a NAnt task in the 1.1 branch!</p>
+<h3>PostSharp from the Command Line</h3>
+<p>PostSharp comes with a command line utility. Its syntax is very simple, 
+   because nearly everything is passed as named properties:</p>
+<pre>Usage: postsharp [&lt;options&gt;] &lt;project&gt; &lt;input&gt; [&lt;options&gt;]
+
+Options:
+/P:name=value   Sets a property.
+/Attach         Gives the opportunity to attach a debugger to the process.
+</pre>
+<p>So here is how a call to the command line may look like:</p>
+<pre>PostSharp.exe 
+ Default.psproj 
+ .\obj\Debug\PostSharp.Samples.Binding.exe
+ /P:Output=.\obj\Debug\PostSharp\PostSharp.Samples.Binding.exe
+ /P:ReferenceDirectory=P:\open\branches\1.0\Samples\PostSharp.Samples.Binding
+ /P:SearchPath=bin\Debug /P:IntermediateDirectory=obj\Debug\PostSharp
+ /P:CleanIntermediate=False
+ /P:MSBuildProjectFullPath=<a href="file:///P:/open/branches/1.0/Samples/PostSharp.Samples.Binding/PostSharp.Samples.Binding.csproj">P:\\Samples\PostSharp.Samples.Binding\PostSharp.Samples.Binding.csproj</a>
+</pre>
+<h3>Summary</h3>
+<p>I&#39;ve explained how PostSharp is invoked from MSBuild and/or Visual Studio, 
+   and described the properties that are passed from MSBuild to PostSharp. 
+   Finally, I&#39;ve shown how to invoke PostSharp on your own, eventually from the 
+   command line.</p>
+<p>I hope this has been usefull to some of you and...</p>
+<p>Happy Aspecting!</p>
+<p>-Gael</p>

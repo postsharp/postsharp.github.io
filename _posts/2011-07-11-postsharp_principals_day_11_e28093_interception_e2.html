@@ -1,0 +1,238 @@
+---
+layout: post
+title: "PostSharp Principles: Day 11 – EventInterceptionAspect"
+date: 2011-07-11 15:23:00 +02:00
+categories: [Tutorial]
+permalink: /post/postsharp-principals-day-11-e28093-interception-e28093-part-3.html
+---
+<p>Previously we’ve covered interception for methods and “locations” (fields/properties). Today we’re going to finish up interception by looking at the EventInterceptionAspect. </p>  <h3>Intercepting Events</h3>  <p>Events in .NET are similar to automatic properties. They look like fields, but you can override their underlying methods, Get and Set. Events don’t have Get or Set methods, instead they have Add and Remove methods. PostSharp allows us to intercept these Add and Remove methods as well as the invocation of the event using the EventInterceptionAspect base class. Let’s have a look</p>  <pre>[Serializable]
+public class EventAspect : EventInterceptionAspect
+{
+    public override void  OnAddHandler(EventInterceptionArgs args)
+    {
+        args.ProceedAddHandler();
+        Console.WriteLine(&quot;Handler added&quot;);
+    }
+
+    public override void  OnRemoveHandler(EventInterceptionArgs args)
+    {
+        args.ProceedRemoveHandler();
+        Console.WriteLine(&quot;Handler removed&quot;);
+    }
+
+    public override void OnInvokeHandler(EventInterceptionArgs args)
+    {
+        args.ProceedInvokeHandler();
+        Console.WriteLine(&quot;Handler invoked&quot;);
+    }
+}</pre>
+
+<p>The aspect is very similar to the other aspects we’ve seen. We simply override the provided virtual methods for the actions we want to intercept - add, remove and invoke. Our test code is as follows</p>
+
+<pre>public class Program
+{
+    static void Main(string[] args)
+    {
+        ExampleClass c = new ExampleClass();
+        c.SomeEvent += new EventHandler(c_SomeEvent);
+        c.DoSomething();
+        c.SomeEvent -= c_SomeEvent;
+
+        Console.ReadKey();
+    }
+
+    static void c_SomeEvent(object sender, EventArgs e)
+    {
+        Console.WriteLine(&quot;Hello Event!&quot;);
+    }
+}
+
+public class ExampleClass
+{
+    [EventAspect]
+    public event EventHandler SomeEvent;
+
+    public void DoSomething()
+    {
+        if (SomeEvent != null)
+        {
+            SomeEvent.Invoke(this, EventArgs.Empty);
+        }
+    }
+}</pre>
+
+<br />The output is as expected 
+
+<br />
+
+<br />
+
+<pre>Handler added
+Hello Event!
+Handler invoked
+Handler removed</pre>
+
+<h3>EventInterceptionAspect</h3>
+
+<p>This aspect is pretty straight forward. We’re given three points in which we can intercept Add, Remove and Invoke. As with the other interception aspects, if one or more is applied to a target, the next node in the chain will be invoked and may not be the target event. </p>
+
+<h4>EventInterceptionAspect.OnAddHandler</h4>
+
+<p>Instead of the Add semantic of the event, the OnAddHandler is invoked instead. This occurs when a new handler is attached to the event (C# +=).</p>
+
+<h4>EventInterceptionAspect.OnRemoveHandler</h4>
+
+<p>Instead of the Remove semantic of the event, the OnRemoveHandler is invoked instead. This occurs when a delegate is removed from the event (C# -=).</p>
+
+<h4>EventInterceptionAspect.OnInvokeHandler</h4>
+
+<p>When the event is fired, the OnInvokeHandler method is invoked for each delegate attached to the event. If several handlers have been registered to the event, this method is called once for every handler.</p>
+
+<h3>EventInterceptionArgs</h3>
+
+<p>Each of the methods that we implement will have an EventInterceptionArgs parameter that we can use to get information and take action. </p>
+
+<h4>EventInterceptionArgs.Handler</h4>
+
+<p>Handler is the delegate that is currently being added, removed or invoked</p>
+
+<h4>EventInterceptionArgs.Instance</h4>
+
+<p>Instance is a reference to the instance from which the invocation is occurring, usually the class that the event is a member of. The instance where the invocation will occur can be changed by setting Instance to another class instance.</p>
+
+<h4>EventInterceptionArgs.Arguments</h4>
+
+<p>Arguments provides access to the arguments passed in during invocation of the event. For example, args.Argument[0] would typically be the value of the “sender” parameter and args.Arguments[1] would be the EventArgs (or some derivation). </p>
+
+<h4>EventInterceptionArgs.Event</h4>
+
+<p>Event is an instance of System.Reflection.EventInfo containing the reflected information for the target event. For more information on EventInfo, see the <a href="http://msdn.microsoft.com/en-us/library/system.reflection.eventinfo.aspx">MSDN reference</a>. </p>
+
+<h4>EventInterceptionArgs.AddHandler</h4>
+
+<p>AddHandler is the representation of the Add semantic of the event. You can call this directly to add a handler. It is possible to add additional/specific delegates to the event using AddHandler. </p>
+
+<h4>EventInterceptionArgs.ProceedAddHandler</h4>
+
+<p>Continues with the original request of adding a delegate to the target event. </p>
+
+<h4>EventInterceptionArgs.RemoveHandler</h4>
+
+<p>RemoveHandler is the representation of the Remove semantic of the event. You can call this directly to remove a handler. It is possible to remove additional/specific delegates to the event using RemoveHandler.</p>
+
+<h4>EventInterceptionArgs.ProceedRemoveHandler</h4>
+
+<p>Continues with the original request of removing a delegate from the target event. </p>
+
+<h4>EventInterceptionArgs.InvokeHandler</h4>
+
+<p>InvokeHandler allows us to invoke the handler, but it allows us to do so by providing a different delegate and arguments. InvokeHandler returns an object which will contain the return value of the delegate (if the delegate is not void).</p>
+
+<h4>EventInterceptionArgs.ProceedInvokeHandler</h4>
+
+<p>Continues with the original invocation of the delegate with the specified arguments. After invocation, args.ReturnValue may contain a value if the delegate is not void. </p>
+
+<h4>EventInterceptionArgs.ReturnValue</h4>
+
+<p>ReturnValue will contain the value returned by the delegate is it is not void. The return value can be changed or manipulated by setting ReturnValue to a new value.</p>
+
+<h3>Making Events Asynchronous </h3>
+
+<p>One of the uses for event interception is to invoke the registered delegates asynchronously. Let’s check out what that aspect looks like</p>
+
+<pre>[Serializable]
+public sealed class AsyncEventAttribute : EventInterceptionAspect
+{
+    public override void OnInvokeHandler(EventInterceptionArgs args)
+    {
+        Task.Factory.StartNew(() =&gt; Invoke(args));
+    }
+
+    private static void Invoke(EventInterceptionArgs args)
+    {
+        try
+        {
+            args.ProceedInvokeHandler();
+        }
+        catch (Exception e)
+        {
+            args.ProceedRemoveHandler();
+        }
+    }
+}</pre>
+
+<p>This is a very simple aspect. We are only implementing the OnInvokeHandler which has only one job, creating and starting a task. We use Task.Factory.StartNew() to create and immediately start the task asynchronously. We provide the StartNew method with an action which just makes a call to our Invoke method. Tasks are part of the Task Parallel Library which ships with .NET 4.0. If you are not familiar with the TPL or Tasks, please see the <a href="http://msdn.microsoft.com/en-us/library/dd460717.aspx">MSDN reference</a>.</p>
+
+<p>The Invoke method contains a try/catch structure. We make a call to args.ProceedInvokeHandler and if an exception occurs, we catch it and then remove that delegate from the event by calling args.ProceedRemoveHandler.</p>
+
+<p>To test our aspect, we have modified our example from above.</p>
+
+<pre>public class Program
+{
+    static void Main(string[] args)
+    {
+        ExampleClass c = new ExampleClass();
+        c.SomeEvent += new EventHandler(c_SomeEvent);
+        c.SomeEvent += new EventHandler(c_SomeEvent);
+        c.SomeEvent += new EventHandler(c_SomeEvent);
+        c.SomeEvent += new EventHandler(c_SomeEvent2);
+        c.SomeEvent += new EventHandler(c_SomeEvent2);
+        c.SomeEvent += new EventHandler(c_SomeEvent2);
+
+        c.DoSomething();
+
+        Console.ReadKey();
+    }
+
+    static void c_SomeEvent(object sender, EventArgs e)
+    {
+        Console.WriteLine(&quot;Hello Event! Task: &quot; + Task.CurrentId);
+    }
+    static void c_SomeEvent2(object sender, EventArgs e)
+    {
+        Console.WriteLine(&quot;Hello Event! Task: &quot; + +Task.CurrentId);
+    }
+}
+
+public class ExampleClass
+{
+    [AsyncEventAttribute]
+    public event EventHandler SomeEvent;
+
+    public void DoSomething()
+    {
+        if (SomeEvent != null)
+        {
+            SomeEvent.Invoke(this, EventArgs.Empty);
+        }
+    }
+}</pre>
+
+<p>We register a few handlers with the event and then we call the DoSomething method that is going to invoke the event. Our output shows that the registered handlers were invoked and that they have been invoked in their own task.</p>
+
+<pre>Hello Event! Task: 1
+Hello Event! Task: 2
+Hello Event! Task: 3
+Hello Event! Task: 4
+Hello Event! Task: 5
+Hello Event! Task: 6</pre>
+
+<h3>Under the Hood</h3>
+
+<p>Just for fun, let’s open up ILSpy and look at our example code, you’ll see that there is a lot of work going on.</p>
+
+<p><a href="/assets/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/image_19.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/image_thumb_19.png" width="626" height="554" /></a></p>
+
+<p>If you look around, you’ll notice a few things. Even though we didn’t implement OnAddHandler or OnRemoveHandler, PostSharp has modified the event to use &lt;SomeEvent&gt;_Broker to do the adding and removing of handlers. </p>
+
+<p>&lt;SomeEvent&gt;_Broker is a nested class that PostSharp has added and it derives from EventBroker, <a name="_GoBack"></a>an abstract class that is used to realize the interception of the invocation. </p>
+
+<p>Notice that the DoSomething method doesn’t call our aspect’s OnInvokeHandler method, nor does it call to the &lt;SomeEvent&gt;_Broker. It simply does the invocation of the event just as it was coded in Visual Studio. How is it that it can intercept the invocation then? When &lt;SomeEvent&gt;_Broker is instantiated in the &lt;&gt;z__InitializeAspects method it gets a reference to our instance. EventBroker is a black box that uses our instance to wrap around the event. We’ll leave it at that for now. </p>
+
+<h3>Conclusion</h3>
+The further we dig, the more we see just how comprehensive PostSharp really is. We still have more to cover. The topics are getting more complex, but I’ll try to make sense of them. 
+
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="/assets/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/self573_thumb[1]_thumb_3.jpg" width="66" height="66" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>
+
+
+

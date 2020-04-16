@@ -1,0 +1,18 @@
+---
+layout: post
+title: "Building on Linux and macOS "
+date: 2019-08-13 10:47:00 +02:00
+categories: []
+permalink: /post/building-on-linux-and-macos.html
+---
+<p><strong>We have made those proverbial first steps and PostSharp compiler is now able to run on Linux and macOS. This means that you will not be bound to build on Windows when using PostSharp package in your .NET Core and .NET Standard projects.&nbsp;</strong></p>
+<p>In order to achieve that, we&rsquo;ve reimplemented our previous dependencies on Windows components using .NET Core APIs. The main example of this are strong name signatures, which depended on .NET Framework up to this point.&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>We are still hard at work...&nbsp;</strong></p>
+<p>...and you may expect some convenient features being disabled and PostSharp not behaving ideally in the UNIX environment, but we are going to solve these problems along the way.&nbsp;</p>
+<p>&nbsp;</p>
+<p><strong>Specific distros go&nbsp;</strong></p>
+<p>We are mainly working on Ubuntu Linux 16.04 and 18.04 and we are keeping eye on Alpine Linux and macOS Mojave. We intend to support operating systems that are supported by official .NET Core SDK on x64 architecture.&nbsp;</p>
+<p>&nbsp;</p>
+<p>Happy PostSharping!</p>
+<p>Dagmar</p>
