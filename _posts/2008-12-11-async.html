@@ -1,8 +1,0 @@
----
-layout: post
-title: "Async"
-date: 2008-12-11 20:03:44 +01:00
-categories: [General]
-permalink: /post/async.html
----
-<h6>Custom Attribute That Makes the Method Asynchronous</h6><p style="font-family: Consolas; font-size: 10pt"><span style="color: blue">public</span><span> <span style="color: blue">class</span> <span style="color: #2b91af">AsyncAttribute</span> : <span style="color: #2b91af">OnMethodInvocationAspect<br /></span>{<br /><span style="color: blue">  public</span> <span style="color: blue">override</span> <span style="color: blue">void</span> OnInvocation(<span style="color: #2b91af">MethodInvocationEventArgs</span> eventArgs)<br />  {<br /><span style="color: #2b91af">    ThreadPool</span>.QueueUserWorkItem(<span style="color: blue">delegate</span> { eventArgs.Proceed(); });<br />  }<br />}</span></p>
