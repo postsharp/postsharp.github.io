@@ -1,0 +1,92 @@
+{% include header.html%}
+<div class="page_wrapper home_page">
+	<section class="latest_posts">
+	    <div class="swiper-container">
+	        <div class="swiper-wrapper">
+	            {% for post in site.posts limit:5 %}
+	            <div class="swiper-slide"> 	
+	                <div class="post_data">
+	                    <figure>
+	                        <a href="{{site.baseurl}}{{ post.url }}"><img src="{{site.baseurl}}/assets/images/blog/{{post.featImg}}" alt="{{post.title}}"></a>
+	                    </figure>                    
+						<h3>{{post.title | strip_html | strip_newlines | truncate: 150}}</h3>
+						
+						<div class="post_details_and_tag">
+							<div class="post_details">by <span>{{post.author}}</span> on {{ post.date | date_to_string }}</div>						
+		                    <div class="post_share_n_tag">
+		                        <div class="share_buttons">
+		                            {% include share_buttons.html %}
+		                        </div>
+		                        {% if post.categories[0].size > 1 %} <div class="post_category"><a href="archive.html#{{post.categories[0] | downcase}}"><img src="{{site.baseurl}}/assets/images/icons/tag_white.svg" alt=""> <span>{{post.categories}}</span></a></div>{% endif %}
+		                    </div>
+						</div>
+	                    <p class="post_excerpt">
+							{{ post.excerpt | strip_html | strip_newlines | truncate: 220 }}
+						</p>			
+									
+						<div class="pagination_and_read_button">							
+							<div class="swiper-pagination in-pagination"></div>
+							<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
+						</div>
+	                    <div class="share_buttons desktop">
+	                        {% include share_buttons.html %}
+	                    </div>
+	                </div>
+	            </div>
+	            {% endfor %}
+	        </div>	        
+	    </div>
+	</section>		
+</div>
+<section class="featured_posts">
+	<h2>Featured Posts</h2>    
+	{% for post in site.posts limit:3 %}
+	<div class="blog_item">
+		<figure>
+			<a href="{{site.baseurl}}{{ post.url }}"><img src="{{site.baseurl}}/assets/images/blog/{{post.featImg}}" alt="{{post.title}}"></a>
+		</figure>
+		<h3>{{post.title}}</h3>
+		<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
+		<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
+	</div>
+	{% endfor %}
+	<div class="sidebar_left"></div>
+	<div class="sidebar_right"></div>
+</section>
+<section class="categories">
+	<h2>Categories</h2>
+	<ul>
+		{% for category in site.categories %}
+		<li><a href="{{site.baseurl}}/archive.html#{{category[0] | downcase}}">{{ category[0] }}</a></li>
+		{% endfor %}
+	</ul>
+</section>
+<section class="older_posts">
+	<h2>Older Posts</h2>
+	{% for post in site.posts limit:9 %}
+	<div class="blog_item">
+		<figure>
+			<img src="{{site.baseurl}}/assets/images/blog/{{post.featImg}}" alt="{{post.title}}">
+		</figure>
+		<h3>{{post.title}}</h3>
+		<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
+		<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
+	</div>
+	{% endfor %}
+	<div class="sidebar_left"></div>
+	<div class="sidebar_right">
+		<div class="categories">
+			<h2>Categories</h2>
+			<ul>
+				{% for category in site.categories %}
+				<li><a href="{{site.baseurl}}/archive.html#{{category[0] | downcase}}">{{ category[0] }}</a></li>
+				{% endfor %}
+			</ul>
+		</div>			
+	</div>    
+</section>
+<section class="older_posts_button">
+	<a href="{{site.baseurl}}/archive.html"><h2>Older Posts</h2></a>
+</section>
+{% include newsletter.html %}
+{% include footer.html %}

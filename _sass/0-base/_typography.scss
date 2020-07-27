@@ -1,0 +1,73 @@
+    @font-face {
+    font-family:Monosten;
+    src:url(../fonts/Monosten/Monosten-A.woff2?etag=9bdc03646207a5354c40167543f428b6) format("woff2"),
+    url(../fonts/Monosten/Monosten-A.woff) format("woff");
+    font-weight:400;
+    font-style:normal
+   }
+   @font-face {
+    font-family:LatoLatinWeb;
+    src:url(../fonts/LatoLatin/LatoLatin-Bold.eot?etag=86f41d54c4fa52ecfcae6204c03e4782);
+    src:url(../fonts/LatoLatin/LatoLatin-Bold.eot?#iefix) format("embedded-opentype"),
+    url(../fonts/LatoLatin/LatoLatin-Bold.woff2?etag=3ff66ada9b57d10c17e415222486ec21) format("woff2"),
+    url(../fonts/LatoLatin/LatoLatin-Bold.woff?etag=f323edeea9058ded98148eefffb1794a) format("woff"),
+    url(../fonts/LatoLatin/LatoLatin-Bold.ttf?etag=20ee9bd18996dbf668b6585cf59a6bed) format("truetype");
+    font-style:normal;
+    font-weight:700;
+    text-rendering:optimizeLegibility
+   }
+   @font-face {
+    font-family:LatoLatinWeb;
+    src:url(../fonts/LatoLatin/LatoLatin-BoldItalic.eot?etag=328250e7434a3067a36856da8f62a9bc);
+    src:url(../fonts/LatoLatin/LatoLatin-BoldItalic.eot?#iefix) format("embedded-opentype"),
+    url(../fonts/LatoLatins/LatoLatin-BoldItalic.woff2?etag=e3efadc700b8e6364a98fda1b2e2b784) format("woff2"),
+    url(../fonts/LatoLatin/LatoLatin-BoldItalic.woff?etag=2538f760e9fb5f5ec46f70facba55ac5) format("woff"),
+    url(../fonts/LatoLatin/LatoLatin-BoldItalic.ttf?etag=e22cd5242829916ff8a5e0c6464c480e) format("truetype");
+    font-style:italic;
+    font-weight:700;
+    text-rendering:optimizeLegibility
+   }
+   @font-face {
+    font-family:LatoLatinWeb;
+    src:url(../fonts/LatoLatin/LatoLatin-Italic.eot?etag=6df64ed5a283ba37d65346e4c133fd21);
+    src:url(../fonts/LatoLatin/LatoLatin-Italic.eot?#iefix) format("embedded-opentype"),
+    url(../fonts/LatoLatin/LatoLatin-Italic.woff2?etag=5e75c678391d787696bb192db689fcaf) format("woff2"),
+    url(../fonts/LatoLatin/LatoLatin-Italic.woff?etag=6b654922e092ce676796215a3bb19620) format("woff"),
+    url(../fonts/LatoLatin/LatoLatin-Italic.ttf?etag=d9129929b06db37a97fed3218b48e13c) format("truetype");
+    font-style:italic;
+    font-weight:400;
+    text-rendering:optimizeLegibility
+   }
+   @font-face {
+    font-family:LatoLatinWeb;
+    src:url(../fonts/LatoLatin/LatoLatin-Regular.eot?etag=6cfad5881181ae658a6efdd68889a690);
+    src:url(../fonts/LatoLatin/LatoLatin-Regular.eot?#iefix) format("embedded-opentype"),
+    url(../fonts/LatoLatin/LatoLatin-Regular.woff2?etag=3cd36578026d6c12eddf9a5c671a251d) format("woff2"),
+    url(../fonts/LatoLatin/LatoLatin-Regular.woff?etag=586ec8dc57c264cffafa044f8603e7bb) format("woff"),
+    url(../fonts/LatoLatin/LatoLatin-Regular.ttf?etag=c305a828efdfe8d0e57a840028d3c289) format("truetype");
+    font-style:normal;
+    font-weight:400;
+    text-rendering:optimizeLegibility
+   }
+
+   $ff-headings: monosten;
+   $ff-texts: LatoLatinWeb;
+
+   $fw-normal: 400;
+   $fw-bold: 700;
+
+   $fs-base-mobile: 12px;
+   $fs-base-desktop: 15px;
+   
+
+  
+  @function rem($size, $version:'mobile') {
+    @if $version == 'mobile' {
+      @return $size / $fs-base-mobile * 1rem;      
+    } @else {
+      @return $size / $fs-base-desktop * 1rem;      
+    }
+  }
+  @function em($size) {
+    @return $size;
+  }

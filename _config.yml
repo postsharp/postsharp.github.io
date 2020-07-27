@@ -16,6 +16,13 @@ baseurl: "" # the subpath of your site, e.g. /blog
 url: "http://postsharp.github.io" # the base hostname & protocol for your site
 twitter_username: postsharp
 github_username:  postsharp
+facebook_username: postsharp
+linkedin_username: postsharp
+
+main_website_url: https://www.postsharp.net
 
 # Build settings
 markdown: kramdown
+
+plugins:
+  - jekyll-feed

@@ -1,0 +1,37 @@
+<a id="newsletter"></a>
+<section class="newsletter">
+    <div class="items_wrapper">
+        <img src="{{site.baseurl}}/assets/images/icons/subscribe.svg" alt="newsletter">
+        <h2>Subscribe to our <br> newsletter</h2>
+        <p>Stay up to date on all the latest releases, news and discounts.<br>Follow us on social media:</p>
+        <form method="post" action="https://www.postsharp.net/" id="aspnetForm" _lpchecked="1">
+            <input type="hidden" name="__VIEWSTATE" id="__VIEWSTATE"
+                value="/wEPDwUKMTYzNTI5NjY2MGRkLRnDrpFxEAh4cOAjtd48wGaJKLyGVXPsAh/V0dsqybw=">
+    
+            <input type="hidden" name="__VIEWSTATEGENERATOR" id="__VIEWSTATEGENERATOR" value="8D0E13E6">
+            <input type="hidden" name="__EVENTVALIDATION" id="__EVENTVALIDATION"
+                value="/wEdAAPLh9MFk0i3oP+lt46/kFdpGQ2XY2puuV0SA/8BfnGaPpLuegiG9X+ofecdQGvCNKXBLqTb0EfWYXolZz1tSYOhmlp6X4qqBKQZZ5Z1Ip0Dag==">
+    
+            <div class="form_elements">
+    
+                <div class="email_wrapper">
+                    <input name="ctl00$BodyPlaceHolder$ctl24$emailTextBox" id="ctl00_BodyPlaceHolder_ctl24_emailTextBox"
+                        class="email_field" placeholder="Your Email" type="email">
+                </div>
+                <div class="submit_wrapper">
+                    <input type="submit" name="ctl00$BodyPlaceHolder$ctl24$submitButton" value="SUBSCRIBE"
+                        onclick="javascript:WebForm_DoPostBackWithOptions(new WebForm_PostBackOptions(&quot;ctl00$BodyPlaceHolder$ctl24$submitButton&quot;, &quot;&quot;, true, &quot;&quot;, &quot;&quot;, false, false))"
+                        id="ctl00_BodyPlaceHolder_ctl24_submitButton" class="submit_button">
+                </div>
+            </div>
+        </form>
+        <ul class="socialmedia_links">
+            <li><a href="https://twitter.com/{{ site.twitter_username }}"><img src="{{site.baseurl}}/assets/images/icons/twitter.svg"
+                        alt=""></a></li>
+            <li><a href="https://facebook.com/{{ site.facebook_username }}"><img src="{{site.baseurl}}/assets/images/icons/facebook.svg"
+                        alt=""></a></li>
+            <li><a href="https://twitter.com/{{ site.linkedin_username }}"><img src="{{site.baseurl}}/assets/images/icons/linkedin.svg"
+                        alt=""></a></li>
+        </ul>
+    </div>
+</section>
