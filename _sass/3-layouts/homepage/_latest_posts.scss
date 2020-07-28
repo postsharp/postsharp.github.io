@@ -232,6 +232,8 @@
                 font-size: rem(18px, "desktop");
                 display: flex;
                 align-items: end;
+                height: 50px;
+                align-self: end;
             }
         }
         .read_button {

@@ -2,19 +2,27 @@
 {% include header.html%}
 <div class="page_wrapper post_page">    
     <section class="post_header">
-        <figure>
-            <img src="{{site.baseurl}}/assets/images/blog/{{page.featImg}}" alt="{{page.title}}">
+        <figure>            
+            {% if page.folderName %}
+            <img src="{{site.baseurl}}/assets/images/blog/{{page.folderName}}/{{page.folderName}}{{page.featImgExt}}" alt="{{page.title}}">
+                alt="{{post.title}}">
+            {% else %}
+            <img src="{{site.baseurl}}/assets/images/blog/ps-no-featimg.jpg">
+            {% endif %}            
         </figure>                    
         <h1>{{page.title | strip_html | strip_newlines | truncate: 150}}</h3>
-        <div class="post_details">by <span>{{page.author}}</span> on {{ page.date | date_to_string }}</div>
-        <div class="post_share_n_tag">
-            <div class="share_buttons">
-                {% include share_buttons.html isPage = true %}
+            
+        <div class="post_details_and_tag">
+            <div class="post_details">{% if page.author %} by <span>{{page.author}}</span> {% endif %} on {{ page.date | date_to_string }}</div>
+            <div class="post_share_n_tag">
+                <div class="share_buttons">
+                    {% include share_buttons.html isPage = true %}
+                </div>
+                {% if page.categories[0].size > 1 %}<div class="post_category"><a href="{{site.baseurl}}/archive.html#{{page.categories[0] | downcase }}"><img src="{{site.baseurl}}/assets/images/icons/tag_white.svg" alt=""><span>{{page.categories}}</span></a></div>{% endif %}
             </div>
-            <div class="post_category"><a href="{{site.baseurl}}archive.html#{{page.categories}}"><img src="{{site.baseurl}}/assets/images/icons/tag_white.svg" alt=""> {{page.categories}}</a></div>
         </div>
         <div class="post_excerpt">
-            {{ page.excerpt | strip_newlines }}
+            {{ page.excerpt }}
         </div>        
         <div class="share_buttons desktop">
             {% include share_buttons.html isPage = true %}

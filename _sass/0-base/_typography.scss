@@ -30,10 +30,7 @@
    @font-face {
     font-family:LatoLatinWeb;
     src:url(../fonts/LatoLatin/LatoLatin-Italic.eot?etag=6df64ed5a283ba37d65346e4c133fd21);
-    src:url(../fonts/LatoLatin/LatoLatin-Italic.eot?#iefix) format("embedded-opentype"),
-    url(../fonts/LatoLatin/LatoLatin-Italic.woff2?etag=5e75c678391d787696bb192db689fcaf) format("woff2"),
-    url(../fonts/LatoLatin/LatoLatin-Italic.woff?etag=6b654922e092ce676796215a3bb19620) format("woff"),
-    url(../fonts/LatoLatin/LatoLatin-Italic.ttf?etag=d9129929b06db37a97fed3218b48e13c) format("truetype");
+    src:url(../fonts/LatoLatin/LatoLatin-Italic.eot?#iefix) format("embedded-opentype");
     font-style:italic;
     font-weight:400;
     text-rendering:optimizeLegibility
@@ -54,6 +51,7 @@
    $ff-texts: LatoLatinWeb;
 
    $fw-normal: 400;
+   $fw-semi-bold: 600;
    $fw-bold: 700;
 
    $fs-base-mobile: 12px;
