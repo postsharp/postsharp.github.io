@@ -4,6 +4,17 @@
         margin-bottom: rem(18px);
         font-size: rem(16px);
     }
+    h2{
+        font-size:13px;
+        text-align: left;
+        margin-bottom:15px;
+        margin-top:40px;
+    }
+    h3{
+        font-weight: $fw-semi-bold;
+        font-family: $ff-texts;
+        text-align: left;
+    }    
     .post_details {
         margin-bottom: rem(27px);
         font-size: rem(9px);
@@ -34,6 +45,9 @@
     }
     .post_comments {
         margin: rem(150px) 0 rem(80px);
+        h3{
+            display: none;
+        }
     }
 }
 @media screen and (min-width: rem($mobile_breakpoint)) {
