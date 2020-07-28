@@ -1,0 +1,66 @@
+header{    
+    background-color: $header_newsletter_bg_color;
+    position: fixed;
+    top:0;
+    left:0;
+    width: 100%;
+    z-index: 10000001;
+    overflow: hidden;
+}
+header .items_wrapper{
+
+    font-family: $ff_headings;
+    font-weight: 100;
+    display: flex;
+    justify-content: space-between;
+    align-content: center;
+    padding: rem(22px) rem(25px) rem(10px) rem(25px);
+    @media screen and (min-width: rem($mobile_breakpoint , 'desktop')){         
+        padding: rem(34px , 'desktop') rem($desktop_side_margins , 'desktop')/3;        
+        margin:0 auto;        
+    }    
+    @media screen and (min-width: rem($desktop_wide_width , 'desktop')){         
+        width: rem($desktop_wide_width , 'desktop');
+        padding: rem(33.8px, 'desktop') 0;        
+    }
+    .logo{
+        width: 30%; 
+        @media screen and (min-width: rem($mobile_breakpoint, 'desktop')){ 
+            width:rem(175px , 'desktop');
+        }
+        img{
+            max-width: rem(176px);
+        }
+    }
+    nav{
+        width: 70%;
+        font-size: rem(10px);
+        @media screen and (min-width: rem($mobile_breakpoint , 'desktop')) {
+            font-size: rem(22px , 'desktop');
+        }        
+        display: flex;
+        justify-content: flex-end;
+        ul{
+            list-style-type:none;
+            display: flex;
+            justify-content: flex-end;
+            margin:0;
+            align-self: center;
+            li{
+                margin-left: rem(15px);
+                @media screen and (min-width: rem($mobile_breakpoint , 'desktop')) {
+                    margin-left: rem(70px , 'desktop');
+                }                 
+                a{
+                    color:$bright_texts_color;
+                    text-decoration: none;                    
+                    line-height: 1rem;
+                }
+
+            }
+        }
+    }
+}
+section{
+    overflow:hidden;
+}

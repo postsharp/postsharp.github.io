@@ -1,0 +1,38 @@
+html{
+    font-size:$fs-base-mobile;    
+    scroll-behavior: smooth;
+    @media screen and (min-width: rem($mobile_breakpoint)){ 
+        font-size:$fs-base-desktop;
+    }    
+}
+body{
+    font-family: LatoLatinWeb;
+}
+
+h1,h2,h3,h4,h5{
+    
+    font-family: Monosten;
+    font-weight: $fw-normal;
+}
+*{
+    box-sizing: border-box;
+}
+h3{    
+    font-size:rem(16px);
+    line-height: rem(20px);
+    font-weight: $fw-normal;
+}
+h2{
+    font-size: rem(12px);
+    text-align: center;
+    font-weight: $fw-normal;
+}
+p{    
+    line-height: rem(20px);
+}
+img{
+    width: 100%;
+}
+figure{
+    margin:0;
+}

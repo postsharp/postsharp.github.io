@@ -1,38 +1,92 @@
-<footer class="site-footer">
-
-  <div class="wrapper">
-
-    <h2 class="footer-heading">{{ site.title }}</h2>
-
-    <div class="footer-col-wrapper">
-      <div class="footer-col footer-col-1">
-        <ul class="contact-list">
-          <li>{{ site.title }}</li>
-          <li><a href="mailto:{{ site.email }}">{{ site.email }}</a></li>
-        </ul>
-      </div>
-
-      <div class="footer-col footer-col-2">
-        <ul class="social-media-list">
-          {% if site.github_username %}
-          <li>
-            {% include icon-github.html username=site.github_username %}
-          </li>
-          {% endif %}
-
-          {% if site.twitter_username %}
-          <li>
-            {% include icon-twitter.html username=site.twitter_username %}
-          </li>
-          {% endif %}
-        </ul>
-      </div>
-
-      <div class="footer-col footer-col-3">
-        <p>{{ site.description }}</p>
-      </div>
+<footer>
+    <div class="links_section">
+        <div class="links">
+            <div class="col_logo">
+                <div class="header__logo--footer text-hide"><img src="{{site.baseurl}}/assets/images/postsharp_logo.svg" alt="">
+                </div>
+            </div>
+            <div class="col_links">
+                <h4>Products</h4>
+                <ul class="list-unstyled footer__nav">
+                    <li><a href="{{site.main_website_url}}/get/community">PostSharp Community</a></li>
+                    <li><a href="{{site.main_website_url}}/ultimate">PostSharp Ultimate</a></li>
+                    <li><a href="{{site.main_website_url}}/framework">PostSharp Framework</a></li>
+                    <li><a href="{{site.main_website_url}}/mvvm">PostSharp MVVM</a></li>
+                    <li><a href="{{site.main_website_url}}/logging">PostSharp Logging</a></li>
+                    <li><a href="{{site.main_website_url}}/threading">PostSharp Threading</a></li>
+                    <li><a href="{{site.main_website_url}}/caching">PostSharp Caching</a></li>
+                </ul>
+            </div>
+            <div class="col_links">
+                <h4>Why To Buy</h4>
+                <ul class="list-unstyled footer__nav">
+                    <li><a href="{{site.main_website_url}}/benefits">Benefits</a></li>
+                    <li><a href="{{site.main_website_url}}/customers">Success stories</a></li>
+                    <li><a href="{{site.main_website_url}}/blog/post/Aspect-Oriented-Programming-vs-Dependency-Injection">AOP vs. Dependency
+                            Injection</a></li>
+                    <li><a href="{{site.main_website_url}}/alternatives">Alternatives to PostSharp</a></li>
+                    <li><a
+                            href="https://www.postsharp.net/downloads/case-studies/Pattern-Aware%20Programming.pdf?action=download">Why
+                            you have to consider automating design patterns</a></li>
+                </ul>
+            </div>
+            <div class="col_links">
+                <h4>Pricing</h4>
+                <ul class="list-unstyled footer__nav">
+                    <li><a href="{{site.main_website_url}}/pricing">Pricing</a></li>
+                    <li><a href="{{site.main_website_url}}/pricing/compare">Compare</a></li>
+                    <li><a href="{{site.main_website_url}}/pricing/free">Free Licenses &amp; Discounts</a></li>
+                    <li><a href="{{site.main_website_url}}/downloads/legal">License Agreements</a></li>
+                    <li><a href="{{site.main_website_url}}/pricing/faq">Licensing FAQ</a></li>
+                </ul>
+            </div>
+            <div class="col_links">
+                <h4>Docs &amp; Support</h4>
+                <ul class="list-unstyled footer__nav">
+                    <li><a href="https://doc.postsharp.net/">Documentation</a></li>
+                    <li><a href="https://doc.postsharp.net/requirements">Requirements</a></li>
+                    <li><a href="https://samples.postsharp.net/">Examples</a></li>
+                    <li><a href="{{site.main_website_url}}/faq">Technical FAQ</a></li>
+                    <li><a href="https://stackoverflow.com/questions/tagged/postsharp">Stack Overflow</a></li>
+                    <li><a href="https://support.postsharp.net/">Technical Support</a></li>
+                </ul>
+            </div>
+            <div class="col_links">
+                <h4>Company</h4>
+                <ul class="list-unstyled footer__nav">
+                    <li><a href="{{site.main_website_url}}/company">Our story</a></li>
+                    <li><a href="{{site.main_website_url}}/jobs">Careers</a></li>
+                    <li><a href="{{site.main_website_url}}/community">Community</a></li>
+                    <li><a href="{{site.main_website_url}}/blog">Blog</a></li>
+                    <li><a href="{{site.main_website_url}}/#newsletter">Newsletter</a></li>
+                    <li><a href="{{site.main_website_url}}/company/legal/privacy-policy">Privacy Policy</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col offset-3">
+                <a class="icon icon--follow--ps--twitter mr-40" href="https://twitter.com/postsharp"></a>
+                <a class="icon icon--follow--ps--facebook mr-40" href="https://www.facebook.com/postsharp"></a>
+                <a class="icon icon--follow--ps--linked mr-40" href="https://www.linkedin.com/company/postsharp"></a>
+                <a class="icon icon--follow--ps--rss" href="https://feeds.feedburner.com/postsharp"></a>
+            </div>
+        </div>
+    </div>    
+    <div class="container">
+        <div class="items_wrapper">
+            <section class="footericons">
+                <img src="{{site.baseurl}}/assets/images/icons/Microsoft Logo-Negative.svg" alt="microsoft partner">
+                <img src="{{site.baseurl}}/assets/images/icons/Visual Studio Logo-Negative.svg" alt="visual studio support">
+            </section>
+            <section class="footer_texts">
+                <p class="cr_based">Proudly built in Prague</p>
+                <p class="cr_copy">PostSharp is a registered trade name of SharpCrafters s.r.o. © 2004-2020</p>
+            </section>
+        </div>
     </div>
-
-  </div>
-
 </footer>
+<script src="{{site.baseurl}}/assets/js/swiper-bundle.js"></script>
+<script src="{{site.baseurl}}/assets/js/main.js"></script>
+</body>
+
+</html>
