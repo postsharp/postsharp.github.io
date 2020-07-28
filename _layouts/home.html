@@ -85,7 +85,7 @@
 </section>
 <section class="older_posts">
 	<h2>Older Posts</h2>
-	{% for post in site.posts limit:9 %}
+	{% for post in site.posts limit:9 offset:5 %}
 	<div class="blog_item">
 		<figure>
 			<a href="{{site.baseurl}}{{ post.url }}">
