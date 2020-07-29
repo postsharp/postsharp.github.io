@@ -1,0 +1,111 @@
+footer {
+    background-color: $footer_bg_color;
+    border-top: 1px solid #3b3b62;
+}
+footer .container{
+    border-top: 1px solid #3b3b62;
+}
+footer .items_wrapper {
+    padding: rem(70px) $mobile_side_margins rem(80px) $mobile_side_margins;
+    color: $bright_texts_color;
+    .footericons {
+        display: flex;
+        justify-content: center;
+        img {
+            max-width: rem(80px);
+            margin: 0 rem(20px);
+        }
+    }
+    .footer_texts {
+        margin: rem(50px) 0 0 0;
+        text-align: center;
+        .cr_based {
+            margin: 0;
+            font-size: rem(14px);
+        }
+        .cr_copy {
+            margin: 0 10%;
+        }
+    }
+}
+footer .links_section {
+    padding: rem(120px) rem($desktop_side_margins , 'desktop')/3 rem(70px) rem($desktop_side_margins , 'desktop')/3;
+    margin: 0 auto;
+    .links {
+        display: flex;     
+        justify-content: space-between;   
+        .col_logo{
+            width: 20%;
+            padding-right: 50px;
+            img{
+                width: rem(190px, 'desktop');
+            }
+        }
+        .col_links {
+            margin: 0 25px;
+            width: 12%;
+            h4 {
+                color: $bright_texts_color;
+                font-size: rem(16px, 'desktop');
+                margin: 0 0 rem(40px, 'desktop');
+                font-family: $ff-headings;
+            }
+            ul {
+                list-style-type: none;
+                margin: 0;
+                padding: 0;
+                font-size: rem(14px,'desktop');
+                line-height: rem(24px, 'desktop');
+                li{
+                    margin: rem(20px, 'desktop') 0;
+                }
+            }
+            a {
+                color: $bright_texts_color;
+                text-decoration: none;
+                transition: all 300ms ease-in-out;
+                &:hover{
+                    color:$accent_color01
+                }
+            }
+        }
+    }
+    @media screen and (max-width: rem(1000px , "desktop")) {
+        display: none;
+
+    }
+    @media screen and (min-width: rem($desktop_wide_width , "desktop")) {
+        width: $desktop_wide_width;
+        padding-left: 0;
+        padding-right: 0;        
+    }
+}
+
+@media screen and (min-width: rem($mobile_breakpoint , "desktop")) {
+    footer .items_wrapper {
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        padding: rem(70px) rem($desktop_side_margins , 'desktop')/3 rem(80px) rem($desktop_side_margins , 'desktop')/3;
+        .footericons {
+            width: 30%;
+            justify-content: flex-end;
+            margin-left: 20%;
+            order: 2;
+        }
+        .footer_texts {
+            text-align: left;
+            margin: 0;
+            .cr_copy {
+                margin: 0;
+            }
+        }
+    }
+}
+@media screen and (min-width: rem($desktop_wide_width , "desktop")) {
+    footer .items_wrapper {
+        width: $desktop_wide_width;
+        padding-left: 0;
+        padding-right: 0;
+    }
+}

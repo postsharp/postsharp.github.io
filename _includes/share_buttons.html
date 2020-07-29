@@ -1,0 +1,15 @@
+
+{% if include.isPage %} {% 
+    assign sharableURL = site.url | append:site.baseurl | append:page.url
+    assign sharableTitle = page.title
+%} {% else %} {% 
+    assign sharableURL = site.url | append:site.baseurl | append:post.url
+    assign sharableTitle = post.title
+%} 
+{% endif %}
+
+<ul>
+    <li><a href="https://facebook.com/sharer.php?u={{ sharableURL }}" rel="nofollow" target="_blank" title="Share on Facebook"><img src="{{site.baseurl}}/assets/images/icons/facebook_p.svg" alt=""></a></li>
+    <li><a href="https://twitter.com/intent/tweet?text={{ sharableTitle }}&url={{ sharableURL }}&via={{ site.twitter_username }}&related={{ site.twitter_username }}" rel="nofollow" target="_blank" title="Share on Twitter"><img src="{{site.baseurl}}/assets/images/icons/twitter_p.svg" alt=""></a></li>
+    <li><a href="http://www.linkedin.com/shareArticle?mini=true&url={{ sharableURL }}&title={{sharableTitle}}&summary={{post.excerpt | strip_html | strip_newlines | truncate: 80}}&source={{ site.url }}" rel="nofollow" target="_blank" title="Share on Linkedin"><img src="{{site.baseurl}}/assets/images/icons/linkedin_p.svg" alt=""></a></li>
+</ul>   

@@ -1,15 +1,47 @@
----
-layout: default
----
-<article class="post" itemscope itemtype="http://schema.org/BlogPosting">
 
-  <header class="post-header">
-    <h1 class="post-title" itemprop="name headline">{{ page.title }}</h1>
-    <p class="post-meta"><time datetime="{{ page.date | date_to_xmlschema }}" itemprop="datePublished">{{ page.date | date: "%b %-d, %Y" }}</time>{% if page.author %} • <span itemprop="author" itemscope itemtype="http://schema.org/Person"><span itemprop="name">{{ page.author }}</span></span>{% endif %}</p>
-  </header>
+{% include header.html%}
+<div class="page_wrapper post_page">    
+    <section class="post_header">
+        <figure>            
+            {% if page.folderName %}
+            <img src="{{site.baseurl}}/assets/images/blog/{{page.folderName}}/{{page.folderName}}.{{page.featImgExt}}" alt="{{page.title}}">
+                alt="{{post.title}}">
+            {% else %}
+            <img src="{{site.baseurl}}/assets/images/blog/ps-no-featimg.jpg">
+            {% endif %}            
+        </figure>                    
+        <h1>{{page.title | strip_html | strip_newlines | truncate: 150}}</h3>
+            
+        <div class="post_details_and_tag">
+            <div class="post_details">{% if page.author %} by <span>{{page.author}}</span> {% endif %} on {{ page.date | date_to_string }}</div>
+            <div class="post_share_n_tag">
+                <div class="share_buttons">
+                    {% include share_buttons.html isPage = true %}
+                </div>
+                {% if page.categories[0].size > 1 %}<div class="post_category"><a href="{{site.baseurl}}/archive.html#{{page.categories[0] | downcase }}"><img src="{{site.baseurl}}/assets/images/icons/tag_white.svg" alt=""><span>{{page.categories}}</span></a></div>{% endif %}
+            </div>
+        </div>
+        <div class="post_excerpt">
+            {{ page.excerpt }}
+        </div>        
+        <div class="share_buttons desktop">
+            {% include share_buttons.html isPage = true %}
+        </div>
+    </section>    
+    <section class="post_content">
+    {{ content | remove: page.excerpt }}  
+    </section>
+    <div class="post_footer_share_buttons">
+        {% include share_buttons.html isPage = true %}
+    </div>
 
-  <div class="post-content" itemprop="articleBody">
-    {{ content }}
-  </div>
+    {% if page.comments %}
+    <section class="post_comments">
+        <h3>Comments</h3>
+        {% include disqus_comments.html %}
+        {% endif %}      
+    </section>
+</div>
 
-</article>
+{% include newsletter.html %}
+{% include footer.html %}

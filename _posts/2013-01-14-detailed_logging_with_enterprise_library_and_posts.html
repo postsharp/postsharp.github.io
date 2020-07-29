@@ -1,5 +1,6 @@
 ---
-layout: post
+layout: post 
+comments: true
 title: "Detailed logging with Enterprise Library and PostSharp 3 CTP"
 date: 2013-01-14 08:37:55 +01:00
 categories: [Announcements]
@@ -31,7 +32,7 @@ author: "Gael Fraiteur"
     if (&lt;&gt;z__LoggingImplementationDetails._3)
     {
         object[] CS$0$0__args0 = new object[] { args };
-        &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Verbose,<br />            &quot;Entering: ConsoleApplication39.Program.Main({{{0}}})&quot;, CS$0$0__args0, <br />            &lt;&gt;z__LoggingImplementationDetails._2.Categories);
+        &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Verbose,<br />            &quot;Entering: ConsoleApplication39.Program.Main({{ "{{{0 "}}}}})&quot;, CS$0$0__args0, <br />            &lt;&gt;z__LoggingImplementationDetails._2.Categories);
     }
     try
     {
@@ -39,7 +40,7 @@ author: "Gael Fraiteur"
 </strong>        if (&lt;&gt;z__LoggingImplementationDetails._3)
         {
             object[] CS$0$1__args1 = new object[] { args };
-            &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Verbose, <br />               &quot;Leaving: ConsoleApplication39.Program.Main({{{0}}})&quot;, CS$0$1__args1, <br />               &lt;&gt;z__LoggingImplementationDetails._2.Categories);
+            &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Verbose, <br />               &quot;Leaving: ConsoleApplication39.Program.Main({{ "{{{0 "}}}}})&quot;, CS$0$1__args1, <br />               &lt;&gt;z__LoggingImplementationDetails._2.Categories);
         }
     }
     catch (Exception)
@@ -48,7 +49,7 @@ author: "Gael Fraiteur"
         {
             Exception CS$0$2__ex;
             object[] CS$0$3__args3 = new object[] { args, CS$0$2__ex };
-            &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Warning, <br />                 &quot;Exception in ConsoleApplication39.Program.Main({{{0}}}):\n{1}&quot;, <br />                 CS$0$3__args3,  &lt;&gt;z__LoggingImplementationDetails._4.Categories);
+            &lt;&gt;z__LoggingImplementationDetails.Write((TraceEventType) TraceEventType.Warning, <br />                 &quot;Exception in ConsoleApplication39.Program.Main({{ "{{{0 "}}}}}):\n{1}&quot;, <br />                 CS$0$3__args3,  &lt;&gt;z__LoggingImplementationDetails._4.Categories);
             throw;
         }
     }
