@@ -1,0 +1,109 @@
+---
+layout: post
+title: "Auto-implement Equals and GetHashCode with PostSharp Community"
+date: 2020-06-05 11:07:00 +02:00
+categories: []
+permalink: /post/auto-implement-equals-and-gethashcode-with-postsharp-community.html
+---
+<p><img src="/assets/2020-06-05-auto_implement_equals_and_gethashcode_with_postsha/aligned.png" alt="" width="600" height="315" /></p>
+<p>&nbsp;</p>
+<p>Recently we released <a href="https://github.com/postsharp/PostSharp.Community.StructuralEquality">PostSharp.Community.StructuralEquality</a>. If you add <a href="https://www.nuget.org/packages/PostSharp.Community.StructuralEquality/">the NuGet package</a> to your project and then add the new attribute <em>[StructuralEquality]</em> to your classes, a field-by-field implementation of Equals and GetHashCode will be added to your classes automatically during compilation.</p>
+<p>Fody has had this feature in its <a href="https://github.com/Fody/Equals">Equals.Fody add-in</a> for many years and we&rsquo;re to a large context copying their code and approach, with only some changes that I describe below.</p>
+<h2>How to use it</h2>
+<p>After you add <a href="https://www.nuget.org/packages/PostSharp.Community.StructuralEquality/">the PostSharp.Community.StructuralEquality NuGet package</a>, you can add the <em>[StructuralEquality]</em> attribute to your code like this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[StructuralEquality]
+class Dog
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+
+    public static bool operator ==(Dog left, Dog right) =&gt; Operator.Weave(left, right);
+    public static bool operator !=(Dog left, Dog right) =&gt; Operator.Weave(left, right);
+}</pre>
+<p>Then you can write code as though the Dog class had Equals, GetHashCode and equality operators implemented. That&rsquo;s because at build time, after your code compiles, PostSharp adds synthesized overrides of Equals and GetHashCode to the compiled IL code and it replaces the method bodies of equality operators.</p>
+<p>The result will be the same as if you used the following code:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">class Dog : IEquatable&lt;Dog&gt;
+{
+    public string Name { get; set; }
+    public int Age { get; set; }
+    public static bool operator ==(Dog left, Dog right) =&gt; object.Equals(left,right);
+    public static bool operator !=(Dog left, Dog right) =&gt; !object.Equals(left,right);
+    
+    public override bool Equals(Dog other)
+    {
+        bool result = false;
+        if (!object.ReferenceEquals(null, other))
+        {
+            if (object.ReferenceEquals(this, other))
+            {
+                result = true;
+            }
+            else if (object.Equals(Name, other.Name) &amp;&amp; Age == other.Age)
+            {
+                result = true;
+            }
+        }
+        return result;
+    }
+    
+    public override bool Equals(object other)
+    {
+        bool result = false;
+        if (!object.ReferenceEquals(null, other))
+        {
+            if (object.ReferenceEquals(this, other))
+            {
+                result = true;
+            }
+            else if (this.GetType() == other.GetType())
+            {
+                result = Equals((Dog)other);
+            }
+        }
+        return result;
+    }
+    
+    public override int GetHashCode()
+    {
+        int num = Name?.GetHashCode() ?? 0;
+        return (num * 397) ^ Age;
+    }
+}</pre>
+<p>&nbsp;</p>
+<p>This is the basic no-configuration example. There are ways to customize the synthesized code, for example by excluding some fields or properties. You can see the advanced case in <a href="https://github.com/postsharp/PostSharp.Community.StructuralEquality/blob/master/README.md">the GitHub repository readme</a> for details.</p>
+<h2>Field-by-field comparison</h2>
+<p>The Equals method in the synthesized code compares the <em>fields</em> of each type, not the properties. Backing fields of auto-implemented properties are still compared.</p>
+<p>We feel that both field-by-field and property-by-property comparison are reasonable choices for an Equals implementation, but that fields represent the state of the object better. Fields contain the actual data to be compared, whereas properties could do redundant calculations: you could have several properties with different types or values all based on a single field. It would be wasteful to compare them all.</p>
+<p>That&rsquo;s why we decided to implement field-by-field comparison.</p>
+<h2>Equality operators</h2>
+<p>You may have noticed that to have StructuralEquality implement equality operators, you still needed to add the following code to your class:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">public static bool operator ==(Dog left, Dog right) =&gt; Operator.Weave(left, right);
+public static bool operator !=(Dog left, Dog right) =&gt; Operator.Weave(left, right);</pre>
+<p>Obviously, it would be nicer if PostSharp could do without even this code and do it all behind the scenes. However, that is not possible:</p>
+<p>Suppose you create a class:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">class A { } </pre>
+<p>And then, in the same project, use == on it:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">bool Test(A one, A two) {
+  return one == two;
+}</pre>
+<p>Here&rsquo;s the IL code that gets emitted:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">IL_0001: ldarg.1      // one
+IL_0002: ldarg.2      // two
+IL_0003: ceq</pre>
+<p>The instruction <em>ceq</em> means &ldquo;compare the two operands&rdquo; and, for reference types, it does reference comparison.</p>
+<p>But if you replace the Test method with:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">bool Test(A one, A two) {
+  return object.ReferenceEquals(one, two);
+}</pre>
+<p>Then the IL code stays the same! PostSharp and Fody run only after compilation ends and cannot access the original source code. We could replace all <em>ceq</em>, <em>beq</em> and <em>bne</em> instructions with calls to <em>op_Equality</em> (which is what&rsquo;s emitted if the operators actually are in the original source code), but we wouldn&rsquo;t be able to differentiate between whether &ldquo;==&rdquo; or &ldquo;object.ReferenceEquals&rdquo; was used.</p>
+<p>More discussion on this topic can be found at <a href="https://github.com/Fody/Equals/issues/10">the Equals.Fody GitHub issue #10</a>.</p>
+<h2>What about generating Equals into source code?</h2>
+<p>Tools like ReSharper (and Rider) allow you to generate Equals, GetHashCode and equality members into your source code based on selected fields and properties of the class.&nbsp;</p>
+<p>Compared with Fody and StructuralEquality, generating code the way ReSharper does it keeps your build process cleaner and hides less code from you, but it comes with two downsides:</p>
+<ul>
+<li>When you add a field or property later, it will not be automatically added to your equality members.</li>
+<li>Your main code file is cluttered with generated code.</li>
+</ul>
+<h2>Conclusion</h2>
+<p>With this StructuralEquality package, you can have Equals and GetHashCode methods implemented very quickly. The synthesized code takes into account all fields in the class so it&rsquo;s updated automatically when you add a new field or auto-property. Finally, the actual code that you see in your IDE remains clear and simple.</p>
+<p>For more information on StructuralEquality including more options, see <a href="https://github.com/postsharp/PostSharp.Community.StructuralEquality/blob/master/README.md">the GitHub readme file</a>.</p>

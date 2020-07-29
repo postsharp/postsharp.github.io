@@ -1,0 +1,59 @@
+---
+layout: post
+title: "A better default ToString with PostSharp Community"
+date: 2020-06-16 09:40:00 +02:00
+categories: [Community]
+permalink: /post/a-better-default-tostring-with-postsharp-community.html
+---
+<p>During debugging and prototyping, we often rely on the ToString method to know what an object looks like. This works well for built-in types like integer and string but becomes less helpful for classes and structs unless we override the ToString method manually. Unfortunately, this requires a lot of boilerplate. In this article, I introduce <a href="https://github.com/postsharp/PostSharp.Community.ToString">PostSharp.Community.ToString</a>, a free and open-source extension to PostSharp that automatically generates the ToString method for you.</p>
+<p>Here&rsquo;s what a debugger view of an object in Visual Studio might look like when you don&rsquo;t override ToString:&nbsp;</p>
+<p><img src="/assets/2020-06-16-a_better_default_tostring_with_postsharp_community/tostring1.png" alt="" /></p>
+<p>The values you see for strings and integers are valuable but the default ToString implementation on custom types is not as valuable. In this case, perhaps the only useful information it provides is that the variable or property isn&rsquo;t null. To learn more, I would need to expand.</p>
+<p>I could implement an override for ToString for each of these classes (Hero, AbilityScores, and HeldItem) by hand but that would mean writing and maintaining that code.&nbsp;</p>
+<p>Enter <a href="https://github.com/postsharp/PostSharp.Community.ToString">PostSharp.Community.ToString</a>, our new free and open-source PostSharp add-in that adds a better default ToString implementation.</p>
+<p>If I add the attribute [ToString] to a class, PostSharp will synthesize a reasonable ToString method based on the class&rsquo;s fields and properties for me.</p>
+<p>As with the other add-ins we presented in this series of blog posts, we owe the idea as well as a significant portion of the implementation to Fody, this time to the add-in <a href="https://github.com/Fody/ToString">ToString.Fody</a>.&nbsp;</p>
+<h2>What does it do</h2>
+<p>You apply the attribute [ToString] to a class, like this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[ToString]
+class TestClass
+{
+    public int Foo { get; set; }
+    public double bar;
+    
+    [IgnoreDuringToString]
+    public string Baz { get; set; }
+}</pre>
+<p>&nbsp;</p>
+<p>And during compilation, PostSharp synthesizes a ToString method for that class so the end result will be the same as if your code was actually this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">class TestClass
+{
+    public int Foo { get; set; }
+    public double bar;    
+    public string Baz { get; set; }
+    
+    public override string ToString()
+    {
+        return $"TestClass; Foo:{Foo},bar:{bar}";
+    }
+}</pre>
+<p>&nbsp;</p>
+<p>All of your fields and properties, as well as the type name, are displayed in the string. You can exclude the type name or individual fields and properties, and you can set the separators (&ldquo;,&rdquo; and &ldquo;:&rdquo;) by setting properties on the attribute. <a href="https://github.com/postsharp/PostSharp.Community.ToString/blob/master/README.md">The GitHub readme file has details.</a></p>
+<p>This already has some advantages, especially for prototyping and debugging, over writing the ToString method yourself:</p>
+<ul>
+<li>It&rsquo;s less code for you to write.</li>
+<li>It&rsquo;s automatically updated as you add or remove fields and properties.</li>
+</ul>
+<p>But there&rsquo;s an even greater benefit that comes with multicasting.</p>
+<h2>Multicasting ToString everywhere</h2>
+<p>PostSharp attributes are what we call <a href="https://github.com/postsharp/Home/blob/master/multicasting.md">&ldquo;multicast attributes&rdquo;</a>: If you attach a multicast attribute to an assembly, it is the same as if you attached it to all the classes in that assembly. So I can type in this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[assembly: ToString(PropertiesSeparator =", ", PropertyNameToValueSeparator = ": ", WriteTypeName = false)]</pre>
+<p>And now all classes in the assembly have a new and improved ToString implementation. (At least, all classes where I didn&rsquo;t override ToString manually: a &ldquo;real&rdquo; ToString method still takes precedence over a PostSharp-created one.)</p>
+<p>Our multicast attributes also have filters you can use to target a subset of classes, <a href="https://github.com/postsharp/Home/blob/master/multicasting.md">see multicasting.md for details</a>.</p>
+<p>And so, by adding this one line, now my debugger view looks like this:</p>
+<p>&nbsp;<img src="/assets/2020-06-16-a_better_default_tostring_with_postsharp_community/tostring2.png" alt="" /></p>
+<p>And that is way more informative.</p>
+<p>I find this synthesized ToString method also valuable for rapid application development. When I&rsquo;m prototyping or creating a quick-and-dirty user interface, I can have many objects that are eventually displayed to the user by being ToString&rsquo;d. In situations where I don&rsquo;t care about the exact presentation of a class, a [ToString] attribute will say everything there is to say about an object and can be appropriate.</p>
+<h2>Conclusion</h2>
+<p>Adding [ToString] to your solution saves you some time and code during debugging and for rapid prototyping. It also allows you to set a different &ldquo;default&rdquo; for your ToString methods, which you can target to namespaces, assemblies or even the whole solution using multicasting.</p>
+<p>For more information on PostSharp.Community.ToString, see <a href="https://github.com/postsharp/PostSharp.Community.ToString/blob/master/README.md">the GitHub readme file</a>.</p>

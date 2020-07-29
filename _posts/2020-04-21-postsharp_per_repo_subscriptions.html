@@ -1,0 +1,54 @@
+---
+layout: post
+title: "PostSharp Per-Usage Subscriptions "
+date: 2020-04-21 06:52:00 +02:00
+categories: [Announcement]
+permalink: /post/postsharp-per-repo-subscriptions.html
+---
+<p>Before we start, let me state it clearly:<strong> we hate licensing just as you do</strong>. It&rsquo;s a necessary evil &ndash; but still an evil.&nbsp;</p>
+<p>In PostSharp 6.6 we&rsquo;re introducing <strong>Per-Usage Subscriptions</strong>, a pricing model where you are not charged per daily unique active user but per amount of source code in which you use PostSharp.&nbsp;</p>
+<p>With Per-Usage Subscriptions, we&rsquo;re hoping to lower the barrier to entry for large teams that want to get started with PostSharp without paying a full license fee for all developers.&nbsp;</p>
+<p>The price of Per-Usage Subscriptions starts at $250 for PostSharp Ultimate or $10 for PostSharp Logging.&nbsp;</p>
+<h2>What&rsquo;s so bad about per-user licensing?&nbsp;</h2>
+<p>Software development tools have traditionally been priced per user. If your team of 20 uses Visual Studio, you need to purchase 20 licenses. Per-user pricing is simple to explain and enforce. No wonder it has become the de-facto standard in the software development tools industry. It makes sense for an IDE because most developers open it every day. The ROI of Visual Studio would be much smaller for developers who open the IDE once per week, but this would not be a typical situation.&nbsp;</p>
+<p>However, not all software development tools have the same economics as an IDE. How do you price, say, a data grid control? Suppose you have 10 devs working on a project and you need one data grid. One developer adds the data grid to the app and spends one week integrating it in the codebase. After the initial developer merges the changes, the whole team will need to be able to build the code. With a per-user pricing model, all 10 developers need to be licensed &ndash; for a single instance of the control. This cost is clearly prohibitive.&nbsp;</p>
+<p>The caveats of per-user licensing explain many things in our industry: why UI component vendors try to sell large bundles instead of single controls, but also why customers turn to lower-quality open-source products.&nbsp;&nbsp;</p>
+<p>(Note for those interested in economics theory. The per-user pricing model does not lead to Pareto-efficient markets because the product price for the customer is not proportional to its utility. Both the buyer and the seller would have interest in doing more business together &ndash; the reason of the market inefficiency is not the product, but the pricing model itself.)&nbsp;</p>
+<h2>Enter per-usage subscriptions&nbsp;</h2>
+<p>So, <strong>how to make the cost of PostSharp more proportional to its usefulness?</strong> One of the most important metrics of utility of PostSharp is how much boilerplate code you avoid writing thanks to it. This metric cannot be estimated with enough precision to serve as a pricing basis, so it is not a good candidate. However, the amount of boilerplate code you save is proportional to the amount of hand-written code to which you apply aspects, and this metric can be reliably and precisely measured.&nbsp;</p>
+<p>That&rsquo;s why we chose to base our new pricing model on <strong>the number of lines of code</strong> <strong>that you enhance</strong> with PostSharp.&nbsp;</p>
+<p>All developers would agree that counting lines of code is not the panacea. It is <em>a</em> metric, one that&rsquo;s reasonably simple to measure and one that is proportional to the benefit you get from using PostSharp. It&rsquo;s a compromise, and we hope that for many customers it&rsquo;s a better one than counting unique daily active users.&nbsp;</p>
+<p>Because this new type of subscription is bound to a specific code base, we require the license key to be checked in your source code repository (in a file named <em>postsharp.config</em>). Anybody cloning and building that code would automatically use this subscription.&nbsp;&nbsp;</p>
+<h2>How do we count lines of code?&nbsp;</h2>
+<p>There is no industry standard about counting source lines of code (SLOC). Different tools would report very different results. What&rsquo;s important is to only compare numbers given by the same algorithm.&nbsp;</p>
+<p>We chose a counting method that does not depend on code formatting and the amount of blank lines and comments. This method is very fast and precise enough. We count:&nbsp;</p>
+<ul>
+<li><strong>one line for each declaration</strong> (i.e. for each class, struct, delegate, enum, property, property accessor, event, event accessor, method, field)&nbsp;</li>
+<li><strong>one line for each debugger sequence point</strong> (i.e. each unique source code location where a breakpoint can be enabled), as emitted by the C# compiler, minus two for the opening and closing bracket&nbsp;</li>
+</ul>
+<p>We do not count lines of code for: namespaces, generic parameters, or custom attributes.&nbsp;</p>
+<p>The granularity level is the class or the struct. If you apply an aspect to a single method of a type, we will count all lines of this type. This, again, is a technical compromise of simplicity and performance, and we understand it may be considered as &ldquo;unfair&rdquo; in some situations.&nbsp;&nbsp;</p>
+<h2>Aggregating lines of code in the cloud&nbsp;</h2>
+<p>Since the license key of the subscription is stored in your source code repository, and since different developers may work on different subsets of the code base, how do we ensure that developers together do not exceed the number of SLOC?&nbsp;</p>
+<p>Short answer: we count on each device, upload anonymized metrics to the cloud, then aggregate per subscription. Daily.&nbsp;</p>
+<p>For each C# project, on each device, we compute the number of enhanced lines of code once per day. We create a file, for each project, mapping a non-reversible hash of the type name to the number of lines of code in this type. Then, each day and on each device, we aggregate yesterday&rsquo;s files for all projects, and upload the aggregate to the cloud. The data ends up in Data Lake Analytics.&nbsp;&nbsp;</p>
+<p>If you are not online every day, it does not matter &ndash; but we do require an internet connection once per week for this licensing model.&nbsp;</p>
+<p>Then, once per day, we run a Data Lake Analytics job to aggregate data per subscription. We prepare detailed reports to be displayed in the customer portal, which looks like this:&nbsp;</p>
+<p><img src="/assets/2020-04-21-postsharp_per_repo_subscriptions/per-repo licensing.png" alt="" width="894" height="658" /></p>
+<p>&nbsp;</p>
+<p>Additionally, the script exports summaries for our sales teams. When we notice that the consumption is higher than the entitlements, we will try to contact you and ask you to purchase more.&nbsp;</p>
+<p><strong>We trust you by default</strong>. We will not break your build before we contact you. If you fail to increase the size of your subscription, we reserve the right to remotely deactivate your subscription.&nbsp;</p>
+<h2>Per-Usage Subscriptions are Transferable&nbsp;</h2>
+<p>Consultancies and bespoke development shops will appreciate this: once your project ends, you can transfer the licenses to your customer together with your source code. Seems logical since the license key is in the source repository, doesn&rsquo;t it? A legal note: there&rsquo;s an additional form that the three parties need to sign to make the transfer legally effective.&nbsp;</p>
+<h2>Example&nbsp;</h2>
+<p>Say you have a team of 100 developers and a code base of 1,000,000 lines of code (1,000 KSLOC): a large system with server, desktop and mobile apps.&nbsp;&nbsp;</p>
+<p>You&rsquo;ve just discovered our [NotifyPropertyChanged] aspect and think you could reduce boilerplate on your MVVM classes. The per-user price for 100 devs would get you to a 5-digit price: a no-starter for your development director. You estimate that you will need to add 10 KLOC of MVVM code in the next months, so all you need to get started is a PostSharp Ultimate Per-Usage license for 10 KSLOC. Since 1 KSLOC is given for free, your entry price is 9 x $250 = $2,250. This is just 22$ per developer! Now your development director wishes all publishers would propose our licensing model.&nbsp;&nbsp;</p>
+<p>After your first experience with PostSharp, you learn about other aspects such as caching or authentication, and you start adding them to your server-side code. As your usage of PostSharp increases, you increase the size of your subscription. Eventually, you may decide that switching to a per-user subscription is best for you. But from the beginning, you&rsquo;ve enjoyed a maximal return on investment.&nbsp;</p>
+<h2>Summary&nbsp;</h2>
+<p>Per-user licensing of software has severe caveats and <strong>at PostSharp we&rsquo;ve decided to innovate once again and introduce Per-Usage Subscriptions</strong>, a pricing model bound to the amount of code to which you apply PostSharp.&nbsp;&nbsp;</p>
+<p>Per-Usage Subscriptions work by counting lines of code for each enhanced type on each developer workstation, uploading the data to the cloud once per day, and aggregating, and making them available on the customer portal.&nbsp;</p>
+<p>Thanks to Per-Usage Subscriptions, <strong>you can have a huge ROI from the first day</strong>. No need for a large upfront investment.&nbsp;</p>
+<p>&nbsp;</p>
+<p>Happy PostSharping!&nbsp;</p>
+<p>-gael&nbsp;</p>
+<p>UPDATED 2020-07-23 - Renamed Per-Repo Subscription to Per-Usage Subscription</p>

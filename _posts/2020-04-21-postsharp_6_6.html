@@ -1,0 +1,60 @@
+---
+layout: post
+title: "Announcing PostSharp 6.6: more free goodies and new licensing options "
+date: 2020-04-21 06:31:00 +02:00
+categories: [Announcement]
+permalink: /post/postsharp-6-6.html
+---
+<p><iframe src="https://player.vimeo.com/video/410139478?autoplay=1&amp;muted=1&amp;controls=0&amp;byline=0" frameborder="0" width="918" height="516"></iframe></p>
+<p>We&rsquo;re happy to announce that PostSharp 6.6 is generally available today for<a href="https://www.postsharp.net/download"> download</a>. Although it comes just 2 months after 6.5, it&rsquo;s a <strong>huge release</strong>: we&rsquo;ve been working on it since August 2019.&nbsp;&nbsp;</p>
+<p>The most visible part of it is a new logo and <a href="https://www.postsharp.net/">website</a>, but it&rsquo;s just the tip of the iceberg. Today, we&rsquo;re also releasing a major upgrade of our business model and addressing the principal criticism we&rsquo;ve heard from the community: <strong>our licensing and pricing policy</strong>.&nbsp;</p>
+<p>Until today, the only licensing option was to purchase a license for every team member, even before writing your first line of production code. That was a high barrier to entry for customers. Those who went over that barrier often achieved a very <strong>high return of investment &ndash; 25x</strong> is not unusual &ndash; but of course, most developers just would not take the risk.&nbsp;&nbsp;</p>
+<p>Our principal objective with this release is to make our adoption curve smoother.&nbsp;</p>
+<h2>More free goodies&nbsp;</h2>
+<p>First good news: <strong>we&rsquo;re giving away more features for free</strong> in our new edition called <a href="https://www.postsharp.net/get/community">PostSharp Community</a> that replaces and surpasses PostSharp Essentials.&nbsp;&nbsp;</p>
+<p>Here is what you now get for free:&nbsp;</p>
+<ul>
+<li>Simple aspects (OnMethodBoundaryAspect and MethodInterceptionAspect)&nbsp;&nbsp;</li>
+<li>Architecture validation (build-time code validation)&nbsp;</li>
+<li>Contracts (preconditions, postconditions)&nbsp;</li>
+<li>[NotifyPropertyChanged] on auto-implemented properties&nbsp;</li>
+<li>Logging in <a href="https://doc.postsharp.net/logging-license">developer mode</a>&nbsp;</li>
+<li><a href="https://www.postsharp.net/blog/post/PostSharp-6-6-preview">Creation of low-level add-ins using PostSharp SDK</a>&nbsp;</li>
+<li>Use of community add-ins (<a href="https://github.com/postsharp/Home/blob/master/README.md#use-community-add-ins">7 available</a> at the time of writing)&nbsp;</li>
+<li>Apply any premium feature to a maximum of 1,000 lines of code.&nbsp;</li>
+</ul>
+<p>The following features are premium:&nbsp;</p>
+<ul>
+<li>Location-level aspects, event-level aspects, composite aspects&nbsp;</li>
+<li>Simple aspects applied semantically to async and iterator methods&nbsp;</li>
+<li>[NotifyPropertyChanged] with non-auto-implemented properties&nbsp;</li>
+<li>Caching, XAML commands and dependency properties, undo/redo, multi-threading&nbsp;</li>
+<li>Logging in production mode&nbsp;</li>
+</ul>
+<p>For more information, see <a href="https://www.postsharp.net/get/community">PostSharp Community</a> on our web site.&nbsp;</p>
+<h2>Per-Repo Subscriptions&nbsp;</h2>
+<p>Second good news: <strong>irrespective of the size of your team, you can use all PostSharp features for as little as $250</strong> &ndash; or $50 if you just want logging.&nbsp;&nbsp;</p>
+<p>Besides Per-User subscriptions, we are introducing Per-Repo subscriptions where the price does not depend on the number of daily unique users, not even on the size of your repository. Instead, <strong>the price depends on the amount of code</strong> where you want to use PostSharp.&nbsp;</p>
+<p>So, if you liked PostSharp Community and now want to apply premium to more than 1,000 lines of code, you can now purchase a license by increments of 1,000 lines of code. Compare this to having to buy a license upfront for each team member.&nbsp;</p>
+<p>Also, this <strong>license is transferable</strong>, so if you&rsquo;re a consultancy doing custom software, you can transfer the license to your customer along with the source code.&nbsp;</p>
+<p>For details about Per-Repo Subscriptions, see <a href="https://www.postsharp.net/blog/post/postsharp-per-repo-subscriptions">this blog post</a>&nbsp;about why and how we're doing it.&nbsp;</p>
+<h2>Per-User Lite Subscriptions&nbsp;</h2>
+<p>For people who still want a per-user subscription but want to reduce their initial bill with PostSharp, we&rsquo;re introducing Per-User Lite subscriptions: compared to standard Per-User Subscriptions, <strong>it comes with a 30% discount, but it does not contain a perpetual license</strong>. At the end of the year, you can choose to renew your Per-User Lite subscription, switch to a perpetual license, or stop using PostSharp.&nbsp;</p>
+<h2>Community Add-Ins&nbsp;</h2>
+<p>We have released the following add-ins under the open-source MIT license. They can be used for free with PostSharp Community:&nbsp;</p>
+<ul>
+<li><a href="https://github.com/postsharp/PostSharp.Community.ToString">PostSharp.Community.ToString</a> (ported from ToString.Fody)&nbsp;</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.Packer">PostSharp.Community.Packer </a>(ported from Costura.Fody)&nbsp;</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.UnsafeMemoryChecker">PostSharp.Community.UnsafeMemoryChecker</a> (our original contribution)&nbsp;</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.DeepSerializable">PostSharp.Community.DeepSerializabl</a>e (our original contribution)&nbsp;</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.StructuralEquality">PostSharp.Community.StructuralEquality</a> (ported from StructuralEquality.Fody)&nbsp;</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.Virtuosity">PostSharp.Community.Virtuosity</a>&nbsp; (ported from Virtuosity.Fody)&nbsp;</li>
+<li><a href="https://github.com/postsharp/PostSharp.Community.HelloWorld">PostSharp.Community.HelloWorld</a> (a project template)&nbsp;</li>
+</ul>
+<h2>Summary&nbsp;</h2>
+<p>With PostSharp 6.6, we&rsquo;re introducing a new free edition called <strong>PostSharp Community</strong> with a lot of unlimited free features and the possibility to apply premium features to 1,000 lines of code per app. For those who reach that limit, we&rsquo;re introducing the <strong>Per-Repo Subscription</strong>, where the price depends on the number of lines of code that you enhance using PostSharp.&nbsp;</p>
+<p>Thanks to these new licensing options, you can jump on a<strong> 25x ROI immediately</strong>, with a minimal upfront investment, and increase your subscription size as your use of PostSharp increases.&nbsp;</p>
+<p>&nbsp;</p>
+<p>Happy PostSharping!&nbsp;</p>
+<p>-gael</p>
+<p>&nbsp;</p>
