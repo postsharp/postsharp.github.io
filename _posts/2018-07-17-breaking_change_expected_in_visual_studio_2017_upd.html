@@ -4,6 +4,7 @@ title: "Breaking change expected in Visual Studio 2017 Update 8"
 date: 2018-07-17 15:30:00 +02:00
 categories: []
 permalink: /post/breaking-change-expected-in-visual-studio-2017-update-8.html
+author: "Gael Fraiteur"
 ---
 <p>We regret to inform you that the upcoming Visual Studio 2017 Update 8 (15.8) will introduce a change that will break PostSharp NuGet packages with versions 5.0.0-5.0.52 and 6.0.0-6.0.17. The issue has been addressed in 5.0.53 and 6.0.18.&nbsp;</p>
 <p>The cause of the problem is our use of the&nbsp;<em>developmentDependency&nbsp; </em>flag in our <em>*.nuspec </em>files. Our interpretation of the documentation was apparently incorrect from the beginning but the flag was not properly implemented by Visual Studio, and therefore everything worked perfectly. Now the team at Microsoft decided to implement the flag "properly" at the cost of breaking previous packages, including PostSharp. We discovered the issue while testing the preview of VS 15.8 and <a href="https://github.com/NuGet/Home/issues/7084">reported it to Microsoft</a>&nbsp;but they decided to do the breaking change anyway.</p>

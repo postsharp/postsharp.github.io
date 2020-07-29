@@ -4,6 +4,7 @@ title: "PostSharp Principles: Day 6 Your code after PostSharp"
 date: 2011-07-04 15:08:00 +02:00
 categories: [Tutorial]
 permalink: /post/day-6-your-code-after-postsharp.html
+author: "Dustin Davis"
 ---
 <p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>  <p>Welcome to week 2 of PostSharp Principles. As we move forward we’ll continue to explore the features of PostSharp. We still have a lot to cover and just like last week, we’re going to explore two more aspects provided by PostSharp and we’ll look at what is going on under the hood as we go.</p>  <p>Before we get any deeper into PostSharp, it’s important to understand how PostSharp implements your aspects especially when multiple aspects are applied to a single target. Today we’ll have a look at how PostSharp implements OnMethodBoundaryAspect when applied to a method.</p>  <h3>Getting Started</h3>  <p>If you have not done so, you will need to <a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">download demo project source code</a> and you will also need to download and install a copy of <a href="http://wiki.sharpdevelop.net/ILSpy.ashx">ILSpy</a>. You are welcome to use Reflector as the two tools are very similar.</p>  <h3>Example</h3>  <p>Continuing with the demo project from last week, let’s look at the GetByName method in the InMemoryDataStore.cs file.</p>  <pre>public IQueryable<contact> GetByName(string value)
 {

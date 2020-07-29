@@ -4,6 +4,7 @@ title: "PostSharp internals: Handling C# 8.0 nullable reference types"
 date: 2019-12-18 14:00:00 +01:00
 categories: []
 permalink: /post/postsharp-internals-handling-csharp-8-nullable-reference-types.html
+author: "Petr Hudeček"
 ---
 <p>C# 8.0 introduces <a href="https://docs.microsoft.com/en-us/dotnet/csharp/nullable-references" target="_blank"> nullable reference types</a>. These are yet another way to specify that a given parameter, variable or return value can be null or not. But, unlike attribute libraries such as <a href="https://www.jetbrains.com/help/rider/Reference__Code_Annotation_Attributes.html" target="_blank"> JetBrains.Annotations</a>, <a href="https://github.com/Microsoft/CodeContracts" target="_blank">Microsoft Code Contracts</a> or <a href="https://doc.postsharp.net/contracts" target="_blank">PostSharp Contracts</a>, nullable reference types have built-in compiler support and so we can hope for a much wider adoption.</p>
 <p>In PostSharp 6.4, we added full support for C# 8.0 and that includes nullable reference types. In this article, I discuss what we needed to do to implement this feature.</p>

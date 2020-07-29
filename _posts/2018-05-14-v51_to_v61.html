@@ -4,6 +4,7 @@ title: "PostSharp 5.1 Renumbered 6.0, Addresses Versioning Hell"
 date: 2018-05-14 15:48:00 +02:00
 categories: []
 permalink: /post/v51-to-v61.html
+author: "Gael Fraiteur"
 ---
 <p>As the next version of PostSharp is getting closer to RC, we took the decision to change the version number from 5.1 to 6.0. This decision is purely technical and has no financial impact on customers since our licensing is not bound to the version number.</p>
 <p>PostSharp respects semantic versioning, which means that we promise not to do breaking changes within the same major version. Since we had to introduce breaking changes, we had to increase the major version too. This seems fair, since PostSharp 6.0 is the biggest refactoring of our compiler internals in 8 years because we now run natively on .NET Core (PostSharp is now essentially a .NET Standard component). The good news are that there are almost breaking change at source code level, so, most probably, all you have to do is to update your packages.</p>

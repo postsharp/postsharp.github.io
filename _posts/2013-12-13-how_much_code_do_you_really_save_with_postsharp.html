@@ -4,6 +4,7 @@ title: "How much code do you REALLY save with PostSharp?"
 date: 2013-12-13 09:57:00 +01:00
 categories: []
 permalink: /post/how-much-code-do-you-really-save-with-postsharp.html
+author: "Gael Fraiteur"
 ---
 <p>Many people wonder how many lines of code they really save thanks to PostSharp beyond the buzz and marketing promises. Thanks to data collected through our CEIP program, we are able to shed some light on this question.</p>  <p>When you opt-in for CEIP, we collect a few anonymous metrics for all projects you build. Two of these metrics are interesting here: the number of lines of code (we just count instructions, not declarations like fields, properties, type headers or method headers), and the number of aspect instances in your code.</p>  <p>We feed this data into a database that already has a few GBs. Let’s use <a href="http://www.rstudio.com/" target="_blank">R</a> to analyze it.</p>  <p>First, we load the data. We filter out demo or test projects with fewer than 100 lines.</p>  <pre>library(RODBC)
 db &lt;- odbcConnect(&quot;Feedback&quot;)
