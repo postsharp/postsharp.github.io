@@ -94,7 +94,7 @@ public class TransactionAuditAttribute : OnMethodBoundaryAspect
 </pre>
 <p>Note that CompileTimeInitialize is being used to get the method name and parameter names at compile time, to minimize the amount of reflection being used at runtime, and CompileTimeValidate is being used to make sure that there is an &lsquo;amount' parameter to look at.  If there isn't, it will generate a compiler warning (you could certainly change this to be an error if you wanted to prevent compilation entirely).</p>
 <p>With that aspect in place, and a suitable place to store the auditing data (you could use a database or a logging framework--in this example I'm just using an in-memory collection), your application will start collecting data for the CFO's investigation in an unobtrusive way.</p>
-<p><img src="/assets/2011-03-03-5_ways_that_postsharp_can_solidify_your_code_loggi/post3_picture1.png" alt="Screenshot of an audit trail" /></p>
+<p><img src="{{site.baseurl}}/assets/images/blog/2011-03-03-5_ways_that_postsharp_can_solidify_your_code_loggi/post3_picture1.png" alt="Screenshot of an audit trail" /></p>
 <p>While that investigation is going, you suspect that there other problems with this system: it might not be the most robust of user interfaces, and after talking to the users, you learn that it tends to crash a lot.  You could put try/catch blocks in every single UI method to see why it's crashing (this could be quite a lot in a large app).  Or, you could just write a single aspect to handle the try/catch logging and recovery.  Here's a very simple example:</p>
 <pre>[Serializable]
 public class ExceptionLoggerAttribute : OnExceptionAspect
@@ -129,7 +129,7 @@ public class ExceptionLoggerAttribute : OnExceptionAspect
 }
 </pre>
 <p>Once again, I'm using CompileTimeInitialize to cut down on the slow runtime Reflection.  To use that aspect, I could decorate every method in the UI with it like so:</p>
-<p><img src="/assets/2011-03-03-5_ways_that_postsharp_can_solidify_your_code_loggi/post3_picture2.png" alt="Attributes applied to methods in a repetitive way" /></p>
+<p><img src="{{site.baseurl}}/assets/images/blog/2011-03-03-5_ways_that_postsharp_can_solidify_your_code_loggi/post3_picture2.png" alt="Attributes applied to methods in a repetitive way" /></p>
 <p>This isn't the worst approach--the exception handling/logging is still separated into its own class, but it's still repetitive and inflexible.  Instead, let's just multi-cast out to all the methods like so:</p>
 <pre>// in AssemblyInfo.cs
 [assembly: ExceptionLogger(AttributeTargetTypes = "LoggingAuditing.BankAccountManager")]

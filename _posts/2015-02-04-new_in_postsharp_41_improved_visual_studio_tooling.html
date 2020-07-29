@@ -21,15 +21,15 @@ author: "Gael Fraiteur"
 <p>Thanks to this redesign, we can now rely on powerful and well-designed APIes to understand your code, and as a result we can provide a more useful integration with the source editor.</p>
 <h2>Light bulb</h2>
 <p>The first thing you will notice is that PostSharp now makes use of the light bulb instead of the smart tag to provide refactoring actions. The light bulb UI is neater and more consistent than the smart tag one, and it includes the ability to display a preview.</p>
-<p><img style="border: solid 1px grey;" src="/assets/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/lightbulb.png" alt="" /></p>
+<p><img style="border: solid 1px grey;" src="{{site.baseurl}}/assets/images/blog/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/lightbulb.png" alt="" /></p>
 <p>Unlike the ones that are built in Visual Studio, PostSharp light bulb actions may open a dialog box if user interaction is required. For instance, if you choose <em>Apply threading model</em>, you will be asked to choose from the list of available threading models:</p>
-<p>&nbsp;<img src="/assets/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/wizard.png" alt="" /></p>
+<p>&nbsp;<img src="{{site.baseurl}}/assets/images/blog/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/wizard.png" alt="" /></p>
 <h2>Live code diagnostics</h2>
 <p>Real-time code diagnostics are useful when you are implementing an advanced pattern such as a threading model or undo/redo. We implemented live analysis of the most frequent issues. Just as with other C# errors, you will see the red squiggle and the error will appear in the Error List toolbox window.</p>
-<p>&nbsp;<img style="border: solid 1px grey;" src="/assets/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/livediagnostics.png" alt="" /></p>
+<p>&nbsp;<img style="border: solid 1px grey;" src="{{site.baseurl}}/assets/images/blog/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/livediagnostics.png" alt="" /></p>
 <h2>Coding guidance, or Cody Clippy</h2>
 <p>We took live code diagnostics to the next level. When you are in the process of implementing a pattern, for instance Immutable, we will show you the next more relevant issue to solve related to the task you are now completing, and will display links to the most relevant documentation articles.</p>
-<p>&nbsp;<img style="border: solid 1px grey;" src="/assets/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/assistant.png" alt="" /></p>
+<p>&nbsp;<img style="border: solid 1px grey;" src="{{site.baseurl}}/assets/images/blog/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/assistant.png" alt="" /></p>
 <p>PostSharp Assistant is based on analysis of your own source code in real time, so it's much more relevant than previous guidance systems.</p>
 <p>PostSharp Assistant is a non-modal tool window that you can dock where you want. Of course you can always disable the feature once you learned how to implement a pattern.</p>
 <h1>Conservative NuGet Versioning</h1>
@@ -56,7 +56,7 @@ author: "Gael Fraiteur"
 <ol><!--EndFragment--></ol>
 <h1>PostSharp Explorer</h1>
 <p>PostSharp Explorer, the Visual Studio toolbox window that shows you which aspects are in your code, is now more useful. You can orient the panel vertically and horizontally, and it has three panels instead of two for better readability.</p>
-<p><img style="border: solid 1px grey;" src="/assets/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/explorer.png" alt="" /></p>
+<p><img style="border: solid 1px grey;" src="{{site.baseurl}}/assets/images/blog/2015-02-04-new_in_postsharp_41_improved_visual_studio_tooling/explorer.png" alt="" /></p>
 <h1>Universal Apps (shared projects)</h1>
 <p>We now properly support Universal Apps, the marketing name for &ldquo;shared projects&rdquo;. When you add an aspect to a class that is shared among several projects, PostSharp will try to install itself in all projects that use the shared project. That means that you will be only offered the aspects that are eligible for <em>all</em> importing projects. If you need more fine-grained control, you can skip the UI and use directly NuGet and #<em>if</em> blocks.</p>
 <p>Note that Universal Apps support is not available in the currently public preview.</p>

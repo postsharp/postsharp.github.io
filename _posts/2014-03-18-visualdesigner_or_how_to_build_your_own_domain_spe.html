@@ -10,18 +10,18 @@ author: "Gael Fraiteur"
 <p><em>A couple of weeks ago we announced our PostSharp 3.2 makes it much easier to <a href="http://www.postsharp.net/blog/post/New-in-PostSharp-32-UndoRedo">implement undo/redo in your app</a>. We didn’t want to publish the feature before giving it a serious try, but didn’t have an internal app to dogfood. So we looked for an open-source project that would greatly benefit from the feature. We selected <a href="https://github.com/SuperJMN/VisualDesigner">VisualDesigner</a>, a framework to build graphical editors as PowerPoint, Visio or Blend. VisualDesigner is hosted on <a href="https://github.com/SuperJMN/VisualDesigner">GitHub</a> and released under the permissive MS-PL.</em></p>
 <p><em>VisualDesigner is being developed by José Manuel Nieto (@SuperJMN). José works at DocPath, building software to help customers to design and create dynamic documents. With years of experience in graphical editors, he understands that visualization and UI interaction are very important to DocPath’s product line. You can find José’s contact info on his <a href="https://github.com/SuperJMN">GitHub profile page</a>.</em></p>
 <p><em>We asked José to talk about his project.</em></p>
-<p><img style="border: 1px solid grey; margin-top: 40px; margin-left: 25px; float: right;" alt="Jose Manuel Nieto" src="/assets/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/jose1.jpg"></p>
+<p><img style="border: 1px solid grey; margin-top: 40px; margin-left: 25px; float: right;" alt="Jose Manuel Nieto" src="{{site.baseurl}}/assets/images/blog/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/jose1.jpg"></p>
 <p><strong>How did you come to the idea of creating VisualDesigner?</strong></p>
 <p>It all started as one of my many side projects. As part of my experience, I have seen that visual designers have a lot of potential. A great number of applications can benefit in a way or another from this concept. I realized that there was almost no information about how to develop a visual designer from scratch and most importantly, doing it the right way. Only a few basic samples, incomplete and not generic enough to be a solid start for others to make their own designers in a MVVM way. I took it as a challenge and felt I had enough knowledge to make something useful out of it while enjoying my passion for development.</p>
 <p><strong>Tell us more about VisualDesigner.</strong></p>
 <p>It’s a little framework that enables anybody to develop their own designer in minutes. It solves the most common scenarios in a designer and can be extended easily. It’s made specifically to apply the MVVM pattern.</p>
 <p>The project consists of several libraries and 2 demo applications. One is a WPF demo. It was the first I developed.</p>
-<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="WPF Demo App" src="/assets/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd1.png">
+<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="WPF Demo App" src="{{site.baseurl}}/assets/images/blog/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd1.png">
 <p style="text-align: center; font-size: 0.85em;"><em>Picture 1 WPF Demo application</em></p>
 </div>
 <p>As most of the code is shared through a Portable Class Library, it was very easy to create a demo application using other Windows platforms like Windows RT.</p>
 <p>The Window RT demo is a very basic comic creator. You can drop a sample character, add speech bubbles and frames. You can also modify their properties like text, fonts, colors…</p>
-<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="" src="/assets/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd2.png">
+<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="" src="{{site.baseurl}}/assets/images/blog/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd2.png">
 <p style="text-align: center; font-size: 0.85em;"><em>Picture 2 Windows Store Demo Application </em></p>
 </div>
 <p>90% of the code is shared, and it works out of the box, that it’s a very good thing.</p>
@@ -35,7 +35,7 @@ author: "Gael Fraiteur"
 <li>snapping, undo/redo.</li>
 </ul>
 <p>It supports WPF and WinRT through Portable Class Librairies.</p>
-<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="" src="/assets/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd3.png">
+<div><img style="border: 1px solid grey; margin-right: auto; margin-left: auto; display: block;" alt="" src="{{site.baseurl}}/assets/images/blog/2014-03-18-visualdesigner_or_how_to_build_your_own_domain_spe/vd3.png">
 <p style="text-align: center; font-size: 0.85em;"><em>Picture 3 Snapping to edges is a nice feature </em></p>
 </div>
 <p><strong>What were your architectural/design priorities?</strong></p>

@@ -22,7 +22,7 @@ author: "Dustin Davis"
 
 <p>Since this is a pretty basic method it will be easy to see how PostSharp applies our aspects. Build the project with no aspects applied and then open ILSpy. Once ILSpy is open, browse to the output folder for the demo project and select PostSharpDemo1.exe. Navigate down the namespace tree until you reach the GetByName method in the InMemoryDataStore class.</p>
 
-<p><a href="/assets/2011-07-04-day_6_your_code_after_postsharp/image_11.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-04-day_6_your_code_after_postsharp/image_thumb_11.png" width="628" height="359" /></a></p>
+<p><a href="{{site.baseurl}}/assets/images/blog/2011-07-04-day_6_your_code_after_postsharp/image_11.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="{{site.baseurl}}/assets/images/blog/2011-07-04-day_6_your_code_after_postsharp/image_thumb_11.png" width="628" height="359" /></a></p>
 
 <p>It looks exactly the same as our original code. Let’s apply an aspect and see what changes. </p>
 
@@ -54,7 +54,7 @@ public class DemoAspect : OnMethodBoundaryAspect
 
 <p>Apply the aspect to the GetByName method and then rebuild the project. Back in ILSpy, click refresh (you might have to navigate back to the GetByName method). What you see now is much different than before.</p>
 
-<p><a href="/assets/2011-07-04-day_6_your_code_after_postsharp/image_12.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-04-day_6_your_code_after_postsharp/image_thumb_12.png" width="628" height="488" /></a></p>
+<p><a href="{{site.baseurl}}/assets/images/blog/2011-07-04-day_6_your_code_after_postsharp/image_12.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="{{site.baseurl}}/assets/images/blog/2011-07-04-day_6_your_code_after_postsharp/image_thumb_12.png" width="628" height="488" /></a></p>
 
 <p>There is a try/catch/finally added to the method and references to InMemoryDataStore.&lt;&gt;z__Aspects.a0 throughout. Let’s start at the top.</p>
 
@@ -88,7 +88,7 @@ public class DemoAspect : OnMethodBoundaryAspect
 
 <p>Now we’re only implementing OnException and we’ve changed it to set the FlowBehavior. When an exception occurs, we don’t want to rethrow, just continue on. Rebuild the project and refresh ILSpy.</p>
 
-<p><a href="/assets/2011-07-04-day_6_your_code_after_postsharp/image_13.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/2011-07-04-day_6_your_code_after_postsharp/image_thumb_13.png" width="628" height="425" /></a></p>
+<p><a href="{{site.baseurl}}/assets/images/blog/2011-07-04-day_6_your_code_after_postsharp/image_13.png"><img style="background-image: none; border-right-width: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="image" border="0" alt="image" src="{{site.baseurl}}/assets/images/blog/2011-07-04-day_6_your_code_after_postsharp/image_thumb_13.png" width="628" height="425" /></a></p>
 
 <p>We have a try/catch now instead of a try/catch/finally, but now the catch method is much larger. So what’s going on? Starting our catch block is an instantiation of MethodExecutionArgs and then a call to InMemoryDataStore.&lt;&gt;z__Aspects.a0.OnException(methodExecutionArgs). The reason why there is now a declaration for MethodExecutionArgs is because we need to have access to the properties whereas before, we did not. </p>
 
@@ -106,4 +106,4 @@ public class DemoAspect : OnMethodBoundaryAspect
 
 <p>&#160;</p>
 
-<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/2011-07-04-day_6_your_code_after_postsharp/self573.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573" border="0" alt="self573" align="left" src="/assets/2011-07-04-day_6_your_code_after_postsharp/self573_thumb.jpg" width="66" height="66" /></a>Dustin Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="{{site.baseurl}}/assets/images/blog/2011-07-04-day_6_your_code_after_postsharp/self573.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573" border="0" alt="self573" align="left" src="{{site.baseurl}}/assets/images/blog/2011-07-04-day_6_your_code_after_postsharp/self573_thumb.jpg" width="66" height="66" /></a>Dustin Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

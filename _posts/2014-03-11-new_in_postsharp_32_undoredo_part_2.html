@@ -64,7 +64,7 @@ namespace MvvmExample.Model
 &lt;model:RedoButton HorizontalAlignment="Left" Margin="64,24,0,0" VerticalAlignment="Top"/&gt;
 </pre>
 <p>At this point, you can start the application and try to modify a data grid cell and try clicking the undo and redo buttons.</p>
-<p><img alt="" src="/assets/2014-03-11-new_in_postsharp_32_undoredo_part_2/recordable-mainwindow.png"></p>
+<p><img alt="" src="{{site.baseurl}}/assets/images/blog/2014-03-11-new_in_postsharp_32_undoredo_part_2/recordable-mainwindow.png"></p>
 <h1>Interacting with the Recorder manually</h1>
 <p>In the previous section, we just inserted the UndoButton and RedoButton controls into our XAML code. If you want more control, you can access the Recorder class directly from C# code.</p>
 <p>In this example, we are using a global <em>Recorder</em> object. You can get a reference to this instance from the <em>RecordingServices.DefaultProvider</em> class. This class provides the following members:</p>
@@ -98,7 +98,7 @@ namespace MvvmExample.Model
 <h2>Example</h2>
 <p>Let’s see how we can manually interact with the <em>Recorder </em>in practice.</p>
 <p>If you click on the arrow of the Undo button just after the application started, you will see that the operation list is already populated with nine items. These operations were created during the application initialization.</p>
-<p><img alt="" src="/assets/2014-03-11-new_in_postsharp_32_undoredo_part_2/recordable-dropdown.png"></p>
+<p><img alt="" src="{{site.baseurl}}/assets/images/blog/2014-03-11-new_in_postsharp_32_undoredo_part_2/recordable-dropdown.png"></p>
 <p>If we don’t want users to be able to undo these operations, we can clear the Recorder at initialization. Go to the ViewModelMain class and append the following instruction to the constructor:</p>
 <pre>RecordingServices.DefaultRecorder.Clear();
 </pre>

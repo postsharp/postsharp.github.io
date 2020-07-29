@@ -32,12 +32,12 @@ author: "Gael Fraiteur"
 <p>There are two locations where you can see code savings in Visual Studio: in tooltips, and in a new tool window.</p>
 <h3>Code Savings in Tooltips</h3>
 <p>The first location where you will find code saving metrics is in the PostSharp-augmented tooltip. You will find detailed information about how individual aspects and advices affect the current piece of code:</p>
-<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/tooltip2.png" alt="" /></p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="{{site.baseurl}}/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/tooltip2.png" alt="" /></p>
 <h3>Code Metrics Tool Window</h3>
 <p>Tooltips are great when you want a detailed view, but sometimes you also need to get the big picture. That&rsquo;s why we&rsquo;re also displaying project-level metrics in a separate tool window. To open it, click on PostSharp / PostSharp Metrics in the Visual Studio menu.</p>
-<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/menu2.png" alt="" /></p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="{{site.baseurl}}/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/menu2.png" alt="" /></p>
 <p>You can then see how much manual lines of code you have in each project, and how much additional code you would have to write if you didn&rsquo;t use PostSharp:</p>
-<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/toolwindow2.png" alt="" /></p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="{{site.baseurl}}/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/toolwindow2.png" alt="" /></p>
 <h3>About Lines of Code</h3>
 <p>Developers generally hate lines of code as a metric. I think there are two elements we need to address in this criticism: the <em>intended use</em> of the metric, and the <em>algorithm</em> used to compute the metric.</p>
 <p>There are many bad uses of software metrics. Comparing productivity of individual developers is one of the worse. However, lines of source code is a decent metric to estimate the size of a project. Empirical studies show, ex post, a strong correlation between the number of lines of code and the total development effort. The intended use of metrics computed by PostSharp is to let you evaluate how efficiently you&rsquo;re using aspects in your project.</p>

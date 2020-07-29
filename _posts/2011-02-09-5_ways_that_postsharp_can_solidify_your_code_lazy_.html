@@ -146,7 +146,7 @@ public override bool CompileTimeValidate(PostSharp.Reflection.LocationInfo locat
 
 <p>Go ahead and put LoadDependency on a non-interface field, compile, and this is what you'll see:</p>
 
-<p><img src="/assets/2011-02-09-5_ways_that_postsharp_can_solidify_your_code_lazy_/post1_picture1.png" alt="Visual Studio build error" /></p>
+<p><img src="{{site.baseurl}}/assets/images/blog/2011-02-09-5_ways_that_postsharp_can_solidify_your_code_lazy_/post1_picture1.png" alt="Visual Studio build error" /></p>
 
 <p>And you'd get a similar message if you forgot to put a interface<->concrete mapping in the DependencyMap class too.  This is such a great feature, because if you make a mistake, you will fail much faster in your testing, get a clear message of what exactly went wrong, and ultimately save a lot of time and frustration.  Make sure to put as much information as you can in the error message, to make the error easy to find in the code, since you won't have line numbers to fall back on.</p>
 

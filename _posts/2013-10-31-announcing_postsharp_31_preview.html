@@ -45,7 +45,7 @@ public class MyAspect : OnMethodBoundaryAspect, IOnStateMachineBoundaryAspect
 
 <p>The first time you compile a project using a specific build of PostSharp, you will be proposed to install itself into GAC and create native images.</p>
 
-<p><img alt="" src="/assets/2013-10-31-announcing_postsharp_31_preview/nativeinstall.png" /></p>
+<p><img alt="" src="{{site.baseurl}}/assets/images/blog/2013-10-31-announcing_postsharp_31_preview/nativeinstall.png" /></p>
 
 <p>Doing will decrease build time of a fraction of a second for each project. A potentially substantial gain if you have a lot of projects. You can uninstall these images at any time from PostSharp options in Visual Studio.</p>
 
@@ -59,7 +59,7 @@ public class MyAspect : OnMethodBoundaryAspect, IOnStateMachineBoundaryAspect
 
 <p>You can now double-click on an error message in Visual Studio and you’ll get to the relevant location for the error message.</p>
 
-<p><img alt="" src="/assets/2013-10-31-announcing_postsharp_31_preview/errorlocation.png" /></p>
+<p><img alt="" src="{{site.baseurl}}/assets/images/blog/2013-10-31-announcing_postsharp_31_preview/errorlocation.png" /></p>
 
 <p>I know, it seems like an obvious feature. But it was actually quite complex to implement. PostSharp works as MSIL level and the file that’s supposed to MSIL back to source – the PDB file – won’t tell you where a type, field, or abstract method is implemented. Indeed, it only contains “sequence points”, mapping instructions to lines of code. That is, only the inside of method bodies are mapped to source code.&#160; So, we had to rely on a source code parser to make the missing like ourselves.</p>
 
@@ -71,7 +71,7 @@ public class MyAspect : OnMethodBoundaryAspect, IOnStateMachineBoundaryAspect
 
 <p>We made it easier to add a policy to a whole solution. Say you want to add logging to the whole solution. Previously, you had to add the aspect to every project of the solution. Now, you can right-click on the solution and just add it to the solution.</p>
 
-<p><img alt="" src="/assets/2013-10-31-announcing_postsharp_31_preview/solutionlevelpolicy.png" /></p>
+<p><img alt="" src="{{site.baseurl}}/assets/images/blog/2013-10-31-announcing_postsharp_31_preview/solutionlevelpolicy.png" /></p>
 
 <p>This is not just a UI tweak. To make this scenario possible, we had to do significant work on our configuration subsystem:</p>
 
@@ -93,7 +93,7 @@ public class MyAspect : OnMethodBoundaryAspect, IOnStateMachineBoundaryAspect
 
 <p>PostSharp Diagnostics Pattern Library was good at adding a lot of logging, but the log quickly became unreadable because the output was not indented. We fixed that. If the logging back-end supports indentation, we’ll call its Indent or Unindent method. Otherwise, we’ll create indentation using spaces.</p>
 
-<p><img alt="" src="/assets/2013-10-31-announcing_postsharp_31_preview/indentation.png" /></p>
+<p><img alt="" src="{{site.baseurl}}/assets/images/blog/2013-10-31-announcing_postsharp_31_preview/indentation.png" /></p>
 
 <p>Our implementation is thread-safe and still does not require you to add a reference to any PostSharp library at runtime (the reference is required at build time and will be removed).</p>
 
