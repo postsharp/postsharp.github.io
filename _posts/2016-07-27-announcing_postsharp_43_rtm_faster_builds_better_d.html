@@ -8,6 +8,8 @@ permalink: /post/announcing-postsharp-43-rtm-faster-builds-better-debugging-easi
 author: "Gael Fraiteur"
 ---
 <p>Today we&rsquo;re excited to announce the release of PostSharp 4.3 RTM, available for <a href="https://www.postsharp.net/download">download</a> on Visual Studio Gallery and NuGet.&nbsp; PostSharp 4.3 addresses the most important concerns of current customers.&nbsp; It focuses on improving the current experience without adding brand new features.</p>
+<!-- readmore-->
+
 <p>In a nutshell, PostSharp 4.3 brings you:</p>
 <ul>
 <li>Improved build-time performance: up to 3x faster</li>
@@ -21,7 +23,7 @@ author: "Gael Fraiteur"
 <p>Let&rsquo;s look at these improvements one by one:</p>
 <h1>Improved build-time performance</h1>
 <p>PostSharp 4.3 is up to 3 times faster than PostSharp 4.2. The real figures will depend on the number and size of your projects, how many aspects are being used, and whether you enabled the <em>solution-wide build optimizations</em>. This option can be found under the PostSharp tab of the Solution properties in Visual Studio.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2016-07-27-announcing_postsharp_43_rtm_faster_builds_better_d/solutionwidebuild.png" alt="" /></p>
+<p><img src="/assets/images/blog/2016-07-27-announcing_postsharp_43_rtm_faster_builds_better_d/solutionwidebuild.png" alt=""></p>
 <p>What is does is to try to build the whole solution in a single AppDomain (or as few as possible) so the overhead per project is much smaller.</p>
 <h1>Improved debugging experience</h1>
 <p>Debugging an application enhanced with aspects is now even easier thanks to the following improvements:</p>

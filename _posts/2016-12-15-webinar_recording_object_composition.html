@@ -8,6 +8,8 @@ permalink: /post/webinar-recording-object-composition.html
 author: "Iveta Moldavcuk"
 ---
 <p>Modern business applications rely heavily on rich domain classes, which in turn rely heavily on polymorphic execution, code reuse and similar concepts.</p>
+<!-- readmore-->
+
 <p>How can we extend rich domain classes to support complex requirements?</p>
 <p>In this webinar, Zoran Horvat will show why an object composition approach is favored over class inheritance when it comes to code reuse and polymorphism.</p>
 <p>Watch the webinar to learn:</p>
@@ -160,7 +162,7 @@ author: "Iveta Moldavcuk"
 <p>A: Visitor can be injected using common DI techniques. It boils down to selecting a concrete visitor, which is exactly what DI frameworks are good at. There are subtle issues here, though, but they are not hard to resolve. For example, I have requested target objects in all visitor constructors. That would have to be redesigned to fit DI, but as I said, it&rsquo;s not too hard.</p>
 <p>Composition does not fit the DI pattern since there is no object that implements certain type. It is rather an object which is constructed in certain way. We could argue that composite objects are closer to the Builder pattern which codifies the process of building a complex object. In that respect, IoC container (which implements DI) would rather resemble Abstract Factory, which is of lower complexity level compared to the Builder.</p>
 <p><strong>Q: How do you persist encapsulated domain entities to database without breaking encapsulation?</strong></p>
-<p>A: The persistence problem is not related to application of Visitor pattern, or object composition, as it exists in class hierarchies as well.<br />There are two levels at which we can attack it. One is to use ORM which can access private data members of a class. Entity Framework and Hibernate can both access private members. You can use that approach to some extent.</p>
+<p>A: The persistence problem is not related to application of Visitor pattern, or object composition, as it exists in class hierarchies as well.<br>There are two levels at which we can attack it. One is to use ORM which can access private data members of a class. Entity Framework and Hibernate can both access private members. You can use that approach to some extent.</p>
 <p>In really complex domains differences between OO model and relational model are significant. When you see that persistence is affecting domain model in adverse ways, it is probably time to separate domain model from persistence model. You can then apply a mapping framework to convert proper OO model into flat persistence model and vice versa.</p>
 <p><strong>Q: Can we call this pattern in borderlines of SOLID principles?</strong></p>
 <p>A: Depending on application, Visitor pattern may be seen as enforcement to SOLID principles, or as an adversary. Here are some guidelines on that:</p>
@@ -175,7 +177,7 @@ author: "Iveta Moldavcuk"
 <p>From run time performance point of view, there is only a negligent penalty. Where one virtual method used to be called, now we will have two virtual methods called. That does not give sufficient motivation to consider performance loss due to application of the Visitor pattern.</p>
 <div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
 <h3 style="text-align: center; margin-bottom: 10px;">About the speaker, Zoran Horvat</h3>
-<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="{{site.baseurl}}/assets/images/blog/2016-12-15-webinar_recording_object_composition/zoranhorvat.jpg" alt="Matt Warren" />
+<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2016-12-15-webinar_recording_object_composition/zoranhorvat.jpg" alt="Matt Warren">
 <p style="margin-bottom: 10px;">After fifteen years in development and after leading a dozen of development teams, Zoran has turned to training, publishing and recording video courses for Pluralsight, eager to share practical experience with fellow programmers. Zoran is currently working as CEO and principal consultant at Coding Helmet Consultancy, a startup he has established to streamline in-house training and production of video courses. <a href="http://codinghelmet.com/">Zoran's blog</a>.</p>
 </div>
 </div>

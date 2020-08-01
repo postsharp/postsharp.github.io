@@ -8,6 +8,8 @@ permalink: /post/new-in-postsharp-40-oninstanceconstructedadvice.html
 author: "Gael Fraiteur"
 ---
 <p>As we&rsquo;re progressing in the RC cycle of PostSharp 4.0, I would like to shed some light on a feature that has been often requested in the past, and is finally available in PostSharp 4.0: <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_oninstanceconstructedadvice">OnInstanceConstructedAdvice</a>.</p>
+<!-- readmore-->
+
 <p>The objective of this advice is to provide a way for the aspect to execute code when instances of the target class are &ldquo;fully constructed&rdquo;. What does that mean to be &ldquo;fully constructed&rdquo;? In short, it means that all instance constructors in the chain have been invoked. Note that it is <em>not</em> the same as having an <em>OnSuccess</em> advice on the public constructor: such advice would be executed even if the current constructor is not the last in the chain.</p>
 <h2>Example</h2>
 <p>Let&rsquo;s see this on a simple example.Here&rsquo;s an aspect that has both kinds of advices:</p>
@@ -38,11 +40,11 @@ class MyAspect : InstanceLevelAspect
 class Foo
 {
     public Foo()
-    {<br />       Console.WriteLine("Foo()");
+    {<br>       Console.WriteLine("Foo()");
     }
 
     public Foo(int foo) : this()
-    {<br />        Console.WriteLine("Foo(int)");
+    {<br>        Console.WriteLine("Foo(int)");
     }
 }
 
@@ -68,11 +70,11 @@ OnInstanceConstructed(ConsoleApplication7.Foo)
 class Bar : Foo
 {
     public Bar() 
-    {<br />       Console.WriteLine("Bar()");
+    {<br>       Console.WriteLine("Bar()");
     }
 
     public Bar(int bar) : this()
-    {   <br />        Console.WriteLine("Bar(int)");
+    {   <br>        Console.WriteLine("Bar(int)");
     }
 }
 
@@ -90,7 +92,7 @@ OnSuccess(ConsoleApplication7.Foo)
 Bar()
 OnSuccess(ConsoleApplication7.Bar)
 Bar(int)
-OnSuccess(ConsoleApplication7.Bar)<br />OnInstanceConstructed(ConsoleApplication7.Foo)
+OnSuccess(ConsoleApplication7.Bar)<br>OnInstanceConstructed(ConsoleApplication7.Foo)
 OnInstanceConstructed(ConsoleApplication7.Bar)
 
 </pre>

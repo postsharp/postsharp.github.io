@@ -8,6 +8,8 @@ permalink: /post/announcing-postsharp-42-rtm.html
 author: "Gael Fraiteur"
 ---
 <p>Today we’re excited to announce the release of PostSharp 4.2, available for download on NuGet and <a href="https://visualstudiogallery.msdn.microsoft.com/a058d5d3-e654-43f8-a308-c3bdfdd0be4a"> Visual Studio Gallery </a> .</p>
+<!-- readmore-->
+
 <p>This release comes more than 10 months after PostSharp 4.1, and during most of this time the team was focused on a single objective: to improve the quality, performance and usability of existing features. The result: thread-safe design patterns, NotifyPropertyChanged and VB support are now way better than before. PostSharp 4.2 also includes brand new features like code metrics and experimental support for ASP.NET v5.</p>
 <h2>Threading Models Made Usable</h2>
 <p>When we announced PostSharp 4.0 in October 2014, we were truly excited to bring a huge innovation to the .NET community and even to the OOP world. This innovation was the ability to write thread-safe code in a mainstream object-oriented language thanks to compiler-supported design patterns. It was not the first time that design patterns were used to achieve thread safety, but this time design patterns were not mere implementation guidelines that developers would benevolently follow: thanks to PostSharp 4.0, patterns are enforced and implemented by the compiler based on declarative indications given by the developer as custom attributes. PostSharp 4.0 gave design patterns a new dimension: the ability to be automatically implemented or verified by the machine, not only saving costly development time, but also avoiding defects.</p>
@@ -72,7 +74,7 @@ author: "Gael Fraiteur"
 <h2>Code Saving Metrics</h2>
 <p>First we believed it would be a non-feature for developers and we did it for, hum, sales and marketing purposes. But the feedback we got is overwhelmingly positive.</p>
 <p>Briefly said, PostSharp Tools for Visual Studio now tell you how many lines of hand-written code you have, and many lines of code you saved thanks to PostSharp. To see the metrics, build your project and go to the <em> PostSharp </em> / <em> PostSharp Metrics menu </em> item.</p>
-<p><img alt="" src="{{site.baseurl}}/assets/images/blog/2015-12-09-announcing_postsharp_42_rtm/metrics.png"></p>
+<p><img alt="" src="/assets/images/blog/2015-12-09-announcing_postsharp_42_rtm/metrics.png"></p>
 <p>You can customize the amount of code considered save whenever one of your custom aspects is applied to a target declaration. For details, see <a href="http://doc.postsharp.net/estimating-code-saving"> Estimating Code Savings </a> .</p>
 <h2>Experimental Support for ASP.NET v5</h2>
 <p>Even if ASP.NET v5 is still preview, we are already providing some experimental support for it. Given the high fragility of ASP.NET v5 public APIs, we are shipping the ASP.NET v5 connector in a separate open-source project named <a href="https://github.com/postsharp/PostSharp.Dnx"> PostSharp.Dnx, </a> hosted on GitHub. Please look at the <a href="https://github.com/postsharp/PostSharp.Dnx"> project home page </a> for instructions.</p>

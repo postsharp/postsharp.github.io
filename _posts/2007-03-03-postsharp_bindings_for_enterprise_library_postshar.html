@@ -7,9 +7,11 @@ categories: [General]
 permalink: /post/postsharp-bindings-for-enterprise-library-postsharp4entlib.html
 author: "Gael Fraiteur"
 ---
-<span style="font-size:130%;"><span style="font-weight: bold;">About Enterprise Library</span></span>
+<p>
 
-With the new release of the Enterprise Library of Microsoft patterns & practices team, it seems like AOP makes a great and sudden come back in the .NET community. The latest release comes indeed with the <a href="http://blogs.msdn.com/tomholl/archive/2007/02/28/just-released-enterprise-library-3-0-february-2007-ctp.aspx">Policy Injection Application Block</a>, which is a kind of AOP framework that allows to "inject" the other Enterprise Library application blocks (logging, exception handling, ...) into user code, and using a configuration file.
+With the new release of the Enterprise Library of Microsoft patterns & practices team, it seems like AOP makes a great and sudden come back in the .NET community. The latest release comes indeed with the </p>
+<!-- readmore-->
+<a href="http://blogs.msdn.com/tomholl/archive/2007/02/28/just-released-enterprise-library-3-0-february-2007-ctp.aspx">Policy Injection Application Block</a>, which is a kind of AOP framework that allows to "inject" the other Enterprise Library application blocks (logging, exception handling, ...) into user code, and using a configuration file.
 
 The implementation use remoting proxies to intercept method calls and inject policies, which has the major drawbacks to:
 <ul><li>Be limited to methods derived from MarshalByRefObject or exposing their semantics on an interface.</li><li>Require instances to be created through a factory.
@@ -61,7 +63,7 @@ Like the InjectPolicy attribute, this one can be applied to methods, either dire
 <span style="font-size:85%;"><span style="font-family:courier new;">[assembly: Interceptable("Exception Handling", AttributeTargetTypes="MyProject.BusinessLayer.*")]
 
 </span></span>The benefit is of course that <span style="font-weight: bold;">policies can be injected on unchanged existing code</span>:
-<ul><li>no need for factories,</li><li>not limited to MarshalByRefObject,</li><li>works also with static methods.</li></ul><span style="font-weight: bold;font-size:130%;" >How does it work?</span>
+<ul><li>no need for factories,</li><li>not limited to MarshalByRefObject,</li><li>works also with static methods.</li></ul><span style="font-weight: bold;font-size:130%;">How does it work?</span>
 
 As I said in the beginning, PostSharp achieves this result by modifying the assembly after compilation. The best way to see how the code is modified is to use look at the modified code using Roeder's Reflector.
 
@@ -101,4 +103,4 @@ Before I get the CodePlex space, you can access the project from the <a href="ht
 Many thanks to Olaf Conijn for its online support.
 
 
-<span style="font-weight: bold;"></span>
+<span style="font-weight: bold;"></span><span style="font-weight: bold;">About Enterprise Library</span>

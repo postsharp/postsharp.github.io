@@ -8,6 +8,8 @@ permalink: /post/microsoft-application-insights-adding-custom-metrics-without-mo
 author: "Gael Fraiteur"
 ---
 <p>Microsoft is rarely the first to jump on a train, but when they do jump, they make sure it is very simple for everybody to get on their wagon. And they did it again with <a href="http://blogs.msdn.com/b/visualstudioalm/archive/2013/11/13/announcing-application-insights-preview.aspx" target="_blank">Application Insights</a>, a feature of Visual Studio Online that monitors the performance of web sites, web services, and mobile apps.&nbsp; They are perhaps not as feature-complete as early players (special thoughts to our friends and partners at <a href="http://www.gibraltarsoftware.com/loupe/intro" target="_blank">Gibraltar Software</a>), but their simplicity is stunning.</p>
+<!-- readmore-->
+
 <h2>Adding Application Insights to Your App</h2>
 <p>Judge by yourself. You need just two simple steps to add monitoring to your app:</p>
 <ol>
@@ -26,7 +28,7 @@ author: "Gael Fraiteur"
 </ol>
 <p>You&rsquo;re done.</p>
 <p>Run your application and cause the instrumented to execute. Then go back to Visual Studio, and click on menu Tools / Open Application Insights Portal. You&rsquo;ll see custom timed events triggered by the execution of the method.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-04-24-microsoft_application_insights_adding_custom_metri/applicationinsights2.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-04-24-microsoft_application_insights_adding_custom_metri/applicationinsights2.png" alt=""></p>
 <h2>A Closer Look At the Aspect</h2>
 <p>Let&rsquo;s now have a look at the <strong>ApplicationInsightsTimedEventAttribute</strong> class itself.</p>
 <pre>[PSerializable] // Use [Serializable] with the free PostSharp Express.
@@ -118,7 +120,7 @@ public class ApplicationInsightsTimedEventAttribute : OnMethodBoundaryAspect
 <p>So far, I&rsquo;ve shown how to add timed events to Application Insights using a very simple custom aspect.</p>
 <p>You may want more features for real production-ready logging. For instance, it is important to be able to enable or disable logging dynamically or through a configuration file. Otherwise, the log would just be too huge, so you may want to prepare logging to your complete codebase but disable it by default. Would a problem occur in your app, the operation team would just update the configuration file and enable tracing for a specific class or namespace.</p>
 <p>PostSharp has a solution for this: the <a href="http://doc.postsharp.net/##diagnostics-library" target="_blank">Diagnostics Pattern Library</a>. It includes a production-ready logging aspect. The bad news is that Application Insights is not directly supported as a back-end. The good news is that we can emit data to NLog, Log4Net or TraceListener, and Application Insights is able to read from all of these frameworks. So, the gap is easily bridged.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-04-24-microsoft_application_insights_adding_custom_metri/detailedtracing3.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-04-24-microsoft_application_insights_adding_custom_metri/detailedtracing3.png" alt=""></p>
 <p>&nbsp;</p>
 <h2>Feature Tracking</h2>
 <p>Nobody said that the concept of &ldquo;event&rdquo; must just map to the concept of &ldquo;logging&rdquo;. You can use events to model feature tracking too. You could build your own aspect, starting from the code aspect, to implement your own definition of feature tracking and encapsulate it as a custom attribute.</p>

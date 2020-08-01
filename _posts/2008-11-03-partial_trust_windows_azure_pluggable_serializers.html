@@ -7,7 +7,9 @@ categories: [General]
 permalink: /post/partial-trust-windows-azure-pluggable-serializers.html
 author: "Gael Fraiteur"
 ---
-<p>Would I be a perfect .NET developer if I did not blog about Windows Azure? I let the response to your own judgment, but even if you don't agree on that statement read on.</p>  <p>If you try to deploy a PostSharp-enabled assembly into the Development Fabric, you will probably get the following exception:</p>  <pre class="csharpcode"><span class="rem">[SecurityException: Request for the permission of type 'System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089' failed.]</span>
+<p>Would I be a perfect .NET developer if I did not blog about Windows Azure? I let the response to your own judgment, but even if you don't agree on that statement read on.</p>
+<!-- readmore-->
+  <p>If you try to deploy a PostSharp-enabled assembly into the Development Fabric, you will probably get the following exception:</p>  <pre class="csharpcode"><span class="rem">[SecurityException: Request for the permission of type 'System.Security.Permissions.SecurityPermission, mscorlib, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089' failed.]</span>
 <span class="rem">   System.Runtime.Serialization.Formatters.Binary.ObjectReader.CheckSecurity(ParseRecord pr) +10107255</span>
 <span class="rem">   System.Runtime.Serialization.Formatters.Binary.ObjectReader.ParseArray(ParseRecord pr) +155</span>
 <span class="rem">   System.Runtime.Serialization.Formatters.Binary.ObjectReader.ParseObject(ParseRecord pr) +151</span>
@@ -41,7 +43,7 @@ author: "Gael Fraiteur"
 <div>
   <pre class="csharpcode">[LaosSerializer(<span class="kwrd">typeof</span>(XmlLaosSerializer))]
 <span class="kwrd">public</span> <span class="kwrd">class</span> SomeAspect : OnMethodBoundaryAspect
-{ <br />  [XmlElement] <span class="kwrd">public</span> <span class="kwrd">string</span> Name;<br />
+{ <br>  [XmlElement] <span class="kwrd">public</span> <span class="kwrd">string</span> Name;<br>
   <span class="kwrd">public</span> <span class="kwrd">override</span> <span class="kwrd">void</span> OnEntry(MethodExecutionEventArgs eventArgs)
   {
       

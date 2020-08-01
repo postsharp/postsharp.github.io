@@ -7,7 +7,9 @@ categories: [Tutorial]
 permalink: /post/day-3-applying-aspects-with-multicasting-part-2.html
 author: "Dustin Davis"
 ---
-<p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>  <p>Yesterday we started looking at multicasting. Today we’ll go even further with assembly level declarations and how to prevent aspects from being applied.</p>  <h3>Assembly Level Declaration</h3>  <p>At the highest level we have assembly declarations. This is a powerful feature that allows us to achieve many tasks. Before we explore the details, let’s see it in action. Remove any aspect declarations you have currently. </p>  <p>Note: Depending on your own tastes, you can apply this assembly declaration in any file. Commonly, these are put in the AssemblyInfo.cs file, but they can go anywhere. I recommend putting them in relevant class files to keep the visibility or creating an AspectInfo.cs file to keep them in. Putting them in the AssemblyInfo.cs could be a problem since it's a rarely used file.</p>  <pre>[assembly: PostSharpDemo1.MethodTraceAspect()]
+<p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>
+<!-- readmore-->
+  <p>Yesterday we started looking at multicasting. Today we’ll go even further with assembly level declarations and how to prevent aspects from being applied.</p>  <h3>Assembly Level Declaration</h3>  <p>At the highest level we have assembly declarations. This is a powerful feature that allows us to achieve many tasks. Before we explore the details, let’s see it in action. Remove any aspect declarations you have currently. </p>  <p>Note: Depending on your own tastes, you can apply this assembly declaration in any file. Commonly, these are put in the AssemblyInfo.cs file, but they can go anywhere. I recommend putting them in relevant class files to keep the visibility or creating an AspectInfo.cs file to keep them in. Putting them in the AssemblyInfo.cs could be a problem since it's a rarely used file.</p>  <pre>[assembly: PostSharpDemo1.MethodTraceAspect()]
 namespace PostSharpDemo1
 {
     …
@@ -52,7 +54,7 @@ public class MethodTraceAspect: OnMethodBoundaryAspect
 public IQueryable<contact> GetByName(string value)
 {
     …
-}</pre>
+}</contact></pre>
 
 <p>We're telling PostSharp to apply the MethodTraceAspect first and then apply the DatabaseExceptionWrapper second. I used 10 and 20 because it gives better flexibility when you need to apply more aspects. You won’t have to adjust the priority values for each aspect this way. Feel free to use your own system.</p>
 
@@ -71,7 +73,7 @@ public IQueryable<contact> GetByName(string value)
 
 <p><b>Wildcards</b> 
 
-  <br />We can also declare wildcards. Specifying an asterisk on part of a namespace will apply the aspect to all types under that namespace and all types in sub namespaces.</p>
+  <br>We can also declare wildcards. Specifying an asterisk on part of a namespace will apply the aspect to all types under that namespace and all types in sub namespaces.</p>
 
 <pre>[assembly: PostSharpDemo1.MethodTraceAspect(
                        AttributeTargetTypes = &quot;PostSharpDemo1.Data.*&quot;)]</pre>
@@ -80,7 +82,7 @@ public IQueryable<contact> GetByName(string value)
 
 <p><b>Regular Expressions</b> 
 
-  <br />PostSharp also lets us use regular expressions to declare target types.</p>
+  <br>PostSharp also lets us use regular expressions to declare target types.</p>
 
 <pre>[assembly: PostSharpDemo1 MethodTraceAspect(AttributeTargetTypes = &quot; regex:.*Memory.*&quot;)]</pre>
 
@@ -88,7 +90,7 @@ public IQueryable<contact> GetByName(string value)
 
 <p><b>By name</b> 
 
-  <br />Last but not least, we can specify the exact name of the target. In this case we can declare</p>
+  <br>Last but not least, we can specify the exact name of the target. In this case we can declare</p>
 
 <pre>[assembly: PostSharpDemo1.MethodTraceAspect(AttributePriority = 10
                             AttributeTargetMembers=&quot;GetByName&quot;)]
@@ -113,4 +115,4 @@ public IQueryable<contact> GetByName(string value)
 
 <p>&#160;</p>
 
-<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self[5][7]" border="0" alt="self[5][7]" align="left" src="{{site.baseurl}}/assets/images/blog/2011-06-29-day_3_applying_aspects_with_multicasting_part_2/self[5][7]_1.jpg" width="66" height="66" />Dustin is an enterprise solutions developer and regularly speaks at user groups and code camp. He can be followed on twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self[5][7]" border="0" alt="self[5][7]" align="left" src="/assets/images/blog/2011-06-29-day_3_applying_aspects_with_multicasting_part_2/self[5][7]_1.jpg" width="66" height="66">Dustin is an enterprise solutions developer and regularly speaks at user groups and code camp. He can be followed on twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

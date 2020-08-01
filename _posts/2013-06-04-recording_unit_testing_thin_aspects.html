@@ -8,6 +8,8 @@ permalink: /post/recording-unit-testing-thin-aspects.html
 author: "Britt King"
 ---
 <p>The benefits of unit testing are numerous. When aspects are involved, Matt Groves believes keeping them "thin" is key to keeping your code easy to unit test and he explores some of the implications of unit testing when a post-compiler tool is involved.</p>
+<!-- readmore-->
+
 <p>Gael Fraiteur joins this final episode in the AOP in .NET series to give his differing opinion about the relevancy of "thin" aspects and speaks about a set of practices that can be used to create efficient tests of aspects.</p>
 <p><iframe src="https://player.vimeo.com/video/67455844?title=0&amp;byline=0&amp;portrait=0&amp;loop=1" frameborder="0" width="640" height="460"></iframe></p>
 <h2>Q&amp;A</h2>
@@ -27,13 +29,13 @@ author: "Britt King"
 <p><strong>Q: Gael, you mentioned in your presentation that you can&rsquo;t unit test build-time logic because PostSharp performs code weaving at compile-time. For a consumer of a class or a framework, why would I be concerned on how the deliverables are made instead of how they are used?</strong></p>
 <p><strong>A:</strong> It depends on who the consumer is. In large teams, you&rsquo;re delivering aspects to the rest of the team and not the end customer. With some of our largest customers 10% of the team build aspects and the other 90% consume the aspects. In those cases, if you want your team to be more productive then you need to check that the aspect has correct build-time behavior. Then the problem is: how to test validation.</p>
 <p>If however your aspect never emits build-time errors, then run-time testing may be sufficient.</p>
-<p><strong>Q: Couldn't you unit test the aspects advice the way Matthew suggests, and then integration test the combination and ordering of method calls of the aspects the way Gael suggests? Do these techniques really need to be mutually exclusive?<br /></strong></p>
+<p><strong>Q: Couldn't you unit test the aspects advice the way Matthew suggests, and then integration test the combination and ordering of method calls of the aspects the way Gael suggests? Do these techniques really need to be mutually exclusive?<br></strong></p>
 <p>A: Gael &ndash; it depends on what your objective is. If your objective is to decouple the framework from the aspect, then Matt&rsquo;s approach may be useful. However, if the objective is to do good testing in as little time as possible then why would I add complexity and decouple the framework from the aspect? I don&rsquo;t see the benefit in terms of architecture and time-savings.</p>
 <p>Matt &ndash; Gael and the PostSharp team take a different approach than I would because they&rsquo;re writing aspects for the general public to consume and not just my team.</p>
 <p><strong>Q: In the case of injected concerns/dependencies for aspects, would you use a fake resolver?</strong></p>
 <p><strong>A:</strong> Matt &ndash; in my case the aspect was thin enough so I didn&rsquo;t have to use a fake resolver. What I did instead was to pass-in mock objects directly, injecting them myself.</p>
 <p>Gael &ndash; you should have your resolver work differently, depending on the context. In production, you would involve your real resolver and in testing you would add rules. and according to the context to which the aspect is being applied, it would return a different implementation of the service. these are all options to consider.</p>
-<p><strong>Q: Have any of you used something like nCrunch with PostSharp?<br />A:</strong> Matt &ndash; I&rsquo;ve used nCrunch before, it&rsquo;s a great test runner tool, and haven&rsquo;t had any problems with using it and PostSharp together. However it&rsquo;s been a while since I last used it.</p>
+<p><strong>Q: Have any of you used something like nCrunch with PostSharp?<br>A:</strong> Matt &ndash; I&rsquo;ve used nCrunch before, it&rsquo;s a great test runner tool, and haven&rsquo;t had any problems with using it and PostSharp together. However it&rsquo;s been a while since I last used it.</p>
 <p>Many thanks to Matthew Groves for the wonderful 5-part series. We wish him much success with his new book, <a href="http://www.manning.com/groves/">Aspect-Oriented Programming in .NET</a>, out this month. You can see Matt speak and catch up with him in person this summer at <a href="http://www.postsharp.net/community">Louisville .NET Meetup Group and CodeStock</a>.</p>
 <p><a href="https://twitter.com/apapadimoulis">Alex Papadimoulis</a> of <a href="http://thedailywtf.com/">The Daily WTF</a> fame will join us on June 27th for the next PostSharp Live Webinar to talk about NuGet, deployment management issues, and private repositories as a possible solution.</p>
 <p>More on that coming very soon.</p>

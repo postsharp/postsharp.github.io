@@ -8,19 +8,21 @@ permalink: /post/new-in-postsharp-21-nuget-package.html
 author: ""
 ---
 <p>Now that PostSharp 2.1 CTP 2 is out of the door, I&rsquo;ll write more about individual new features. Let&rsquo;s start with something easy: the <a href="http://www.nuget.org/List/Packages/PostSharp" target="_blank">NuGet package</a>.</p>
+<!-- readmore-->
+
 <p>The PostSharp nuget contains everything you need to add aspects to an application. So not only does it contain the run-time library PostSharp.dll, but all the stuff you need to build the project, including the Visual Studio Extension.</p>
 <h2>Adding PostSharp to your application</h2>
 <p>It has never been easier to add aspects to your code:</p>
 <p><strong>1.</strong> Open the <em>Add Library Package Reference</em> dialog normally and search for a package named <em>PostSharp</em>. You may have to scroll down a bit because we just uploaded the package.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2011-05-31-new_in_postsharp_21_nuget_package/nuget-1b.png" alt="" /></p>
+<p><img src="/assets/images/blog/2011-05-31-new_in_postsharp_21_nuget_package/nuget-1b.png" alt=""></p>
 <p>&nbsp;</p>
 <p><strong>2.</strong> Click on <em>Install</em> :), accept license terms.</p>
 <p><strong>3.</strong> A few seconds after the installation completes, and only the first time you add PostSharp on your machine, PostSharp will ask you if you want to install the Visual Studio Extension (VSX). The VSX is an important help, so we highly recommend you to install it.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2011-05-31-new_in_postsharp_21_nuget_package/nuget-2.png" alt="" /></p>
+<p><img src="/assets/images/blog/2011-05-31-new_in_postsharp_21_nuget_package/nuget-2.png" alt=""></p>
 <p>&nbsp;</p>
 <p><strong>4.</strong> After the VSX has been installed, restart Visual Studio (again, you should do that only once per machine).</p>
 <p>You can see a new page in the project properties. It means PostSharp is enabled for this project.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2011-05-31-new_in_postsharp_21_nuget_package/nuget-3.png" alt="" /></p>
+<p><img src="/assets/images/blog/2011-05-31-new_in_postsharp_21_nuget_package/nuget-3.png" alt=""></p>
 <h2>Features</h2>
 <p>A lot of smart things actually happen behind this apparent simplicity. The installation process will:</p>
 <ul>

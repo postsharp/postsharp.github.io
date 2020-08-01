@@ -7,9 +7,10 @@ categories: [General]
 permalink: /post/introducing-postsharp-2-0-5-build-performance-and-packaging.html
 author: "Gael Fraiteur"
 ---
-
 <p>Let me finally discuss some changes in product packaging; they will are 
 important for performance and reliability.</p>
+<!-- readmore-->
+
 <h2>Understanding the Build Performance Issue</h2>
 <p>Many people complained about PostSharp performance and wondered if the new 
 release would bring some improvement. The short answer is: yes.</p>
@@ -55,7 +56,7 @@ server. When a project needs to be built, the pipe server is started, and it is
 stopped only after a long period of inactivity. So we don&#39;t have to continuously 
 load and unload PostSharp.</p>
 <p align="center">
-<img src="{{site.baseurl}}/assets/images/blog/2009-10-08-introducing_postsharp_2_0_5_build_performance_and_/pipeserver.png" alt="" />
+<img src="/assets/images/blog/2009-10-08-introducing_postsharp_2_0_5_build_performance_and_/pipeserver.png" alt="">
 </p>
 <p>But we only won the half of the battle. Since PostSharp loads your executable 
 code and executes it (aspects are instantiated at build time), we need to create 
@@ -102,7 +103,7 @@ Diagnostic Console:</p>
 
 
 <p align="center">
-<img src="{{site.baseurl}}/assets/images/blog/2009-10-08-introducing_postsharp_2_0_5_build_performance_and_/diagnosticconsole.png" alt="" />
+<img src="/assets/images/blog/2009-10-08-introducing_postsharp_2_0_5_build_performance_and_/diagnosticconsole.png" alt="">
 </p>
 
 <p>We are working close with guys of <a href="http://www.gibraltarsoftware.com/">Gibraltar Software</a> 

@@ -8,6 +8,8 @@ permalink: /post/deeper-into-aspect-inheritance.html
 author: "Gael Fraiteur"
 ---
 <p>As introduced in the previous post, aspect inheritance allows you to apply an aspect to an abstract or virtual method and to have the aspect automatically get propagated to any method overriding the initial method.</p>
+<!-- readmore-->
+
 <p>The functionality is implemented inside the &#8220;custom attribute multicasting&#8221; mechanism, so you can use aspect inheritance even for your custom aspects developed using PostSharp Core.</p>
 <p>Note that, by default, aspects are not inherited. You have to explicitly enable inheritance on aspect-definition or -usage level (see below).</p>
 

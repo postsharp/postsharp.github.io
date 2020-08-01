@@ -8,6 +8,8 @@ permalink: /post/the-definitive-inotifypropertychanged.html
 author: "Karol Waledzik"
 ---
 <p><strong>Updated&nbsp;</strong><strong>by Gael Fraiteur on&nbsp;</strong><strong>February, 2020.</strong></p>
+<!-- readmore-->
+
 <p>&nbsp;</p>
 <p>It's been a while ago since PostSharp has introduced the first tool to treat the implementation of <a href="https://www.postsharp.net/mvvm" target="_parent">INotifyPropertyChanged</a> seriously and finally end change notifications pain for WPF developers!</p>
 <p>Let's start from the beginning...</p>
@@ -55,7 +57,7 @@ author: "Karol Waledzik"
             handler(this, new PropertyChangedEventArgs(propertyName));
         }
     }
-}<br /><br /></pre>
+}<br><br></pre>
 <p>&nbsp;</p>
 <p><strong>There are at least two problems here</strong>.</p>
 <p>First, notice the amount of boilerplate code in the solution. Instead of using simple automatic properties (one line of code), you need to create regular field-backed properties with OnPropertyChanged calls in each of them. Each property must also be aware of all other properties depending on its value (and we're still ignoring any inter-object dependencies).</p>
@@ -229,7 +231,7 @@ class Customer
     }
  
     //...
-}<br /><br /></pre>
+}<br><br></pre>
 <p>&nbsp;</p>
 <p>In all the solutions considered so far, this snippet would raise notification after each single property change, which means that at the time the first 2 of 3 events have been raised, the Account object would be in an inconsistent state, some property values would have already been modified and some not.</p>
 <p>In this case your change notification listener would see an object in which the last operation time is already updated, but the account balance is lagging behind. This may not be a serious issue if all you need the notifications for is a simple case of displaying the values on-screen. It does get serious, however, as soon as any kind of business (or even more advanced presentation) code starts to react to the events.</p>

@@ -8,6 +8,8 @@ permalink: /post/new-in-postsharp-43-preview-improved-debugging-experience.html
 author: "Gael Fraiteur"
 ---
 <p>One of the most frequently questions asked by people who just learned about PostSharp is how the debugging experience is affected. Our usual answer was that debugging experience was unaffected, and indeed the debugger worked as usually. On some occasions we had some bugs, which we fixed when we discovered them. But in general, it worked as expected.</p>
+<!-- readmore-->
+
 <p>However, debugging experience is so critical that we wanted to improve it even more in PostSharp 4.3. That&rsquo;s why we are proud to announce three features:</p>
 <ol>
 <li>Step Into Aspects</li>
@@ -26,7 +28,7 @@ author: "Gael Fraiteur"
 <h1>Clean Call Stack</h1>
 <p>Let&rsquo;s face it: PostSharp could create ugly call stacks. If your method was intercepted by two aspects, you could easily have four additional stack frames with weird names. This reflected the reality of which MSIL code was executed, but most of the time, this was not useful.</p>
 <p>Starting with PostSharp 4.3, we will clean the call stack by default. See by yourself.</p>
-<p>&nbsp;<img src="{{site.baseurl}}/assets/images/blog/2016-02-18-new_in_postsharp_43_preview_improved_debugging_exp/prettify.png" alt="" /></p>
+<p>&nbsp;<img src="/assets/images/blog/2016-02-18-new_in_postsharp_43_preview_improved_debugging_exp/prettify.png" alt=""></p>
 <h1>Just My Code</h1>
 <p>Finally, we realized (although the problem has never been reported by customers) that Just My Code did not play nicely with PostSharp. I intentionally put the responsibility on Just My Code here and not on PostSharp. When Just My Code is enabled, it will automatically step over any non-user-code method, even if this method invokes a user-code method. In many situations, this leads to strange behaviors. For instance, when a non-user-code <strong>Foo</strong> method invokes a delegate bound to a user-code method <strong>Bar</strong>, the method <strong>Bar</strong> will never be stepped into. The same happens with PostSharp&rsquo;s interception aspects like LocationInterceptionAspect and MethodInterceptionAspect: you just could not step into methods that had interception aspects if Just My Code was enabled.</p>
 <p>We implemented a <em>brutal</em> workaround to this, and now Just My Code just works as you would expect.</p>

@@ -8,6 +8,8 @@ permalink: /post/announcing-postsharp-42-preview-4-code-saving-metrics.html
 author: "Gael Fraiteur"
 ---
 <p>It has been one more successful iteration (we&rsquo;re on a 3-week cycle here) and&nbsp;on&nbsp;Monday&nbsp;we&rsquo;ve successfully released PostSharp 4.2 Preview 4, available for download <a href="https://www.postsharp.net/downloads/postsharp-4.2">on our website</a> and on NuGet (make sure to enable the pre-release option as usually). This should be our last Preview release for PostSharp 4.2; we&rsquo;re now heading toward the RC.</p>
+<!-- readmore-->
+
 <h2>What&rsquo;s new in PostSharp 4.2</h2>
 <p>In the <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-1">previous</a> <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-3">blog posts</a>, I already announced the following improvements included in previous previews of PostSharp 4.2:</p>
 <ul>
@@ -32,12 +34,12 @@ author: "Gael Fraiteur"
 <p>There are two locations where you can see code savings in Visual Studio: in tooltips, and in a new tool window.</p>
 <h3>Code Savings in Tooltips</h3>
 <p>The first location where you will find code saving metrics is in the PostSharp-augmented tooltip. You will find detailed information about how individual aspects and advices affect the current piece of code:</p>
-<p><img style="margin-right: auto; margin-left: auto; display: block;" src="{{site.baseurl}}/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/tooltip2.png" alt="" /></p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/tooltip2.png" alt=""></p>
 <h3>Code Metrics Tool Window</h3>
 <p>Tooltips are great when you want a detailed view, but sometimes you also need to get the big picture. That&rsquo;s why we&rsquo;re also displaying project-level metrics in a separate tool window. To open it, click on PostSharp / PostSharp Metrics in the Visual Studio menu.</p>
-<p><img style="margin-right: auto; margin-left: auto; display: block;" src="{{site.baseurl}}/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/menu2.png" alt="" /></p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/menu2.png" alt=""></p>
 <p>You can then see how much manual lines of code you have in each project, and how much additional code you would have to write if you didn&rsquo;t use PostSharp:</p>
-<p><img style="margin-right: auto; margin-left: auto; display: block;" src="{{site.baseurl}}/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/toolwindow2.png" alt="" /></p>
+<p><img style="margin-right: auto; margin-left: auto; display: block;" src="/assets/images/blog/2015-07-15-announcing_postsharp_42_preview_4_code_saving_metr/toolwindow2.png" alt=""></p>
 <h3>About Lines of Code</h3>
 <p>Developers generally hate lines of code as a metric. I think there are two elements we need to address in this criticism: the <em>intended use</em> of the metric, and the <em>algorithm</em> used to compute the metric.</p>
 <p>There are many bad uses of software metrics. Comparing productivity of individual developers is one of the worse. However, lines of source code is a decent metric to estimate the size of a project. Empirical studies show, ex post, a strong correlation between the number of lines of code and the total development effort. The intended use of metrics computed by PostSharp is to let you evaluate how efficiently you&rsquo;re using aspects in your project.</p>
@@ -56,7 +58,7 @@ author: "Gael Fraiteur"
 <p>The easiest way is to add the <em>[LinesOfCodeAvoided]</em> attribute to your aspect class.</p>
 <pre>[LinesOfCodeAvoided(2)]
 public sealed class DispatchedMethodAspect : MethodInterceptionAspect
-{<br />  // Details skipped.<br />}</pre>
+{<br>  // Details skipped.<br>}</pre>
 <p>The <em>[LinesOfCodeAvoided(2)]</em> custom attribute above instructs PostSharp to consider that 2 lines of code have been saved every time <em>DispatchedMethodAspect</em> is applied to a method.</p>
 <p>If you have composite aspects in your code (the ones composed from several advices of the <em>PostSharp.Aspects.Advices</em> namespace), you can get more precise estimates by specifying how many lines of code are saved every time an <em>advice</em> is applied.&nbsp; Simply set the <em>LinesOfCodeAvoided</em> property of the advice custom attribute.</p>
 <pre>[OnLocationSetValueAdvice(LinesOfCodeAvoided = 2)]

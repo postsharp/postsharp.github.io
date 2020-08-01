@@ -7,7 +7,9 @@ categories: [Tutorial]
 permalink: /post/postsharp-principals-day-13-e28093-aspect-providers-e28093-part-2.html
 author: "Dustin Davis"
 ---
-<p>When it comes to building complex aspects to solve a specific problem or implement a pattern, the base classes such as OnMethodBoundaryAspect and LocationInterceptionAspect aren’t always up-to the job. We covered the IAspectProvider yesterday, which allows us to dynamically tell PostSharp which aspects to apply to a target at compile time. Today we’re going to build complex aspects that encapsulate multiple transformations in a single aspect. </p>  <h3>Advices and Pointcuts</h3>  <p>Before we continue, we should cover some vocabulary. We’ve avoided the use of these terms until now to avoid any confusion.</p>  <p>· Advice – “An advice is anything that adds a behavior or a structural element to an element of code. For instance, introducing a method into a class, intercepting a property setter, or catching exceptions, are advices.” </p>  <p>· Pointcut – “A pointcut is a function returning a set of elements of code to which advices apply. For instance, a function returning the set of properties annotated with the custom attribute DataMember is a pointcut.”</p>  <p>When we override the OnEntry method when building an aspect based on OnMethodBoundaryAspect, we’re providing the advice to implement. By default the pointcut would be all methods in a class, if the class was decorated with our aspect based on the OnMethodBoundaryAspect base class. </p>  <p>PostSharp provides us with a set of attributes for declaring advice and pointcuts in any combination under a single aspect. Let’s have a look at an example to give a better picture</p>  <pre>[Serializable]
+<p>When it comes to building complex aspects to solve a specific problem or implement a pattern, the base classes such as OnMethodBoundaryAspect and LocationInterceptionAspect aren’t always up-to the job. We covered the IAspectProvider yesterday, which allows us to dynamically tell PostSharp which aspects to apply to a target at compile time. Today we’re going to build complex aspects that encapsulate multiple transformations in a single aspect. </p>
+<!-- readmore-->
+  <h3>Advices and Pointcuts</h3>  <p>Before we continue, we should cover some vocabulary. We’ve avoided the use of these terms until now to avoid any confusion.</p>  <p>· Advice – “An advice is anything that adds a behavior or a structural element to an element of code. For instance, introducing a method into a class, intercepting a property setter, or catching exceptions, are advices.” </p>  <p>· Pointcut – “A pointcut is a function returning a set of elements of code to which advices apply. For instance, a function returning the set of properties annotated with the custom attribute DataMember is a pointcut.”</p>  <p>When we override the OnEntry method when building an aspect based on OnMethodBoundaryAspect, we’re providing the advice to implement. By default the pointcut would be all methods in a class, if the class was decorated with our aspect based on the OnMethodBoundaryAspect base class. </p>  <p>PostSharp provides us with a set of attributes for declaring advice and pointcuts in any combination under a single aspect. Let’s have a look at an example to give a better picture</p>  <pre>[Serializable]
 public class ComplexAspect : TypeLevelAspect
 {
     private int MethodCounter = 0; //Shared between all advices
@@ -16,29 +18,29 @@ public class ComplexAspect : TypeLevelAspect
                         MulticastTargets.Method, MemberName = &quot;DoSomethingElse&quot;)]
     public void OnInvoke(MethodInterceptionArgs args)
     {
-        Console.WriteLine(&quot;Before method {0}. MethodCounter = {1}&quot;, <br />                                              args.Method.Name, this.MethodCounter);
+        Console.WriteLine(&quot;Before method {0}. MethodCounter = {1}&quot;, <br>                                              args.Method.Name, this.MethodCounter);
         args.Proceed();
-        Console.WriteLine(&quot;After method {0}. MethodCounter = {1}&quot;, <br />                                              args.Method.Name, this.MethodCounter);
+        Console.WriteLine(&quot;After method {0}. MethodCounter = {1}&quot;, <br>                                              args.Method.Name, this.MethodCounter);
     }
 
     [OnMethodEntryAdvice, MulticastPointcut(Targets = MulticastTargets.Method)]
     public void OnEntry(MethodExecutionArgs args)
     {
         MethodCounter++;
-        Console.WriteLine(&quot;Entering {0}. MethodCounter = {1}&quot;, <br />                                               args.Method.Name, this.MethodCounter);
+        Console.WriteLine(&quot;Entering {0}. MethodCounter = {1}&quot;, <br>                                               args.Method.Name, this.MethodCounter);
     }
 
     [OnMethodExitAdvice(Master = &quot;OnEntry&quot;)]
     public void OnExit(MethodExecutionArgs args)
     {
-        Console.WriteLine(&quot;Exiting {0}. MethodCounter = {1}&quot;, <br />                                               args.Method.Name, this.MethodCounter);
+        Console.WriteLine(&quot;Exiting {0}. MethodCounter = {1}&quot;, <br>                                               args.Method.Name, this.MethodCounter);
     }
 
     [OnLocationSetValueAdvice, MulticastPointcut(Targets = MulticastTargets.Property)]
     public void OnPropertySet(LocationInterceptionArgs args)
     {
         MethodCounter++;
-        Console.WriteLine(&quot;Setting property: {0} = {1}. MethodCounter = {2}&quot;, <br />                                     args.LocationName, args.Value, this.MethodCounter);
+        Console.WriteLine(&quot;Setting property: {0} = {1}. MethodCounter = {2}&quot;, <br>                                     args.LocationName, args.Value, this.MethodCounter);
     }
 }</pre>
 
@@ -85,7 +87,7 @@ public class ExampleClass
     }
 
 }</pre>
-<br />&nbsp;
+<br>&nbsp;
 <pre>Entering DoSomething. MethodCounter = 1
 Doing something
 Exiting DoSomething. MethodCounter = 1
@@ -102,7 +104,7 @@ Setting property: LastName = Smith. MethodCounter = 6
 Exiting set_LastName. MethodCounter = 6</pre>
 
 <p>
-  <br />In a single aspect, we have implemented advice and pointcuts that we normally would have written three different aspects using the base classes. In addition, we were able to share state between those advices. Examine the output of the MethodCounter. It’s incrementing as we continue along with the execution. If we had three individual aspects the provided equivalent advices, the output would look more like</p>
+  <br>In a single aspect, we have implemented advice and pointcuts that we normally would have written three different aspects using the base classes. In addition, we were able to share state between those advices. Examine the output of the MethodCounter. It’s incrementing as we continue along with the execution. If we had three individual aspects the provided equivalent advices, the output would look more like</p>
 
 <pre>Entering DoSomething. MethodCounter = 1
 Doing something
@@ -132,7 +134,7 @@ Exiting set_LastName. MethodCounter = 1</pre>
           <p><b>OnMethodExceptionAdvice</b></p>
 
           <p><b>OnMethodExitAdvice 
-              <br /></b></p>
+              <br></b></p>
         </td>
 
         <td valign="top" width="421">
@@ -143,7 +145,7 @@ Exiting set_LastName. MethodCounter = 1</pre>
       <tr>
         <td valign="top" width="217">
           <p><b>OnMethodInvokeAdvice 
-              <br /></b></p>
+              <br></b></p>
         </td>
 
         <td valign="top" width="421">
@@ -156,7 +158,7 @@ Exiting set_LastName. MethodCounter = 1</pre>
           <p><b>OnLocationGetValueAdvice</b></p>
 
           <p><b>OnLocationSetValueAdvice 
-              <br /></b></p>
+              <br></b></p>
         </td>
 
         <td valign="top" width="421">
@@ -171,7 +173,7 @@ Exiting set_LastName. MethodCounter = 1</pre>
           <p><b>OnEventRemoveHandlerAdvice</b></p>
 
           <p><b>OnEventInvokeHandlerAdvice 
-              <br /></b></p>
+              <br></b></p>
         </td>
 
         <td valign="top" width="421">
@@ -199,7 +201,7 @@ Exiting set_LastName. MethodCounter = 1</pre>
         </td>
       </tr>
     </tbody></table>
-</p>
+
 
 <p>When applying advice to a method, the method must be public and have the same signature as the corresponding base class advice signature. For example, in order to apply OnLocationGetValueAdvice on a method, the method must be public and have a single LocationInterceptionArgs parameter with no return value (void). </p>
 
@@ -237,7 +239,7 @@ Exiting set_LastName. MethodCounter = 1</pre>
         </td>
       </tr>
     </tbody></table>
-</p>
+
 
 <h4>MulticastPointcut</h4>
 
@@ -273,11 +275,11 @@ public class ExampleAspect : TypeLevelAspect
         Console.WriteLine(&quot;Entering method: &quot; + args.Method.Name);
     }
 
-}</pre>
+}</methodinfo></methodinfo></pre>
 
 <p>Our aspect has only one advice that we want to implement, OnMethodEntryAdvice. We use the MethodPointcut attribute and pass it “FindTargetMethods” which is the name of the method we’ve setup to determine which methods will be targets. The method that is going to return the targets has to have a specific signature. PostSharp documentation defines this signature as</p>
 
-<pre>IEnumerable<advicetargettype> SelectCodeElements(AspectTargetType target)</pre>
+<pre>IEnumerable<advicetargettype> SelectCodeElements(AspectTargetType target)</advicetargettype></pre>
 
 <p><b>AdviceTargetType</b> will be replaced with either object or a reflection type representing the targets of the advice. For example, MethodInfo when the advice targets are methods and PropertyInfo when the targets are Properties.</p>
 
@@ -323,7 +325,7 @@ Entering method: DoSomething1
 Did something</pre>
 
 <h3>
-  <br />SelfPointcut</h3>
+  <br>SelfPointcut</h3>
 
 <p>There is a special attribute that you can use instead of MulticastPointcut, the SelfPointcut attribute. SelfPointcut tells PostSharp to select the exact aspect target. For example, if we have the following aspect</p>
 
@@ -349,4 +351,4 @@ public class ExampleAspect: MethodLevelAspect
 <h3>Conclusion</h3>
 
 <p>By now you should have a clear understanding of how to build complex aspects using the tools provided by PostSharp. The term “complex” shouldn’t be a deterrent because over the last two days we’ve seen just how easy it is to build aspects. </p>
-<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="{{site.baseurl}}/assets/images/blog/2011-07-13-postsharp_principals_day_13_e28093_aspect_provider/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="{{site.baseurl}}/assets/images/blog/2011-07-13-postsharp_principals_day_13_e28093_aspect_provider/self573_thumb[1]_thumb_3.jpg" width="66" height="66" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/images/blog/2011-07-13-postsharp_principals_day_13_e28093_aspect_provider/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="/assets/images/blog/2011-07-13-postsharp_principals_day_13_e28093_aspect_provider/self573_thumb[1]_thumb_3.jpg" width="66" height="66"></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

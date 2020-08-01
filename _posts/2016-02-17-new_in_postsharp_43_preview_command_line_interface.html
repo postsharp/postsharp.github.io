@@ -8,6 +8,8 @@ permalink: /post/new-in-postsharp-43-preview-command-line-interface.html
 author: "Gael Fraiteur"
 ---
 <p>At PostSharp we have a strong bias for building against communicating. Between PostSharp 4.2 RTM and now, we’ve already released <em>four </em>previews of PostSharp 4.3. Let’s have a look at the first feature that we almost completed: the command-line interface.</p>
+<!-- readmore-->
+
 <p>It is now possible to bypass NuGet and MSBuild integration and <strong>invoke PostSharp as an executable</strong>. This feature was supported up to PostSharp 2.1 and then removed in PostSharp 3. We are including it back because of <a href="https://postsharp.uservoice.com/">popular demand</a>.</p>
 <h1>Why to use the command-line interface?</h1>
 <p>PostSharp has been primarily designed as an extension to the C# and VB languages that automates the implementation or validation of patterns. Most patterns need to be present for the application to work. Think for instance of INotifyPropertyChanged.&nbsp; It does not make sense to have a build of your application that does not implement INotifyPropertyChanged. Therefore, the best way to invoke PostSharp is to use the default MSBuild integration.</p>
@@ -32,7 +34,7 @@ author: "Gael Fraiteur"
 <h2>Step 4. Run the instrumented program</h2>
 <p>First, copy file <strong>Echo.Client.exe.config</strong> to <strong>Echo.Client2.exe.config </strong>so that the new executable will find its configuration.</p>
 <p>Then execute <strong>Echo.Client2.exe </strong>and… enjoy the logging!</p>
-<p><img alt="" src="{{site.baseurl}}/assets/images/blog/2016-02-17-new_in_postsharp_43_preview_command_line_interface/dotnetty.png"></p>
+<p><img alt="" src="/assets/images/blog/2016-02-17-new_in_postsharp_43_preview_command_line_interface/dotnetty.png"></p>
 <h1>Summary</h1>
 <p>With PostSharp 4.3, we are bringing back a few good features of PostSharp 2.1 that disappeared in PostSharp 3: the zip distribution and the command-line executable.</p>
 <p>You can use the command-line executable whenever you want to add instrumentation to an assembly without having to recompile it – whether or not you have its source code.</p>

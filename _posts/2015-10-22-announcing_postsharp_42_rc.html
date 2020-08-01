@@ -8,9 +8,11 @@ permalink: /post/announcing-postsharp-42-rc.html
 author: "Gael Fraiteur"
 ---
 <p>We are done! After 10 months of development, the team is happy to announce that PostSharp 4.2 is now fully finished, tested and documented, and since we reached a zero-known-bug status, we&rsquo;re more than relieved to say that the RC quality level has been reached. <a href="https://www.postsharp.net/support/policies">We don&rsquo;t make a difference between RC and RTM quality level</a>, which means that we consider PostSharp 4.2 to be ready, just needing more end-customer testing.</p>
+<!-- readmore-->
+
 <p>You can download PostSharp 4.2 from <a href="https://www.postsharp.net/downloads/postsharp-4.2">our website</a> or from NuGet (make sure to enable the pre-release option as usually). The documentation is <a href="https://www.postsharp.net/downloads/documentation">available for download</a> but not yet for online browsing.</p>
 <div class="buttons">
-<a class="button green"  href="https://www.postsharp.net/downloads/postsharp-4.2">download PostSharp 4.2</a>
+<a class="button green" href="https://www.postsharp.net/downloads/postsharp-4.2">download PostSharp 4.2</a>
 </div>
 <h2>What&rsquo;s New in PostSharp 4.2?</h2>
 <p>In the previous blog posts (see <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-1">Preview 1</a>, <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-3">Preview 3</a> and <a href="http://www.postsharp.net/blog/post/Announcing-PostSharp-42-Preview-4-Code-Saving-Metrics">Preview 4</a> announcements), we announced the following features:</p>
@@ -49,9 +51,9 @@ class CustomerViewModel
 {
     public CustomerModel Model { get; set; }
 
-    public string FullName <br />    { <br />       get <br />       {
-         return string.Format("{0} {1} from {2}", this.Model?.FirstName, this.Model?.LastName, <br />                              this.Model?.Address?.City);
-       } <br />    }
+    public string FullName <br>    { <br>       get <br>       {
+         return string.Format("{0} {1} from {2}", this.Model?.FirstName, this.Model?.LastName, <br>                              this.Model?.Address?.City);
+       } <br>    }
 }
 </pre>
 <p>Note how the <em>FullName</em> property depends on the <em>this.Model?.Address?.City</em> chain. This is a very common scenario in MVVM applications, but it is generally very cumbersome to implement INotifyPropertyChanged in this situation. This is why PostSharp is so useful here. Unfortunately, this was not possible in PostSharp 4.1 because of the Elvis operator. We fixed that in PostSharp 4.2.</p>
@@ -59,11 +61,11 @@ class CustomerViewModel
 <pre>[NotifyPropertyChanged]
 class AddressFallback
 {
-    public Address Address1 { get; set; }<br />    public Address Address2 { get; set; }
+    public Address Address1 { get; set; }<br>    public Address Address2 { get; set; }
 
-    public string City <br />    { <br />       get <br />       {
+    public string City <br>    { <br>       get <br>       {
          return (this.Address1 ?? this.Address2)?.City;
-       } <br />    }
+       } <br>    }
 }
 </pre>
 <p>In the example above, PostSharp would detect a dependency from <em>AddressFallback.City</em> to both <em>Address1.City</em> and <em>Address2.City</em>. If we would have expressed the same logic with <em>?:</em> or an <em>if-else</em>, PostSharp would have detected the same dependencies as well.</p>
@@ -74,7 +76,7 @@ class AddressFallback
 <h1>Code Contracts: output parameters and return values</h1>
 <p>You can now add a code contract to the return value of a method or to its out/ref parameters. The code contract will be verified when the method returns (not on exception).</p>
 <p>For instance, you can do this:</p>
-<pre>public interface IFoo<br />{<br />   [return:Required]<br />   string GetName();<br /><br />   void GetName([Required] out string name);<br />}</pre>
+<pre>public interface IFoo<br>{<br>   [return:Required]<br>   string GetName();<br><br>   void GetName([Required] out string name);<br>}</pre>
 <h2>Actor: support for non-async methods returning a value</h2>
 <p>We are now allowing non-async non-void methods on actors. The method will be executed on the actor&rsquo;s message queue but the caller will wait synchronously for the method execution to complete. Exceptions are dispatched to the caller.</p>
 <p>This introduces an ambiguity with the behavior of non-async void methods, because the previous behavior was to execute them asynchronously, without requiring the caller to wait for the result. To resolve the ambiguity, we now require non-async void methods to be explicitly annotated with the [Dispatched] custom attribute. In the next major version, we will remove this requirement and non-async void methods will be called synchronously (but executed on the actor queue).</p>

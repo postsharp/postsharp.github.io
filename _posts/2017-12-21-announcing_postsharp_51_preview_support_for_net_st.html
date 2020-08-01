@@ -8,6 +8,8 @@ permalink: /post/announcing-postsharp-51-preview-support-for-net-standard-20-and
 author: "Gael Fraiteur"
 ---
 <p>TL;DR <strong>If you use .NET Standard or .NET Core, you must now upgrade to PostSharp 5.1 even if it is not RTM.</strong></p>
+<!-- readmore-->
+
 <p>We&rsquo;re happy to announce that the first preview of PostSharp 5.1 is now ready for download on NuGet Gallery (make sure to enable the &ldquo;include pre-release&rdquo; option) and on our <a href="https://www.postsharp.net/downloads/postsharp-5.1">website</a>.</p>
 <p>PostSharp 5.1 will focus on providing support for .NET Standard 2.0 and .NET Core 2.0. Our objective is to port the PostSharp compiler itself to .NET Standard 2.0 so that we can compile .NET Standard and .NET Core applications natively, without cross-compilation. PostSharp 5.1 will still only support Windows as the only build platform.</p>
 <p>PostSharp 5.1 comes after months of increasing instability of PostSharp 5.0. Initially, we tried to implement support for .NET Standard 2.0 and .NET Core 2.0 as bug fixes on the top of PostSharp 5.0, but it proved impossible to do without a significant refactoring of our type binding logic. We decided that, in respect to our .NET Framework users, we could not afford to destabilize PostSharp 5.0 any more, and therefore that any effort to support .NET Standard and .NET Core would go into a new version.</p>

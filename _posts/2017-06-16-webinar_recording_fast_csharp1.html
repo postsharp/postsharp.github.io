@@ -7,7 +7,9 @@ categories: [Webinars]
 permalink: /post/webinar-recording-fast-csharp1.html
 author: "Iveta Moldavcuk"
 ---
-<p>Do you know how to write very fast C# code? Here's a sobering fact: many schools and universities only teach how to write valid C# code, and not how to write fast and efficient code.<br /><br />Did you know that adding strings together inefficiently can slow down your code by a factor of more than two hundred? And &rsquo;swallowing&rsquo; exceptions will make your code run a thousand times slower than normal.<br /><br />Slow C# code is a big problem. Slow code on the web will not scale to thousands of users. Slow code will make your Unity game unplayable. Slow code will have your mobile apps catching dust in the app store.<br /><br />In this session, our guest speaker Mark Farragher will show you many common performance bottlenecks and how to fix them. We&rsquo;ll introduce each problem, write a small test program to measure the baseline performance, and then learn how you can radically speed up the code.</p>
+<p>Do you know how to write very fast C# code? Here's a sobering fact: many schools and universities only teach how to write valid C# code, and not how to write fast and efficient code.<br><br>Did you know that adding strings together inefficiently can slow down your code by a factor of more than two hundred? And &rsquo;swallowing&rsquo; exceptions will make your code run a thousand times slower than normal.<br><br>Slow C# code is a big problem. Slow code on the web will not scale to thousands of users. Slow code will make your Unity game unplayable. Slow code will have your mobile apps catching dust in the app store.<br><br>In this session, our guest speaker Mark Farragher will show you many common performance bottlenecks and how to fix them. We&rsquo;ll introduce each problem, write a small test program to measure the baseline performance, and then learn how you can radically speed up the code.</p>
+<!-- readmore-->
+
 <p>Watch the webinar and learn:</p>
 <ul>
 <li>The low-hanging fruit: basic optimizations</li>
@@ -125,7 +127,7 @@ author: "Iveta Moldavcuk"
 <p>A: Correct! String interpolation ($&rdquo;yadday {yadda}&rdquo;) compiles to a String.Format call, so it&rsquo;s exactly the same thing. I always use interpolation because it&rsquo;s so much easier to type.</p>
 <p>You&rsquo;re also spot-on with the string versus StringBuilder comment. A StringBuilder has some overhead initializing, so it is actually slower for a small number of additions. The cutoff point is at 3 additions. For zero to three the string is faster, for four and more the StringBuilder is faster. For larger number of additions, they start to diverge very quickly.</p>
 <p>In my logging and diagnostic code, I always use strings (string interpolation) because I usually stay below the 3-addition limit, and it makes my code so much easier to read.</p>
-<p><strong>Q: Hi, For Exceptions,</strong> <strong>what if TryParse is not there. For user-defined types instead of Primitive what needs to be done.<br /> </strong>A: You need to do the same that TryParse is doing internally &ndash; scan the input data first, and only start parsing if the scan says it&rsquo;s okay. Also make sure you return a parsing failure as a return value (i.e. a bool) instead of throwing a FormatException.</p>
+<p><strong>Q: Hi, For Exceptions,</strong> <strong>what if TryParse is not there. For user-defined types instead of Primitive what needs to be done.<br> </strong>A: You need to do the same that TryParse is doing internally &ndash; scan the input data first, and only start parsing if the scan says it&rsquo;s okay. Also make sure you return a parsing failure as a return value (i.e. a bool) instead of throwing a FormatException.</p>
 <p>An easy way to scan is by using a precompiled regular expression to make sure the input data doesn&rsquo;t contain any invalid characters. Regular expressions are super-fast.</p>
 <p><strong>Q: Any comment about differences between copping arrays, lists, c # hash table, etc at the heap?</strong></p>
 <p>A: In terms of memory layout, there&rsquo;s not that much difference between an array, a list, or a hashtable. All three use arrays internally to hold the data. A hashtable is optimized for key/value lookup, whereas list and array are intended for indexed access.</p>
@@ -168,8 +170,8 @@ author: "Iveta Moldavcuk"
 <p>&nbsp;</p>
 <div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
 <h3 style="text-align: center; margin-bottom: 10px;">About the speaker, Mark Farragher</h3>
-<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="{{site.baseurl}}/assets/images/blog/2017-06-16-webinar_recording_fast_csharp1/markfarragher.jpg" alt="Mark Farragher" />
-<p style="margin-bottom: 10px;"><a href="http://mdfarragher.com/" target="_blank">Mark Farragher</a> is a blogger, investor, serial entrepreneur, and the author of 10 successful IT courses in the Udemy marketplace. His IT career spans 2 decades and he has worn many different hats over the years.<br /><br /> Mark started using C# and the .NET framework 15 years ago, and creates online courses that make complex C# programming topics easy to understand and accessible to anyone.</p>
+<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2017-06-16-webinar_recording_fast_csharp1/markfarragher.jpg" alt="Mark Farragher">
+<p style="margin-bottom: 10px;"><a href="http://mdfarragher.com/" target="_blank">Mark Farragher</a> is a blogger, investor, serial entrepreneur, and the author of 10 successful IT courses in the Udemy marketplace. His IT career spans 2 decades and he has worn many different hats over the years.<br><br> Mark started using C# and the .NET framework 15 years ago, and creates online courses that make complex C# programming topics easy to understand and accessible to anyone.</p>
 </div>
 </div>
 <p>&nbsp;</p>

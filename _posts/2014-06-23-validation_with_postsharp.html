@@ -8,6 +8,8 @@ permalink: /post/validation-with-postsharp.html
 author: "Gael Fraiteur"
 ---
 <p><em>In this article, Alessandro Federici, System Architect at <a href="http://www.codysystems.com/">CODY Systems</a>, talks about how and why he is using the Model Pattern Library and shows a pragmatic approach to make the PostSharp Code Contracts play nice with XAML-based applications. He also describes some of the other aspects he built himself: - InstantiateIfNullAspect, StringManipulationAspect and WrapExceptionsAspect.</em></p>
+<!-- readmore-->
+
 <p><em>The <a href="/blog/file.axd?file=2014%2f06%2fAlessandro.zip">source code for this blog post</a> is available for download.</em></p>
 <p>I&rsquo;ve been using PostSharp for several months at CODY Systems. For the sake of this article, I built a small WPF application that demonstrates our principal use cases. This application is very simple and is split into two assemblies:</p>
 <ul>
@@ -15,9 +17,9 @@ author: "Gael Fraiteur"
 <li><strong>WPFApp.exe</strong>: the main executable. It links to the other assembly and contains just one view, its view model and some helper classes.</li>
 </ul>
 <p>When you run the application, you will see a dialog that will look like this:</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-06-23-validation_with_postsharp/validation1.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-06-23-validation_with_postsharp/validation1.png" alt=""></p>
 <p>As soon as you change the text of some controls, if the values are invalid and validation rules fail, you will get the following hints being displayed:</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-06-23-validation_with_postsharp/validation2.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-06-23-validation_with_postsharp/validation2.png" alt=""></p>
 <p>The two buttons at the bottom of the dialog show how to trigger validation manually (the 'Validate' button) and how to use my <em>WrapExceptionAspect</em> (the 'Throw Exception' button).</p>
 <h2>To use IDataErrorInfo/IValidatableObject, or to throw exceptions, this is the question</h2>
 <p>When you build XAML applications (i.e. WPF, Silverlight or Windows Phone), you are supposed to use the <em>IDataErrorInfo</em> interface to collect errors. These errors are then intercepted by using specific triggers and the collection 'ValidationRules' of the bindings of your view. MVC also respects the interface, although it does so by using the MVC approach to binding and using post-backs.</p>
@@ -37,7 +39,7 @@ author: "Gael Fraiteur"
 <p>So, having said this, what I wanted to see is if I can use the PostSharp aspects that ensure 'universal' (i.e. always necessary) object-state integrity, proper formatting of some text (e.g. capitalization of names or other helpful thing of this nature) and, at the same time, build a WPF interface that shows nice errors just like using the <em>IDataErrorInfo</em> interface.</p>
 <p>The contracts library is where all the validation rules I choose get defined. The idea is to create a set of classes that are reusable regardless of the user-interface framework you will build clients with. WPF, ASP.Net, ASP MVC... It shouldn't matter. Actually it shouldn't matter if you have a user-interface layer at all. Business contracts should work even without a client and allow you to just write a web service API which is used as-is.</p>
 <p>The contracts library in the sample application is very simple. It defines three classes: <em>User</em>, <em>PersonName</em> and <em>Phones</em>. <em>User</em> is defined as follows:</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-06-23-validation_with_postsharp/contractslibrary1.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-06-23-validation_with_postsharp/contractslibrary1.png" alt=""></p>
 <p>As you can see, there isn't much to it, except an abundance of aspects.</p>
 <p>The properties <em>Age</em> and <em>EMail</em> use two aspects that should be obvious to anybody reading the code. That is a very important part of using aspects: they often help making behavior obvious and forego the need to read documentation or dive into code. <em>Range</em> and <em>EmailAddress</em> are part of the Model Pattern Library shipped with PostSharp 3.0. The first will check that the <em>Age</em> is positive and won't allow values bigger than 110. The second will ensure that the email address is properly typed (i.e. something@somewhere.xyz).</p>
 <h2>INotifyPropertyChanged No More</h2>
@@ -46,24 +48,24 @@ author: "Gael Fraiteur"
 <h2>My Custom Aspects</h2>
 <p>The <em>Name</em> property is decorated with my very own <em>InstantiateIfNullAspect</em>. That aspect (which I included in this sample) creates instances of the property it is applied to, without the need for repetitive code such as &ldquo;<em>if (_name==null) _name = new PersonName(); return _name;</em>&rdquo;. I use this aspect extensively in my contracts library. It allows me to create a new <em>Person</em> and immediately start populating its pieces without thinking about nulls or redundant extra code.</p>
 <p>You can see this in the <em>CreateDesignTimeData()</em> method of the view model:</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-06-23-validation_with_postsharp/contractslibrary2.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-06-23-validation_with_postsharp/contractslibrary2.png" alt=""></p>
 <p>The principle that guides its use, for me, is the following: certain parts of a class (owner) might be defined using other classes, but the owner describes something that would not make sense without the other piece(s). Whenever this rule is met, it probably makes sense to use <em>InstantiateIfNotNullAspect</em>, auto-create inner instances and cut all the boiler-plate code that would be otherwise necessary (especially in the calling code, which is much easier to plague with <em>NullReferenceException</em>(s)).</p>
 <p>While the aspect supports interfaces (e.g. you can have a property of type<em> IList</em> and specify that the '<em>ConcreteType</em>' you want to use to create it is either <em>List</em>, <em>ObservableCollection</em>, etc.), I rarely use it with interfaces. I leave those as properties that are to be filled in, for instance, after fetching data from the server. The fact those properties are null are a reminder that a web-service fetch is necessary. It's up to you to decide if this fits with your needs or not, but I wanted to mention it.</p>
 <p>The <em>PersonName</em> class is similar, but I user more aspects, including my <em>StringManipulationAspect</em>. This aspect changes strings by performing one or many common transformations (e.g. remove some type of characters, capitalize text, lower-case it, upper-case it, etc.) that we often need in applications.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-06-23-validation_with_postsharp/contractslibrary3.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-06-23-validation_with_postsharp/contractslibrary3.png" alt=""></p>
 <p>Once again, pretty obvious to understand, thanks to aspects.</p>
 <h2>The Application's View</h2>
 <p>As you would expect from any decent MVVM application, the view is 99.99% code-free. Specifically, the only code in the main view is the automatically-generated constructor.</p>
 <p>The interesting parts are in the XAML code.</p>
 <p>The first thing I did was to define a couple of resources that will be needed for my error interception.</p>
 <p>The first is a converter ('<em>ErrorMessageConverter</em>') which is capable of getting an exception message and convert it to nicely readable text. This was necessary because the messages coming from the PostSharp validation aspects don't read well (as tool-tips), even if we provided our own error text like I did in the properties <em>First</em> and <em>Last</em> of the class <em>PersonName</em>. Some text-transformations were necessary and the nicer text is what will be displayed by the tool-tips, whenever a validation rule is violated.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-06-23-validation_with_postsharp/applicationsview2.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-06-23-validation_with_postsharp/applicationsview2.png" alt=""></p>
 <p>The second resource is a style that I want applied to all <em>TextBox</em>(es). This style contains a trigger that binds to the error that was raised (if an error was raised) and uses the previously defined converter '<em>ErrorMessageConverter</em>'.</p>
 <p>With these two resources, I can now continue my XAML coding and have all <em>TextBoxes</em> react to errors by displaying a red box and a tool-tip just adding an <em>ExceptionValidationRule</em> element to its binding:</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-06-23-validation_with_postsharp/applicationsview3.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-06-23-validation_with_postsharp/applicationsview3.png" alt=""></p>
 <h2>Wrapping Exceptions</h2>
 <p>The purpose of the button 'Validate' is to show how to invoke validation manually. This is something you will need if the form starts without data and you want to guide the user actions. To see it work, enable the commented code in the constructor of the view model, run the application and then click the button.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2014-06-23-validation_with_postsharp/validatebutton.png" alt="" /></p>
+<p><img src="/assets/images/blog/2014-06-23-validation_with_postsharp/validatebutton.png" alt=""></p>
 <p>What happens, when you run the application, is the following: a regular <em>Exception</em> is thrown with the message 'This is the inner exception (&hellip;)'. The aspect catches that and wraps it in a GuiException whose message then becomes 'An unexpected error occurred. The error was 'This is the inner exception (&hellip;)''.</p>
 <p>It's easy to get in situations where some exceptions occur and you don't immediately know what caused them. Often we are given mysterious and miss-leading bug reports that read as 'A '<em>NullReference</em> crash occurred when I clicked the button', or more nonsense like that.</p>
 <p>When I read those reports, I usually get angry for two reasons: the completely useless error report and, right after, the knowledge that I have no immediate pointer to what really happened. The <em>WrapExceptionAspect</em> allows me to wrap exceptions into more meaningful ones, so that I immediately know the area where the problem occurred. Obviously all that happens automatically, since we use aspects.</p>

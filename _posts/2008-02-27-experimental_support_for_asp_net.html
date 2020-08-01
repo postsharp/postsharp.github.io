@@ -7,68 +7,58 @@ categories: [General]
 permalink: /post/experimental-support-for-asp-net.html
 author: "Gael Fraiteur"
 ---
-I have just checked in a library (actually, only two classes) allowing to use PostSharp in ASP.NET projects. The stuff is hosted at http://code.google.com/p/postsharp-user-plugins/. The reason why it did not work previously is that ASP.NET compilation does not go through MSBuild, so PostSharp was simply not invoked.
+<p>I have just checked in a library (actually, only two classes) allowing to use PostSharp in ASP.NET projects. The stuff is hosted at http://code.google.com/p/postsharp-user-plugins/. The reason why it did not work previously is that ASP.NET compilation does not go through MSBuild, so PostSharp was simply not invoked.</p>
+<!-- readmore-->
 
-<p>
-Indeed, MSBuild has its own compilation mechanism. Fortunately, it has an extension point that seems just done for PostSharp: the <strong>IAssemblyPostProcessor</strong> interface. As you may imagine, it allows to post-process the compiled assembly.
-</p><p>
-So I simply developed an implementation of this interface (one class). The second class is a configuration handler.
-</p><p>
-Here is how to use this preliminary version of the library (from the documentation):
-
-
-
-</p><p style="MARGIN: 5px 0px 0px">In order to use PostSharp in a web project, specify this class as an assembly post-processor in <b>web.config</b>:</p>
-
-
-<pre class="outline"><code>&lt;configuration&gt;
-     &lt;system.web&gt;
-       &lt;compilation debug="true"
-         assemblyPostProcessorType="PostSharp.AspNet.AssemblyPostProcessor, PostSharp.AspNet"/&gt;
-     &lt;/system.web&gt;
-&lt;/configuration&gt;</code></pre>
-
-
-<p style="MARGIN: 5px 0px 0px">Additionally, you have to add the <b>&lt;postsharp ... /&gt;</b> section in the configuration file: </p>
-
-
-<pre class="outline"><code>&lt;?xml version="1.0"?&gt;
-&lt;configuration&gt;
- &lt;!-- Add a configuration handler for PostSharp. --&gt;
- &lt;configSections&gt;
-  &lt;section name="postsharp"
-                         type="PostSharp.AspNet.Configuration.PostSharpConfiguration, PostSharp.AspNet"/&gt;
- &lt;/configSections&gt;
- &lt;!-- PostSharp configuration --&gt;
- &lt;postsharp directory="P:\open\branches\1.0\Core\PostSharp.MSBuild\bin\Debug" trace="true"&gt;
-  &lt;parameters&gt;
-   &lt;!--&lt;add name="parameter-name" value="parameter-value"/&gt;--&gt;
-  &lt;/parameters&gt;
-  &lt;searchPath&gt;
-   &lt;!-- Always add the binary folder to the search path. --&gt;
-   &lt;add name="bin" value="~\bin"/&gt;
-   &lt;!-- Then add the location of plug-ins that are not installed in standard locations. --&gt;
-   &lt;add name="laos-weaver" value="P:\open\branches\1.0\Laos\PostSharp.Laos.Weaver\bin\Debug"/&gt;
-  &lt;/searchPath&gt;
- &lt;/postsharp&gt;
- &lt;appSettings/&gt;
- &lt;connectionStrings/&gt;
- &lt;system.web&gt;
-  &lt;!-- Note the 'assemblyPostProcessorType' attribute. --&gt;
-  &lt;compilation debug="true"
-                             assemblyPostProcessorType="PostSharp.AspNet.AssemblyPostProcessor, PostSharp.AspNet"&gt;
-  &lt;authentication mode="None"/&gt;
-  &lt;trace enabled="true" pageOutput="true"/&gt;
- &lt;/system.web&gt;
-&lt;/configuration&gt;
- </code></pre>
-
-<p style="MARGIN: 5px 0px 0px">In all configuration parameters and in search path elements, the tilde character (~) is replaced by the physical path of the application. </p>
-Be prepared that the compilation will be much much longer, especially if it is fine-grained...
-<p>
-This is a preliminary version, feedback is welcome!
-
-</p><p>
-Happy postsharping!
-</p><p>
-Gael</p>
+<p><p></p>
+<p>Indeed, MSBuild has its own compilation mechanism. Fortunately, it has an extension point that seems just done for PostSharp: the <strong>IAssemblyPostProcessor</strong> interface. As you may imagine, it allows to post-process the compiled assembly.</p>
+<p></p><p></p>
+<p>So I simply developed an implementation of this interface (one class). The second class is a configuration handler.</p>
+<p></p><p></p>
+<p>Here is how to use this preliminary version of the library (from the documentation):</p>
+<p></p><p style="MARGIN: 5px 0px 0px">In order to use PostSharp in a web project, specify this class as an assembly post-processor in <b>web.config</b>:</p>
+<p><pre class="outline"><code>&lt;configuration&gt;
+<p>     &lt;system.web&gt;</p>
+<p>       &lt;compilation debug="true"</p>
+<p>         assemblyPostProcessorType="PostSharp.AspNet.AssemblyPostProcessor, PostSharp.AspNet"/&gt;</p>
+<p>     &lt;/system.web&gt;</p>
+<p>&lt;/configuration&gt;</p></code></pre>
+<p><p style="MARGIN: 5px 0px 0px">Additionally, you have to add the <b>&lt;postsharp ... /&gt;</b> section in the configuration file: </p>
+<p><pre class="outline"><code>&lt;?xml version="1.0"?&gt;
+<p>&lt;configuration&gt;</p>
+<p> &lt;!-- Add a configuration handler for PostSharp. --&gt;</p>
+<p> &lt;configSections&gt;</p>
+<p>  &lt;section name="postsharp"</p>
+<p>                         type="PostSharp.AspNet.Configuration.PostSharpConfiguration, PostSharp.AspNet"/&gt;</p>
+<p> &lt;/configSections&gt;</p>
+<p> &lt;!-- PostSharp configuration --&gt;</p>
+<p> &lt;postsharp directory="P:\open\branches\1.0\Core\PostSharp.MSBuild\bin\Debug" trace="true"&gt;</p>
+<p>  &lt;parameters&gt;</p>
+<p>   &lt;!--&lt;add name="parameter-name" value="parameter-value"/&gt;--&gt;</p>
+<p>  &lt;/parameters&gt;</p>
+<p>  &lt;searchPath&gt;</p>
+<p>   &lt;!-- Always add the binary folder to the search path. --&gt;</p>
+<p>   &lt;add name="bin" value="~\bin"/&gt;</p>
+<p>   &lt;!-- Then add the location of plug-ins that are not installed in standard locations. --&gt;</p>
+<p>   &lt;add name="laos-weaver" value="P:\open\branches\1.0\Laos\PostSharp.Laos.Weaver\bin\Debug"/&gt;</p>
+<p>  &lt;/searchPath&gt;</p>
+<p> &lt;/postsharp&gt;</p>
+<p> &lt;appSettings/&gt;</p>
+<p> &lt;connectionStrings/&gt;</p>
+<p> &lt;system.web&gt;</p>
+<p>  &lt;!-- Note the 'assemblyPostProcessorType' attribute. --&gt;</p>
+<p>  &lt;compilation debug="true"</p>
+<p>                             assemblyPostProcessorType="PostSharp.AspNet.AssemblyPostProcessor, PostSharp.AspNet"&gt;</p>
+<p>  &lt;authentication mode="None"/&gt;</p>
+<p>  &lt;trace enabled="true" pageOutput="true"/&gt;</p>
+<p> &lt;/system.web&gt;</p>
+<p>&lt;/configuration&gt;</p>
+<p> </p></code></pre>
+<p><p style="MARGIN: 5px 0px 0px">In all configuration parameters and in search path elements, the tilde character (~) is replaced by the physical path of the application. </p>
+<p>Be prepared that the compilation will be much much longer, especially if it is fine-grained...</p>
+<p><p></p>
+<p>This is a preliminary version, feedback is welcome!</p>
+<p></p><p></p>
+<p>Happy postsharping!</p>
+<p></p><p></p>
+<p>Gael</p>

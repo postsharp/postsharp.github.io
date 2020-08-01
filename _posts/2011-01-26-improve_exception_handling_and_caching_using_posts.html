@@ -7,7 +7,9 @@ categories: [Tutorial]
 permalink: /post/improve-exception-handling-and-caching-using-postsharp.html
 author: "Britt King"
 ---
-<p><em>Marcus King recently released <a href="http://www.sharpcrafters.com/media/tutorials" target="_blank">3 screencasts</a> showing how to address exception handling and caching.       <br />We asked him to introduce his work in this guest post.</em></p>  <p>How often do I have to keep solving the same problem?&#160; As developers we’ve all been there, each project we work on we have to do the same ole’ thing we’ve done a thousand times before.&#160; Luckily in most cases there are good native features built into the language or third party frameworks that are available to reduce the tedious chore of writing basic code yet again.&#160; However, there are a lot of times when OOP doesn’t provide us with a good way to solve a recurring problem.&#160; I’m guessing since your reading the SharpCrafter’s Blog you see that this is the point where AOP steps in and fills the gap left by OOP.&#160; I recently did a video tutorial on improving exception handing&#160; using AOP via PostSharp.&#160; Traditionally in applications we need to catch when certain exceptions are thrown and do something with the exception by either logging it, calling another workflow, wrapping the exception inside of another one, or simply swallowing the exception, or some combination of all.&#160; Let’s say for example we have a class we use to call a remote web service to retrieve data for our application.</p>  <pre>public class StockService
+<p><em>Marcus King recently released <a href="http://www.sharpcrafters.com/media/tutorials" target="_blank">3 screencasts</a> showing how to address exception handling and caching.       <br>We asked him to introduce his work in this guest post.</em></p>
+<!-- readmore-->
+  <p>How often do I have to keep solving the same problem?&#160; As developers we’ve all been there, each project we work on we have to do the same ole’ thing we’ve done a thousand times before.&#160; Luckily in most cases there are good native features built into the language or third party frameworks that are available to reduce the tedious chore of writing basic code yet again.&#160; However, there are a lot of times when OOP doesn’t provide us with a good way to solve a recurring problem.&#160; I’m guessing since your reading the SharpCrafter’s Blog you see that this is the point where AOP steps in and fills the gap left by OOP.&#160; I recently did a video tutorial on improving exception handing&#160; using AOP via PostSharp.&#160; Traditionally in applications we need to catch when certain exceptions are thrown and do something with the exception by either logging it, calling another workflow, wrapping the exception inside of another one, or simply swallowing the exception, or some combination of all.&#160; Let’s say for example we have a class we use to call a remote web service to retrieve data for our application.</p>  <pre>public class StockService
 {
     public StockDetails GetStockDetails( string symbol )
     {
@@ -51,19 +53,19 @@ author: "Britt King"
 
 <pre>public class StockService
 {
-    [HandleException( SoapException, StockServiceException, <br />                      &quot;Error Getting Details&quot; )]
+    [HandleException( SoapException, StockServiceException, <br>                      &quot;Error Getting Details&quot; )]
     public StockDetails GetStockDetails( string symbol )
     {
         //.... call to service
     }
 
-    [HandleException( SoapException, StockServiceException, <br />                      &quot;Error Getting Historical Price&quot; )]
+    [HandleException( SoapException, StockServiceException, <br>                      &quot;Error Getting Historical Price&quot; )]
     public decimal GetHistoricalPrice( string symbol )
     {
         //.... call to service
     }
 
-    [HandleException( SoapException, StockServiceException, <br />                      &quot;Error Adding To Portfolio&quot; )]
+    [HandleException( SoapException, StockServiceException, <br>                      &quot;Error Adding To Portfolio&quot; )]
     public void AddToPortfolio( string symbol, int shares )
     {
         //.... call to service
@@ -80,7 +82,7 @@ public class HandleExceptionAttribute : OnExceptionAspect
     private string _message;
 
     // Constructor that takes in variable parameters when the attribute is applied
-    public HandleExceptionAttribute( Type expectedExeptionType, Type wrapInExceptionType, <br />                                     string message )
+    public HandleExceptionAttribute( Type expectedExeptionType, Type wrapInExceptionType, <br>                                     string message )
     {
         _expectedException = expectedExceptionType;
         _wrapInException = wrapInExceptionType;
@@ -88,18 +90,18 @@ public class HandleExceptionAttribute : OnExceptionAspect
     }
 
     // This method checks to see if the exception that was thrown from the method the 
-    // attribute was applied on matches the expected exception type we passed into the <br />    // constructor of the attribute
+    // attribute was applied on matches the expected exception type we passed into the <br>    // constructor of the attribute
     public override Type GetExceptionType( MethodBase targetMethod )
     {
         return _expectedException;
     }
 
     // This method is called when we have guaranteed the exception type thrown matches the
-    // expected exception type passed in the constructor.  It wraps the thrown exception <br />    // into a new exception and adds the custom message that was passed into the constructor
+    // expected exception type passed in the constructor.  It wraps the thrown exception <br>    // into a new exception and adds the custom message that was passed into the constructor
     public override void OnException( MethodExecutionArgs args )
     {
         args.FlowBehavior = FlowBehavior.Continue;
-        Exception newException = (Exception) Activator.CreateInstance(<br />                _wrapInException, new object[] {_message, _expectedException} );
+        Exception newException = (Exception) Activator.CreateInstance(<br>                _wrapInException, new object[] {_message, _expectedException} );
 
         throw newException;
     }
@@ -121,7 +123,7 @@ public class HandleExceptionAttribute : OnExceptionAspect
     }
 
     return account;
-}</pre>
+}</account></pre>
 
 <p>We build our cache key and check to see if the item is present if the cache. If it is we return the value pulled from the cache, otherwise we do the necessary work to retrieve/build the item to return and save it in the cache with the cache key we built so that the next time this method is called we can successfully pull the item from the cache. I’ve repeated this pattern over and over again, typically in a business layer when I need to retrieve data from an expensive resource like a database or a web service call or when I do complex logic to construct the object that I need to return. Luckily PostSharp provides a way to centralize all of the caching logic for me so I can concentrate on the business logic. The same method now looks like this</p>
 
@@ -173,6 +175,6 @@ public Account GetAccount(int accountId)
 <p><strong>Going Further with Caching</strong>:&#160; <a href="http://www.sharpcrafters.com/media/tutorials/caching-2">http://www.sharpcrafters.com/media/tutorials/caching-2</a></p>
 
 <p>&#160;</p>
-<img style="background-image: none; border-bottom: 0px; border-left: 0px; margin: 0px 10px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top: 0px; border-right: 0px; padding-top: 0px" title="marcus_king_image" border="0" alt="marcus_king_image" align="left" src="{{site.baseurl}}/assets/images/blog/2011-01-26-improve_exception_handling_and_caching_using_posts/marcus_king_image_1.jpg" width="135" height="135" /> 
+<img style="background-image: none; border-bottom: 0px; border-left: 0px; margin: 0px 10px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top: 0px; border-right: 0px; padding-top: 0px" title="marcus_king_image" border="0" alt="marcus_king_image" align="left" src="/assets/images/blog/2011-01-26-improve_exception_handling_and_caching_using_posts/marcus_king_image_1.jpg" width="135" height="135"> 
 
 <p><em><strong>Marcus King</strong> is a Software Engineer based in Louisville, KY. He has a broad IT background ranging from infrastructure security to software development, with years of experience working for many different sized companies, from Fortune 100 to small web startups. Marcus is passionate about performance tuning applications, developing solutions for highly scalable applications, plus is heavily involved in discovering and setting standards and best practices for software development. An Aspect-Oriented Programming (AOP) champion, Marcus regularly gives presentations on the topic. In his free time he writes applications for iPhone and Android and is on the executive committee of the </em><a href="http://www.codepalousa.com/"><em>codepaLOUsa</em></a><em> developer conference in Louisville, KY.</em></p>

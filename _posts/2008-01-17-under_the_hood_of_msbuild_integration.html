@@ -10,6 +10,8 @@ author: "Gael Fraiteur"
 <div>
 All works so magically. Once you have PostSharp installed on your computer, your build process automatically invokes PostSharp when it thinks it should. Most of the cases, it works and it's enough. But if you have a complex build process (especially one that does not use MSBuild), you could ask: how does this work? And how can I integrate PostSharp in my non-MSBuild projects?
 </div>
+<!-- readmore-->
+
 <div>
 <h3>Getting Inserted in the MSBuild Process</h3>
 <p>
@@ -33,7 +35,7 @@ There is absolutely no hack in that; it uses extension points of MSBuild especia
 <pre>
 <strong>&lt;Import Project=&quot;$(CustomBeforeMicrosoftCommonTargets)&quot; 
         Condition=&quot;Exists(&#39;$(CustomBeforeMicrosoftCommonTargets)&#39;)&quot;/&gt;
- <import Project="$(CustomBeforeMicrosoftCommonTargets)" Condition="Exists('$(CustomBeforeMicrosoftCommonTargets)')"/></strong>
+ <import project="$(CustomBeforeMicrosoftCommonTargets)" condition="Exists('$(CustomBeforeMicrosoftCommonTargets)')"></import></strong>
 </pre>
 </div>
 <p>

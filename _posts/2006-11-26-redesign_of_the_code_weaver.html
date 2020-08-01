@@ -7,22 +7,15 @@ categories: [General]
 permalink: /post/redesign-of-the-code-weaver.html
 author: "Gael Fraiteur"
 ---
-The ones who already use the Code Weaver will maybe get angry but that's something I needed to do before going beta: I have redesigned quite deeply the low-level code weaver. Most changes are documented in the CHANGELOG.txt file.
+<p>The ones who already use the Code Weaver will maybe get angry but that's something I needed to do before going beta: I have redesigned quite deeply the low-level code weaver. Most changes are documented in the CHANGELOG.txt file.</p>
+<!-- readmore-->
 
-So what has changed?
-
-First, the notions of local and global advices has been deprecated. There is instead a unified notion of method-level advices and unified semantics to express what is called elsewhere <span style="font-style: italic;">pointcuts</span>, i.e. to apply advices to join points. When you add an advice to the weaver, you can now specify on which <span style="font-style: italic;">methods</span> it applies and on which <span style="font-style: italic;">operands</span>. We use the IEnumerable interface to pass sets of methods and operands, so it should be forward compatible with C# 3.0 / LINQ.
-
-If I said method-level advices, that's because PostSharp now supports also type-level advices: the only join point currently supported is <span style="font-style: italic;">after instance construction</span>, i.e. in the constructor, just after the base constructor has been called.
-
-Secondly, you cannot call the weaver for individual methods. The <span style="font-weight: bold;">Weave</span> method now weaves the complete module according to the advices that were previously added to it.
-
-And finally, the <span style="font-weight: bold;">IAdviceProvider</span> has changed. There is now a single <span style="font-weight: bold;">ProvideAdvices</span> method in which you should add advices to the given weaver. That's all.
-
-The internal workings have been considerably optimized to work with operand-sensitive join points. Say you want to intercept all calls to the <span style="font-weight: bold;">Thread.Sleep() </span>method. You create an advice and apply it to the join points of kind <span style="font-weight: bold;">InsteadOfCall</span> with operand <span style="font-weight: bold;">Thread.Sleep</span>. Before redesign, the weaver would have woven every method of the module. But now, it will only weave methods that effectively use the <span style="font-weight: bold;">Thread.Sleep</span> method.
-
-In order to make it possible, I have implemented the new task <span style="font-weight: bold;">IndexUsagesTask</span>, which reads all method bodies an indexes 'uses' and 'used-by' relationships. Why is it better than the previous design? First, because inspection algorithm of this task is much simpler than the one of the weaver. Secondly, because the same information can be used by other tasks.
-
-So at the end of the day, will you be still angry of this design change? Hopefully not, because these changes don't affect your code too much. All you have to do is to change your implementation of <span style="font-weight: bold;">IAdviceProvider</span>. And this new design is much better and is prepared for the future.
-
-So let's go!
+<p>So what has changed?</p>
+<p>First, the notions of local and global advices has been deprecated. There is instead a unified notion of method-level advices and unified semantics to express what is called elsewhere <span style="font-style: italic;">pointcuts</span>, i.e. to apply advices to join points. When you add an advice to the weaver, you can now specify on which <span style="font-style: italic;">methods</span> it applies and on which <span style="font-style: italic;">operands</span>. We use the IEnumerable interface to pass sets of methods and operands, so it should be forward compatible with C# 3.0 / LINQ.</p>
+<p>If I said method-level advices, that's because PostSharp now supports also type-level advices: the only join point currently supported is <span style="font-style: italic;">after instance construction</span>, i.e. in the constructor, just after the base constructor has been called.</p>
+<p>Secondly, you cannot call the weaver for individual methods. The <span style="font-weight: bold;">Weave</span> method now weaves the complete module according to the advices that were previously added to it.</p>
+<p>And finally, the <span style="font-weight: bold;">IAdviceProvider</span> has changed. There is now a single <span style="font-weight: bold;">ProvideAdvices</span> method in which you should add advices to the given weaver. That's all.</p>
+<p>The internal workings have been considerably optimized to work with operand-sensitive join points. Say you want to intercept all calls to the <span style="font-weight: bold;">Thread.Sleep() </span>method. You create an advice and apply it to the join points of kind <span style="font-weight: bold;">InsteadOfCall</span> with operand <span style="font-weight: bold;">Thread.Sleep</span>. Before redesign, the weaver would have woven every method of the module. But now, it will only weave methods that effectively use the <span style="font-weight: bold;">Thread.Sleep</span> method.</p>
+<p>In order to make it possible, I have implemented the new task <span style="font-weight: bold;">IndexUsagesTask</span>, which reads all method bodies an indexes 'uses' and 'used-by' relationships. Why is it better than the previous design? First, because inspection algorithm of this task is much simpler than the one of the weaver. Secondly, because the same information can be used by other tasks.</p>
+<p>So at the end of the day, will you be still angry of this design change? Hopefully not, because these changes don't affect your code too much. All you have to do is to change your implementation of <span style="font-weight: bold;">IAdviceProvider</span>. And this new design is much better and is prepared for the future.</p>
+<p>So let's go!</p>

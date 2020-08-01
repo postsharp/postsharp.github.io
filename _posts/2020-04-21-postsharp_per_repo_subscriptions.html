@@ -8,6 +8,8 @@ permalink: /post/postsharp-per-repo-subscriptions.html
 author: "Gael Fraiteur"
 ---
 <p>Before we start, let me state it clearly:<strong> we hate licensing just as you do</strong>. It&rsquo;s a necessary evil &ndash; but still an evil.&nbsp;</p>
+<!-- readmore-->
+
 <p>In PostSharp 6.6 we&rsquo;re introducing <strong>Per-Usage Subscriptions</strong>, a pricing model where you are not charged per daily unique active user but per amount of source code in which you use PostSharp.&nbsp;</p>
 <p>With Per-Usage Subscriptions, we&rsquo;re hoping to lower the barrier to entry for large teams that want to get started with PostSharp without paying a full license fee for all developers.&nbsp;</p>
 <p>The price of Per-Usage Subscriptions starts at $250 for PostSharp Ultimate or $10 for PostSharp Logging.&nbsp;</p>
@@ -36,7 +38,7 @@ author: "Gael Fraiteur"
 <p>For each C# project, on each device, we compute the number of enhanced lines of code once per day. We create a file, for each project, mapping a non-reversible hash of the type name to the number of lines of code in this type. Then, each day and on each device, we aggregate yesterday&rsquo;s files for all projects, and upload the aggregate to the cloud. The data ends up in Data Lake Analytics.&nbsp;&nbsp;</p>
 <p>If you are not online every day, it does not matter &ndash; but we do require an internet connection once per week for this licensing model.&nbsp;</p>
 <p>Then, once per day, we run a Data Lake Analytics job to aggregate data per subscription. We prepare detailed reports to be displayed in the customer portal, which looks like this:&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2020-04-21-postsharp_per_repo_subscriptions/per-repo licensing.png" alt="" width="894" height="658" /></p>
+<p><img src="/assets/images/blog/2020-04-21-postsharp_per_repo_subscriptions/per-repo licensing.png" alt="" width="894" height="658"></p>
 <p>&nbsp;</p>
 <p>Additionally, the script exports summaries for our sales teams. When we notice that the consumption is higher than the entitlements, we will try to contact you and ask you to purchase more.&nbsp;</p>
 <p><strong>We trust you by default</strong>. We will not break your build before we contact you. If you fail to increase the size of your subscription, we reserve the right to remotely deactivate your subscription.&nbsp;</p>

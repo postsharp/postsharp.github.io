@@ -7,11 +7,11 @@ categories: [General]
 permalink: /post/third-day-at-ecoop-2007.html
 author: "Gael Fraiteur"
 ---
-<span xmlns="">
-<h1>Object Equality, Traits and Non-Nulls.
-</h1>
-<p>The previous two days were full-days workshops on the same topic. Now the main conference has really started, there are a lot more of small topics and a lot more of ideas to pick. Here are some.
+<a name="non-null-annotations"></a><h1>Object Equality, Traits and Non-Nulls.
+</h1><p>The previous two days were full-days workshops on the same topic. Now the main conference has really started, there are a lot more of small topics and a lot more of ideas to pick. Here are some.
 </p>
+<!-- readmore-->
+
 <h1>Declarative Object Identity
 </h1>
 <p>The idea presented there is that much effort is spent to develop non-default implementations of the <em>GetHashCode</em> and <em>Equals</em> methods, and empirical studies of these implementations show that this code is either boiler plate code either buggy. So the proposal was to implement these methods automatically so that equality is tested based on the values of 'key' fields in the object. Key fields may be decorated with an [EqualityKey] custom attribute, for instance:
@@ -47,5 +47,4 @@ author: "Gael Fraiteur"
 <p>The problem is: empirical studies that more than 75% of fields or parameters are meant to be non-null by design. This suggest that the default behavior should be to be non-null...
 </p>
 <p>By the way, who starts writing a static analysis library for .NET and integrate it into PostSharp?
-</p></span>
-<a name="non-null-annotations"></a>
+</p>

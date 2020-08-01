@@ -7,7 +7,9 @@ categories: [Tutorial]
 permalink: /post/day-10-aspect-lifetime-scope-part-2.html
 author: "Dustin Davis"
 ---
-<p>Continuing from yesterday, we’re covering the lifetime and scope of aspects. Today we’ll look at the scope of aspects.</p>  <h3>Scope</h3>  <p>Aspects come in two scopes, static and instance. Static scoped aspects are created and initialized at compile time for consumption at runtime using a singleton pattern. Instance scoped aspects are a bit different. Instanced scoped aspects use a prototype pattern by creating and initializing the aspect at compile time, but at run time when a new instance of a target member’s declaring type is created, a new instance of the aspect is created and used. </p>  <p>Static scoped aspects have the same lifetime as the application while instance scoped aspects have the same lifetime as the instance of the type the aspect was applied to. </p>  <p>However, no matter which scope an aspect will have, PostSharp creates an instance of the aspect for each target in which the aspect has been applied. No doubt this is all confusing so let's see what's going on with a demo. </p>  <h3>Aspect demo</h3>  <p>To make sense of all of this, let's start with a basic aspect.</p>  <pre>[Serializable]
+<p>Continuing from yesterday, we’re covering the lifetime and scope of aspects. Today we’ll look at the scope of aspects.</p>
+<!-- readmore-->
+  <h3>Scope</h3>  <p>Aspects come in two scopes, static and instance. Static scoped aspects are created and initialized at compile time for consumption at runtime using a singleton pattern. Instance scoped aspects are a bit different. Instanced scoped aspects use a prototype pattern by creating and initializing the aspect at compile time, but at run time when a new instance of a target member’s declaring type is created, a new instance of the aspect is created and used. </p>  <p>Static scoped aspects have the same lifetime as the application while instance scoped aspects have the same lifetime as the instance of the type the aspect was applied to. </p>  <p>However, no matter which scope an aspect will have, PostSharp creates an instance of the aspect for each target in which the aspect has been applied. No doubt this is all confusing so let's see what's going on with a demo. </p>  <h3>Aspect demo</h3>  <p>To make sense of all of this, let's start with a basic aspect.</p>  <pre>[Serializable]
 public class TestAspect : LocationInterceptionAspect
 {
     private string InstID;
@@ -152,7 +154,7 @@ Count: 4</pre>
         </td>
       </tr>
     </tbody></table>
-</p>
+
 
 <p>Let's break it down. In Pass 1 we see 5 calls made to our aspect. The first call is to the static member MyField3 while the next 2 are instance calls to MyField1 and MyField3 on tc1 instance and the same for the next 2 calls, but for the tc2 instance.</p>
 
@@ -280,7 +282,7 @@ Count: 1
         </td>
       </tr>
     </tbody></table>
-</p>
+
 
 <p>First, have a look at the Aspect ID's. Notice that again, there are only 3 ID's as we only have 3 targets. They are used both in Pass 1 and Pass 2. This is the same as the static scoped example. The difference is the instance ID's. Except for TestClass.Myfield3, which is static, there are no repeating instance ID's. For each target, we get a new instance of the aspect when we instantiated a new instance of TestClass. This can be verified by examining the count. Since we only make one get call per TestClass instance, count is always 1 because it's scoped to the current instance of the declaring type, tc1 and tc2. </p>
 
@@ -292,4 +294,4 @@ Count: 1
 
 <p>&#160;</p>
 
-<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="{{site.baseurl}}/assets/images/blog/2011-07-08-day_10_aspect_lifetime_scope_part_2/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="{{site.baseurl}}/assets/images/blog/2011-07-08-day_10_aspect_lifetime_scope_part_2/self573_thumb[1]_thumb_3.jpg" width="66" height="66" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/images/blog/2011-07-08-day_10_aspect_lifetime_scope_part_2/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="/assets/images/blog/2011-07-08-day_10_aspect_lifetime_scope_part_2/self573_thumb[1]_thumb_3.jpg" width="66" height="66"></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>

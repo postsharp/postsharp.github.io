@@ -6,22 +6,11 @@ date: 2020-07-22 10:15:00 +02:00
 categories: []
 permalink: /post/thinking-beyond-roslyn-source-generators-and-aspect-oriented-programming.html
 author: "Gael Fraiteur"
+image: "/assets/images/blog/2020-07-22-thinking_beyond_roslyn_source_generators_and_aspec/roslyn source generators.png"
 ---
-<p><img style="float: left;" src="{{site.baseurl}}/assets/images/blog/2020-07-22-thinking_beyond_roslyn_source_generators_and_aspec/roslyn source generators.png" alt="" width="810" height="455" /></p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
-<p>&nbsp;</p>
 <p>When I first heard about Roslyn source generators in the&nbsp;<a href="https://devblogs.microsoft.com/dotnet/introducing-c-source-generators/" target="_blank">announcement post,</a>&nbsp;I first wanted to write a blog post comparing them to aspect-oriented programming. This blog post progressively turned into a philosophical essay. What is programming? What are programming languages? What is design itself? These questions are seldom asked, and philosophical essays are not a popular genre in our industry. Yet, I think they are extremely relevant.</p>
+<!-- readmore-->
+
 <p>In an industry where&nbsp;<em>hacking</em>&nbsp;is so celebrated, I would like today to offer the opposite:<em>&nbsp;a survey of the activity of building software from a humanist and cognitive point of view.</em></p>
 <h2>What are Roslyn source generators?</h2>
 <p>If you haven&rsquo;t read about source generators, then, in a nutshell, it&rsquo;s a new extensibility point of the Roslyn compiler that allows you (and any NuGet package) to dynamically emit new C# code and add it to the compilation in progress. Source generators receive an object model representing the code being compiled and, based on that, can emit new code. They cannot, however, modify existing code.</p>
@@ -79,7 +68,7 @@ author: "Gael Fraiteur"
     }
  
     public event PropertyChangedEventHandler PropertyChanged;
-}<br /><br /></pre>
+}<br><br></pre>
 <p>&nbsp;</p>
 <p>What&rsquo;s wrong with that?</p>
 <p>At first sight, the tool seems to do a good job at avoiding writing the boilerplate. From this angle, source generators look good.</p>

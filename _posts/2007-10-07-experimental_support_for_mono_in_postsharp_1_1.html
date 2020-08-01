@@ -7,9 +7,10 @@ categories: [General]
 permalink: /post/experimental-support-for-mono-in-postsharp-1-1.html
 author: "Gael Fraiteur"
 ---
-<span xmlns="">
 <p>If you use Mono to run your .NET applications on other platforms, this is likely to interest you: PostSharp 1.1 will include experimental support for Mono. You can already download a first snapshot today!
 </p>
+<!-- readmore-->
+
 <p>It has been a hard week of work but now the first bits are working: PostSharp now runs on Mono!
 </p>
 <p>Look at PostSharp Explorer, a Reflector-like sample based on PostSharp, running in openSuse 10.2:
@@ -18,7 +19,7 @@ author: "Gael Fraiteur"
 </p>
 <p>A new NAnt task has been developed, since XBuild is still not yet sufficiently functional.
 </p>
-<p>You can download Mono-enabled PostSharp from our <a href="http://download.postsharp.org/builds/1.1"><span style="TEXT-DECORATION: underline;color:blue;" >daily builds</span></a> section! Download the source package, unzip it, go to the directory <em>Core/PostSharp.NAntTasks</em> and type <em>nant</em>, and you can start!
+<p>You can download Mono-enabled PostSharp from our <a href="http://download.postsharp.org/builds/1.1"><span style="TEXT-DECORATION: underline;color:blue;">daily builds</span></a> section! Download the source package, unzip it, go to the directory <em>Core/PostSharp.NAntTasks</em> and type <em>nant</em>, and you can start!
 </p>
 <p>Gentlemen, porting such an application to Mono is a real pain, and there is still a lot of work to fix issues, so I would appreciate your feedback on this question: Does it worth the effort? Does anyone use Mono and would use PostSharp together? I have no other mean than your feedback to evaluate the user base of PostSharp under Mono.
 </p>
@@ -40,4 +41,4 @@ author: "Gael Fraiteur"
 <p>Note that I suppose PostSharp will not read assemblies on big-endian machines, which would not a bug or 'feature' of Mono but one of PostSharp :-).
 </p>
 <p>Enjoy!
-</p></span>
+</p>

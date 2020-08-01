@@ -8,6 +8,8 @@ permalink: /post/architectural-validation.html
 author: "Matthew Groves"
 ---
 <p><em>The <a href="/blog/file.axd?file=7bf453be61b107b9.zip">full source code for this blog post</a> is available for download</em>.</p>
+<!-- readmore-->
+
 <p>One of the most interesting features of PostSharp that sets it apart from other AOP tools is its ability to apply aspects at compile-time.  As I've explored in previous blog posts, this gives you the ability to do compile time checking and initialization, insteaad of costly and error prone runtime validation.  For instance, one could use CompileTimeValidate to enforce that a given aspect can only be used on MVC Controller methods.</p>
 <pre>    [Serializable]
     public class ConstrainedAspect : OnMethodBoundaryAspect
@@ -70,7 +72,7 @@ author: "Matthew Groves"
 <pre>[assembly: NHEntity(AttributeTargetTypes = "YourNamespace.Models.Entities")]
 </pre>
 <p>When you forget the 'virtual' after you add a new property, you'll see something like this when you compile:</p>
-<p><img src="/blog/image.axd?picture=340c8beb01ed2fe4.png" alt="NHEntity compiler error" /></p>
+<p><img src="/blog/image.axd?picture=340c8beb01ed2fe4.png" alt="NHEntity compiler error"></p>
 <p>You could use constraints like this for similar situations, like WCF DataMembers in a DataContract or OperatingContracts in a ServiceContract.  You can avoid a lot of frustration and wasted time.</p>
 <h3>Referential Constraints</h3>
 <p>Referential constraints are meant to enforce architectural design across assemblies, references, and relationships.  This feature can be very useful, especially if you are writing an API.  PostSharp actually ships with 3 out-of-the-box constraints for common scenarios: ComponentInternal, InternalImplements, and Internal.</p>
@@ -102,7 +104,7 @@ author: "Matthew Groves"
 		}
 	}
 </pre>
-<p><img src="/blog/image.axd?picture=30c76ef832bdf6b5.png" alt="Component Internal compiler error" /></p>
+<p><img src="/blog/image.axd?picture=30c76ef832bdf6b5.png" alt="Component Internal compiler error"></p>
 <p>If you want to specify some exceptions (a specific namespace that you want the internal class to be used in), you can do that in the ComponentInternal's constructor, but by default, it only allows code within its own namespace (and child namespaces) to call it.</p>
 <p><strong>InternalImplements</strong> is for use on interfaces, and limits implementations of the interface to its own assembly.  This means the interface can stay public, for instance, but nothing outside the assembly can implement it.</p>
 <pre>	// in PostsharpArchitecturalConstraints.API assembly
@@ -137,7 +139,7 @@ author: "Matthew Groves"
 		}
 	}
 </pre>
-<p><img src="/blog/image.axd?picture=4b66000a03f68c71.png" alt="InternalImplement compiler error" /></p>
+<p><img src="/blog/image.axd?picture=4b66000a03f68c71.png" alt="InternalImplement compiler error"></p>
 <p>Why would you want to do this?  If you are designing an API, you may want the user to be able to reference an interface, and use your provided implementations of that interface, but you also may want to <em>change</em> your interface somewhere down the line.  But, if you make changes to your interface, you could potentially break any implementations that the user has already made.  By using InternalImplement, the user retains some flexibility in how they consume your API without the potential of their code breaking when they upgrade to your new version.</p>
 <p>And finally, <strong>Internal</strong>.  If you put Internal on a public item, it will remain public, but cannot be used by another assembly.</p>
 <pre>	// in one assembly
@@ -160,7 +162,7 @@ author: "Matthew Groves"
 		}
 	}
 </pre>
-<p><img src="/blog/image.axd?picture=5aea7c3c1ac7589e.png" alt="Internal compiler error" /></p>
+<p><img src="/blog/image.axd?picture=5aea7c3c1ac7589e.png" alt="Internal compiler error"></p>
 <p>Of course, the door is wide open for you to write your own referential constraints.  Here's one I wrote called Unsealable.  It makes any classes inherited from the selected class unable to be sealed.</p>
 <pre>    [MulticastAttributeUsage(MulticastTargets.Class)]
     public class Unsealable : ReferentialConstraint
@@ -207,5 +209,5 @@ author: "Matthew Groves"
 		}
 	}
 </pre>
-<p><img src="/blog/image.axd?picture=261c8b072a21b0d6.png" alt="Unsealable error" /></p>
+<p><img src="/blog/image.axd?picture=261c8b072a21b0d6.png" alt="Unsealable error"></p>
 <p>Constraints can be very valuable for larger teams, or for building an API that will be consumed by a larger audience (even an internal one).  Don't go too crazy, though.  Only build constraints that will help you, your team, and your API consumers save time and make less mistakes.  By enforcing constraints on how code is to be used, you can protect yourself and your users from costly breaking changes down the road.  It may be a politically sensitive issue, so good communication is still important, but it's very much like defensive programming, just at the architectual design level.</p>

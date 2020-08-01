@@ -8,6 +8,8 @@ permalink: /post/done28099t-let-nuget-break-your-build-with-the-upcoming-postsha
 author: "Gael Fraiteur"
 ---
 <p>It&rsquo;s official: PostSharp 3 RC was a success and we are scheduling to move PostSharp 3 to the &ldquo;stable&rdquo; quality band on May 2nd. That means that, on May 2nd, <strong>the stable release of the PostSharp package on NuGet will be version 3.0</strong>. Because of the way the NuGet client is implemented and how people usually author their NuGet packages, this day may turn into a little apocalypse for some of you.</p>
+<!-- readmore-->
+
 <h2>Problem 1. NuGet client in Visual Studio</h2>
 <p>The NuGet user interface in Visual Studio is hardwired to always give you the latest stable version of a Package. There is no way to specify that you want to stay in an old branch. Even if <a href="http://docs.nuget.org/docs/Reference/Versioning" target="_blank">NuGet allegedly supports semantic versioning</a>, NuGet is going to try to upgrade you to a new major version even if it not backward compatible with the old one (semantic versioning says <a href="http://semver.org/" target="_blank">that backward compatibility can be broken</a> when the major version number changes).</p>
 <p>However, PostSharp 3 is not fully backward-compatible with PostSharp 2:</p>
@@ -18,7 +20,7 @@ author: "Gael Fraiteur"
 <p><strong>Action Required:</strong></p>
 <ul>
 <li>Pay attention when upgrading using the NuGet user interface.&nbsp;</li>
-<li>Consider using the NuGet PowerShell console with the <strong>-Version</strong> flag to specify which version you want to install, for instance:<br />
+<li>Consider using the NuGet PowerShell console with the <strong>-Version</strong> flag to specify which version you want to install, for instance:<br>
 <pre>Install-Package PostSharp -Version 2.1.7.30</pre>
 </li>
 <li>Consider using <a href="http://inedo.com/company/news/announcing-proget-20-and-proget-client-tools" target="_blank">ProGet Client Tools</a>, an alternative to NuGet Client Tools that has not been optimized for for pushing the latest fresh bits to your desk, but to protect your build your breaking changes.</li>

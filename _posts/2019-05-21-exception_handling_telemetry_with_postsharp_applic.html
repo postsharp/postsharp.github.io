@@ -6,8 +6,11 @@ date: 2019-05-21 12:02:00 +02:00
 categories: []
 permalink: /post/exception-handling-telemetry-with-postsharp-application-insights-grafana.html
 author: "Alexander Johnston"
+image: "/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/paaop.png"
 ---
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/paaop.png" alt="Pattern-aware programming" /><br /><span style="font-size: small;" data-mce-mark="1"><em>PostSharp is a pattern-aware extension for C# which runs during the compilation stage.</em></span></p>
+<p><br><span style="font-size: small;" data-mce-mark="1"><em>PostSharp is a pattern-aware extension for C# which runs during the compilation stage.</em></span></p>
+<!-- readmore-->
+
 <p>&nbsp;</p>
 <p>Whether you're just getting started with .NET or have been using it for its lifetime, there are concerns every project has to face eventually. <a href="https://medium.com/dealeron-dev/automating-net-core-services-with-postsharp-and-aspect-oriented-code-a8a51d8d84ec" target="_blank">In a previous article</a>, I discussed how PostSharp can be used to target concerns like Logging and Threading. Today, I will show you how we can apply these same principles to Exception Handling to send real-time telemetry to Application Insights.</p>
 <h2>Remarks</h2>
@@ -71,11 +74,11 @@ author: "Alexander Johnston"
 <li>Create an API key and copy it down as well. This can be done in the same "API Access" menu. Provide it all three options `[Read Telemetry, Write Annotations, and Authenticate SDK]`.</li>
 </ol>
 <p>&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/application_id.png" alt="Example of the Azure API key for Application ID." /><br /> <em>Example of the Azure API key for Application ID.</em></p>
+<p><img src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/application_id.png" alt="Example of the Azure API key for Application ID."><br> <em>Example of the Azure API key for Application ID.</em></p>
 <p>&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/instrumentation_keya.png" alt="Example of the Azure API key for Instrumentation and Subscription." /><br /> <em>Example of the Azure API key for Instrumentation and Subscription.</em></p>
+<p><img src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/instrumentation_keya.png" alt="Example of the Azure API key for Instrumentation and Subscription."><br> <em>Example of the Azure API key for Instrumentation and Subscription.</em></p>
 <p>&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/api_key.png" alt="Example of creating an API key in Azure." /><br /> <em>Example of creating an API key in Azure.</em></p>
+<p><img src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/api_key.png" alt="Example of creating an API key in Azure."><br> <em>Example of creating an API key in Azure.</em></p>
 <p>We'll use these pieces of information later to integrate our real-time metrics with Grafana. For now, store those keys in a safe place and let's revisit our code.</p>
 <p>&nbsp;</p>
 <h2>Integrating PostSharp With Azure</h2>
@@ -110,11 +113,11 @@ author: "Alexander Johnston"
 <p>&nbsp;</p>
 <h2>Log Analytics</h2>
 <p>&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/customdima.png" alt="How to reach Log Analytics from an Azure resource" /><br /> <em>This image shows how to reach Log Analytics from an Azure resource.</em></p>
+<p><img src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/customdima.png" alt="How to reach Log Analytics from an Azure resource"><br> <em>This image shows how to reach Log Analytics from an Azure resource.</em></p>
 <p>&nbsp;</p>
 <p>If you navigate to <a href="https://docs.microsoft.com/en-us/azure/azure-monitor/log-query/log-query-overview" target="_blank">Log Analytics</a> on your Application Insights resource then you'll be able to query the `customEvents` table to see if everything worked. You should have `customDimensions` on each record which contains the data you attached to the event from the Exception when it was handled.</p>
 <p>&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/analyticsa.png" alt="Example data structure for an Application Insights custom event." /><br /><em>An example data structure for an Application Insights custom event.</em></p>
+<p><img src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/analyticsa.png" alt="Example data structure for an Application Insights custom event."><br><em>An example data structure for an Application Insights custom event.</em></p>
 <p>&nbsp;</p>
 <p>If you are new to Log Analytics then I recommend checking out the official <a href="https://app.pluralsight.com/library/courses/kusto-query-language-kql-from-scratch/table-of-contents" target="_blank">Kusto Query Language (KQL) From Scratch</a> tutorial on Pluralsight. Here is an example query for our current set of custom events:</p>
 <script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/6b9a7e676aee8e362fec425e3f17b3fb.js"></script>
@@ -134,11 +137,11 @@ author: "Alexander Johnston"
 </ol>
 <p>From here you can begin utilizing KQL queries to make new visualizations. Here are some examples of what can be constructed alongside the queries and settings I used to build them.</p>
 <p>&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafanaa.png" alt="Example of Grafana visuals showing a stable system." /><br /><em>An example of Grafana visuals showing a stable system.</em></p>
+<p><img src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafanaa.png" alt="Example of Grafana visuals showing a stable system."><br><em>An example of Grafana visuals showing a stable system.</em></p>
 <p>&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafana2a.png" alt="Example of Grafana visuals displaying an unstable system." /><br /><em>An example of Grafana visuals displaying an unstable system.</em></p>
+<p><img src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafana2a.png" alt="Example of Grafana visuals displaying an unstable system."><br><em>An example of Grafana visuals displaying an unstable system.</em></p>
 <p>&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafana3a.png" alt="This example image shows what a critical alert might look like." /><br /><em>This example image shows what a critical alert might look like.</em></p>
+<p><img src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/grafana3a.png" alt="This example image shows what a critical alert might look like."><br><em>This example image shows what a critical alert might look like.</em></p>
 <p>&nbsp;</p>
 <p>Bar Chart:</p>
 <script type="text/javascript" src="https://gist.github.com/AlexanderJohnston/38d57e5849b617a9ca5850119fc220f5.js"></script>
@@ -164,7 +167,7 @@ author: "Alexander Johnston"
 <p>&nbsp;</p>
 <div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
 <h3 style="text-align: center; margin-bottom: 10px;">About the author, Alexander Johnston</h3>
-<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="{{site.baseurl}}/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/alexander johnston2.jpg" alt="Alexander Johnston" />
+<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2019-05-21-exception_handling_telemetry_with_postsharp_applic/alexander johnston2.jpg" alt="Alexander Johnston">
 <p style="margin-bottom: 10px;">Alexander is a .NET engineer who began writing code on Visual Basic 6.0 when he was ten years old. He spent the following ten years building online communities, hosting both Linux and Windows servers, and learning how to lead volunteer development teams. By the time he was in college he had contributed code full-time to several games and dropped out to pursue a career as a software engineer. His main focus is automating solutions to everyday problems by writing software with empathy for the user. <a href="https://medium.com/@alexanderj.roaming" target="_blank">Blog</a> | <a href="https://www.linkedin.com/in/alexander-johnston-net/" target="_blank">LinkedIn</a></p>
 </div>
 </div>

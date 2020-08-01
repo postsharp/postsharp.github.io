@@ -7,19 +7,16 @@ categories: [General]
 permalink: /post/laos-to-a-new-design-cycle.html
 author: "Gael Fraiteur"
 ---
-We had two important discussions today with Andre, <a href="http://www.postsharp.org/community/forums/laos/479123478">one about PostSharp Laos</a>, <a href="http://www.postsharp.org/community/forums/free-discussion/116469275">the other about the 'freeze' dates</a>.
+<p>We had two important discussions today with Andre, <a href="http://www.postsharp.org/community/forums/laos/479123478">one about PostSharp Laos</a>, <a href="http://www.postsharp.org/community/forums/free-discussion/116469275">the other about the 'freeze' dates</a>.</p>
+<!-- readmore-->
 
-The discussion about PostSharp Laos, together with other doubts I have, suggests me to send PostSharp Laos in a new design cycle. I really need more feedback like the one of Andre today. I need to know what are the problems encountered in situation. These discussions may have on the design of PostSharp Laos, at least on the public interface.
-
-My initial plan was to freeze all public interfaces with the Beta 1 release (which has been delayed because Wang saw <a href="http://www.postsharp.org/projects/postsharp/issue-tracker/19">an integration problem with VB.NET</a>). But it seems that some parts of the code are more mature than others, and PostSharp Laos seems to belong to the second group.
-
-So that's what I decided:
-<ol><li>The public interface of all core components (excluding eventually Laos and the MSBuild integration) will be frozen after the Beta 1 release. So people that started to use these interfaces (I know there are) can sleep on both ears.</li><li>The specifications of PostSharp Laos will be frozen with Beta 2.</li></ol><span style="font-weight: bold;">Remember that I really need your feedback to close the specs.</span> The quality of the design depends also on your feedback!!
-
-BTW, I plan to open the public interface of the <span style="font-style: italic;">weaver</span> of PostSharp Laos, so it will be possible to implement new base custom attributes using the low-level APIes and using the infrastructure of Laos. This will be after Beta 1, however. I am still hesitating about the right moment to introduced the planned but missing features of PostSharp, principally:
-<ul><li>the state sharing and
-</li><li>the possibility to add aspects programatically at compile-time (and not only declaratively using custom attributes), of course using solely <span style="font-style: italic;">System.Reflection</span> and <span style="font-style: italic;">PostSharp.Laos</span> (no low-level API).
-</li></ul>
-Good night to all people living in my time zone,
-
-Gael
+<p>The discussion about PostSharp Laos, together with other doubts I have, suggests me to send PostSharp Laos in a new design cycle. I really need more feedback like the one of Andre today. I need to know what are the problems encountered in situation. These discussions may have on the design of PostSharp Laos, at least on the public interface.</p>
+<p>My initial plan was to freeze all public interfaces with the Beta 1 release (which has been delayed because Wang saw <a href="http://www.postsharp.org/projects/postsharp/issue-tracker/19">an integration problem with VB.NET</a>). But it seems that some parts of the code are more mature than others, and PostSharp Laos seems to belong to the second group.</p>
+<p>So that's what I decided:</p>
+<p><ol><li>The public interface of all core components (excluding eventually Laos and the MSBuild integration) will be frozen after the Beta 1 release. So people that started to use these interfaces (I know there are) can sleep on both ears.</li><li>The specifications of PostSharp Laos will be frozen with Beta 2.</li></ol><span style="font-weight: bold;">Remember that I really need your feedback to close the specs.</span> The quality of the design depends also on your feedback!!
+<p>BTW, I plan to open the public interface of the <span style="font-style: italic;">weaver</span> of PostSharp Laos, so it will be possible to implement new base custom attributes using the low-level APIes and using the infrastructure of Laos. This will be after Beta 1, however. I am still hesitating about the right moment to introduced the planned but missing features of PostSharp, principally:</p>
+<p><ul><li>the state sharing and
+<p></p></li><li>the possibility to add aspects programatically at compile-time (and not only declaratively using custom attributes), of course using solely <span style="font-style: italic;">System.Reflection</span> and <span style="font-style: italic;">PostSharp.Laos</span> (no low-level API).
+<p></p></li></ul>
+<p>Good night to all people living in my time zone,</p>
+<p>Gael</p>

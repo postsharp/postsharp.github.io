@@ -8,6 +8,8 @@ permalink: /post/webinar-recording-performance-is-a-feature.html
 author: "Iveta Moldavcuk"
 ---
 <p>Starting with the premise that "Performance is a Feature", Matt Warren will show you how to measure, what to measure and how to get the best performance from your .NET code.</p>
+<!-- readmore-->
+
 <p>We will look at real-world examples from the Roslyn code-base and StackOverflow (the product), including how the .NET Garbage Collector needs to be tamed!</p>
 <p>Watch the webinar to learn:</p>
 <ul>
@@ -153,7 +155,7 @@ author: "Iveta Moldavcuk"
 <p><strong>Q: Does LINQ perfomance problem raise only in Roslyn or does it have a place with older .Net platforms?</strong></p>
 <p>A: With regards to LINQ, there are no major differences in the Roslyn compiler compared to the older one. So performance issues <em>can</em> exist in LINQ across all .NET compiler versions. The example was included because it was a change made to the Roslyn code base itself, not to the code it produces when compiling LINQ.</p>
 <p><strong>Q: What is the best setting for GC on Win Server 2012 R2 which hosts 250 ASP.NET MVC apps on IIS. I am talking about gcConcurrent and gcServer in aspnet.config file.</strong></p>
-<p>A: Generally, server mode is the best when you are running on a server, but you actually don&rsquo;t need to do anything, because it&rsquo;s the default mode in ASP.NET Apps, from <a href="https://msdn.microsoft.com/en-us/library/ee787088(v=vs.110).aspx" target="_blank">https://msdn.microsoft.com/en-us/library/ee787088(v=vs.110).aspx</a><br /> You can also specify server garbage collection with unmanaged hosting interfaces. Note that ASP.NET and SQL Server enable server garbage collection automatically if your application is hosted inside one of these environments.</p>
+<p>A: Generally, server mode is the best when you are running on a server, but you actually don&rsquo;t need to do anything, because it&rsquo;s the default mode in ASP.NET Apps, from <a href="https://msdn.microsoft.com/en-us/library/ee787088(v=vs.110).aspx" target="_blank">https://msdn.microsoft.com/en-us/library/ee787088(v=vs.110).aspx</a><br> You can also specify server garbage collection with unmanaged hosting interfaces. Note that ASP.NET and SQL Server enable server garbage collection automatically if your application is hosted inside one of these environments.</p>
 <p><strong>Q: Do we get hints, how to measure or which tools are recommended to measure performance issues?</strong></p>
 <p>I really like PerfView, it takes a while to find your way around it, but it&rsquo;s worth it. This post by Ben Watson will help you get started <a href="http://www.philosophicalgeek.com/2012/07/16/how-to-debug-gc-issues-using-perfview/" target="_blank">http://www.philosophicalgeek.com/2012/07/16/how-to-debug-gc-issues-using-perfview/</a>, plus these tutorials <a href="https://channel9.msdn.com/Series/PerfView-Tutorial" target="_blank">https://channel9.msdn.com/Series/PerfView-Tutorial</a> I&rsquo;ve also used the JetBrains and RedGate profiling tools and they are all very good</p>
 <p><strong>Q: What other techniques can be applied for embedded dotnet, single use application, to avoid unpredicttable GC hesitation. Considering the embedded device is not memory constrained.</strong></p>
@@ -174,7 +176,7 @@ author: "Iveta Moldavcuk"
 <p>&nbsp;</p>
 <div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
 <h3 style="text-align: center; margin-bottom: 10px;">About the speaker, Matt Warren</h3>
-<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="{{site.baseurl}}/assets/images/blog/2016-12-08-webinar_recording_performance_is_a_feature/mattwarren_pic.png" alt="Matt Warren" />
+<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2016-12-08-webinar_recording_performance_is_a_feature/mattwarren_pic.png" alt="Matt Warren">
 <p style="margin-bottom: 10px;">Matt is a C# dev who loves nothing more than finding and fixing performance issues. He's worked with Azure, ASP.NET MVC and WinForms on projects such as a web-site for storing government weather data, medical monitoring devices and an inspection system that ensured kegs of beer didn't leak! He&rsquo;s an Open Source contributor to BenchmarkDotNet and RavenDB. Matt currently works on the C# production profiler at ca and blogs at <a href="http://mattwarren.org/">www.mattwarren.org</a>.</p>
 </div>
 </div>

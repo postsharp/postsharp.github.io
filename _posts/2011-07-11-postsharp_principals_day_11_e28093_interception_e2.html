@@ -7,7 +7,9 @@ categories: [Tutorial]
 permalink: /post/postsharp-principals-day-11-e28093-interception-e28093-part-3.html
 author: "Dustin Davis"
 ---
-<p>Previously we’ve covered interception for methods and “locations” (fields/properties). Today we’re going to finish up interception by looking at the EventInterceptionAspect. </p>  <h3>Intercepting Events</h3>  <p>Events in .NET are similar to automatic properties. They look like fields, but you can override their underlying methods, Get and Set. Events don’t have Get or Set methods, instead they have Add and Remove methods. PostSharp allows us to intercept these Add and Remove methods as well as the invocation of the event using the EventInterceptionAspect base class. Let’s have a look</p>  <pre>[Serializable]
+<p>Previously we’ve covered interception for methods and “locations” (fields/properties). Today we’re going to finish up interception by looking at the EventInterceptionAspect. </p>
+<!-- readmore-->
+  <h3>Intercepting Events</h3>  <p>Events in .NET are similar to automatic properties. They look like fields, but you can override their underlying methods, Get and Set. Events don’t have Get or Set methods, instead they have Add and Remove methods. PostSharp allows us to intercept these Add and Remove methods as well as the invocation of the event using the EventInterceptionAspect base class. Let’s have a look</p>  <pre>[Serializable]
 public class EventAspect : EventInterceptionAspect
 {
     public override void  OnAddHandler(EventInterceptionArgs args)
@@ -63,11 +65,11 @@ public class ExampleClass
     }
 }</pre>
 
-<br />The output is as expected 
+<br>The output is as expected 
 
-<br />
+<br>
 
-<br />
+<br>
 
 <pre>Handler added
 Hello Event!
@@ -223,7 +225,7 @@ Hello Event! Task: 6</pre>
 
 <p>Just for fun, let’s open up ILSpy and look at our example code, you’ll see that there is a lot of work going on.</p>
 
-<p><a href="{{site.baseurl}}/assets/images/blog/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/image_19.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="image" border="0" alt="image" src="{{site.baseurl}}/assets/images/blog/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/image_thumb_19.png" width="626" height="554" /></a></p>
+<p><a href="/assets/images/blog/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/image_19.png"><img style="background-image: none; border-bottom: 0px; border-left: 0px; padding-left: 0px; padding-right: 0px; display: inline; border-top: 0px; border-right: 0px; padding-top: 0px" title="image" border="0" alt="image" src="/assets/images/blog/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/image_thumb_19.png" width="626" height="554"></a></p>
 
 <p>If you look around, you’ll notice a few things. Even though we didn’t implement OnAddHandler or OnRemoveHandler, PostSharp has modified the event to use &lt;SomeEvent&gt;_Broker to do the adding and removing of handlers. </p>
 
@@ -234,7 +236,7 @@ Hello Event! Task: 6</pre>
 <h3>Conclusion</h3>
 The further we dig, the more we see just how comprehensive PostSharp really is. We still have more to cover. The topics are getting more complex, but I’ll try to make sense of them. 
 
-<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="{{site.baseurl}}/assets/images/blog/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="{{site.baseurl}}/assets/images/blog/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/self573_thumb[1]_thumb_3.jpg" width="66" height="66" /></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>
+<div style="padding-bottom: 10px; padding-left: 0px; padding-right: 0px; padding-top: 10px"><a href="/assets/images/blog/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/self573_thumb[1]_3.jpg"><img style="background-image: none; border-right-width: 0px; margin: 0px 5px 0px 0px; padding-left: 0px; padding-right: 0px; display: inline; float: left; border-top-width: 0px; border-bottom-width: 0px; border-left-width: 0px; padding-top: 0px" title="self573_thumb[1]" border="0" alt="self573_thumb[1]" align="left" src="/assets/images/blog/2011-07-11-postsharp_principals_day_11_e28093_interception_e2/self573_thumb[1]_thumb_3.jpg" width="66" height="66"></a>Dustin Davis Davis is an enterprise solutions developer and regularly speaks at user groups and code camps. He can be followed on Twitter <a href="http://twitter.com/#!/PrgrmrsUnlmtd">@PrgrmrsUnlmtd</a> or his blog <a href="http://www.programmers-unlimited.com">Programmers-Unlimited.com</a> </div>
 
 
 

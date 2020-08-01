@@ -7,24 +7,23 @@ categories: [General]
 permalink: /post/pre-release-of-postsharp-1-0-sp1.html
 author: "Gael Fraiteur"
 ---
-It is not a release, because I would need the bravest of you to test it (oh, come on, I tested it extensively in lab conditions!), but it's another significant step forward: <strong>PostSharp 1.0 SP1</strong> is nearly ready.
+<p>It is not a release, because I would need the bravest of you to test it (oh, come on, I tested it extensively in lab conditions!), but it's another significant step forward: <strong>PostSharp 1.0 SP1</strong> is nearly ready.</p>
+<!-- readmore-->
 
-The complete list of fixed issues is on our <a href="http://www.postsharp.org/tracker/search.php?project_id=1&amp;sticky_issues=on&amp;target_version=1.0+SP+1&amp;sortby=last_updated&amp;dir=DESC&amp;hide_status_id=90">issue tracker</a>. Half a dozen of bugs have been reported by the community, all of minor impact, which means that 1.0 RTM was already very stable. Here is the list of the most visible improvements:
-<ul>
-	<li><strong>Runtime performance improvements</strong>: Many of you have complained (yes) of poor runtime performance and I have to admin that they were right to a certain extend. A service pack was surely not the place to make great improvements, but I have found some points where little effort resulted in high effect:
-<ul>
-	<li><strong>OnMethodBoundaryAspect</strong> do not call "methodof" at each method invocation; this information is cached instead. That is, only if neither the method neither the type is generic! Alex Yakutin (dataobjects.net) measured that the call of "methodof" was the most important performance killer. It has been removed.</li>
-	<li>The same with <strong>OnFieldAccessAccess </strong>and "fieldof".</li>
-	<li><strong>OnMethodInvocationAspect</strong> has now its own and optimal implementation of <strong>DynamicInvoke</strong>. Microsoft's implementation was shamefully slow since it all relied on reflection. PostSharp now emits optimal MSIL instruction so there is no reflection at all!</li>
-</ul>
-</li>
-	<li><strong>Side-by-side compatibility with the future PostSharp 1.5 CTP 2 </strong>due in a few days.</li>
-	<li><strong><em>Breaking change</em></strong>: All PostSharp assemblies have now and will have version 1.0.0.0 (i.e. the build and revision numbers are always zero) and <strong>you need to require a specific version in Visual Studio</strong>. This was due to the SxS challenge with 1.5. It also means that you won't need to recompile plug-ins for each reversion of PostSharp; it will be enough to do it for each minor version.</li>
-	<li>Some annoying problem with <strong>debugging experience</strong> has been fixed: sometimes the debugging cursor did not really follow the actual code!</li>
-	<li>Some less visible issues you can see in our <a href="http://www.postsharp.org/tracker/search.php?project_id=1&amp;sticky_issues=on&amp;target_version=1.0+SP+1&amp;sortby=last_updated&amp;dir=DESC&amp;hide_status_id=90">issue tracker</a>.</li>
-</ul>
-I repeat, this is not the SP1 yet, this is a pre-release. I need a hundred of you to try it and to report bugs (eventually), then I will promote it to the SP1 release and update the download page. And now, what everyone expects, the download link. Which one? Oh, there is none, sorry. You have to download revision 459 or higher from <a href="http://download.postsharp.org/builds/1.0/">http://download.postsharp.org/builds/1.0/</a>.
-
-Happy PostSharping!
-
--gael
+<p>The complete list of fixed issues is on our <a href="http://www.postsharp.org/tracker/search.php?project_id=1&amp;sticky_issues=on&amp;target_version=1.0+SP+1&amp;sortby=last_updated&amp;dir=DESC&amp;hide_status_id=90">issue tracker</a>. Half a dozen of bugs have been reported by the community, all of minor impact, which means that 1.0 RTM was already very stable. Here is the list of the most visible improvements:</p>
+<p><ul>
+<p>	<li><strong>Runtime performance improvements</strong>: Many of you have complained (yes) of poor runtime performance and I have to admin that they were right to a certain extend. A service pack was surely not the place to make great improvements, but I have found some points where little effort resulted in high effect:</li></p>
+<p><ul>
+<p>	<li><strong>OnMethodBoundaryAspect</strong> do not call "methodof" at each method invocation; this information is cached instead. That is, only if neither the method neither the type is generic! Alex Yakutin (dataobjects.net) measured that the call of "methodof" was the most important performance killer. It has been removed.</li></p>
+<p>	<li>The same with <strong>OnFieldAccessAccess </strong>and "fieldof".</li></p>
+<p>	<li><strong>OnMethodInvocationAspect</strong> has now its own and optimal implementation of <strong>DynamicInvoke</strong>. Microsoft's implementation was shamefully slow since it all relied on reflection. PostSharp now emits optimal MSIL instruction so there is no reflection at all!</li></p>
+<p></p></ul>
+<p></p>
+<p>	<li><strong>Side-by-side compatibility with the future PostSharp 1.5 CTP 2 </strong>due in a few days.</li></p>
+<p>	<li><strong><em>Breaking change</em></strong>: All PostSharp assemblies have now and will have version 1.0.0.0 (i.e. the build and revision numbers are always zero) and <strong>you need to require a specific version in Visual Studio</strong>. This was due to the SxS challenge with 1.5. It also means that you won't need to recompile plug-ins for each reversion of PostSharp; it will be enough to do it for each minor version.</li></p>
+<p>	<li>Some annoying problem with <strong>debugging experience</strong> has been fixed: sometimes the debugging cursor did not really follow the actual code!</li></p>
+<p>	<li>Some less visible issues you can see in our <a href="http://www.postsharp.org/tracker/search.php?project_id=1&amp;sticky_issues=on&amp;target_version=1.0+SP+1&amp;sortby=last_updated&amp;dir=DESC&amp;hide_status_id=90">issue tracker</a>.</li></p>
+<p></p></ul>
+<p>I repeat, this is not the SP1 yet, this is a pre-release. I need a hundred of you to try it and to report bugs (eventually), then I will promote it to the SP1 release and update the download page. And now, what everyone expects, the download link. Which one? Oh, there is none, sorry. You have to download revision 459 or higher from <a href="http://download.postsharp.org/builds/1.0/">http://download.postsharp.org/builds/1.0/</a>.</p>
+<p>Happy PostSharping!</p>
+<p>-gael</p>

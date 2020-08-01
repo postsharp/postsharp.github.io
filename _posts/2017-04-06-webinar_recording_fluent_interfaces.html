@@ -8,6 +8,8 @@ permalink: /post/webinar-recording-fluent-interfaces.html
 author: "Iveta Moldavcuk"
 ---
 <p>Fluent interfaces are more than just a pretty way to write code. They can prevent errors, by ensuring your shared code is used correctly.</p>
+<!-- readmore-->
+
 <p>Our guest Scott Lilly will walk you through the topic of fluent interfaces and demonstrate how it can save you from needing to create the documentation that we never have time to write anyway.</p>
 <p>Watch the webinar and learn:</p>
 <ul>
@@ -141,7 +143,7 @@ author: "Iveta Moldavcuk"
 <p><strong>Q: How would you have default values and avoid too lengthy code? Let's say for example that 90% of the time you would include all categories so I would not want to repeat that each time I use the FI.</strong></p>
 <p>A: You could make an instantiating function named &bdquo;CreateStandardSalesReport()&ldquo; (for example). Inside that function, it would call the private constructor and set the default values. Its returning datatype would be an interface that is farther in the chain, past the functions for variables that were automatically set inside CreateStandardSalesReport.</p>
 <p>Here is an example of how that might be done: <a href="https://gist.github.com/ScottLilly/85091b9f61e66256a69a7909a05337fd">https://gist.github.com/ScottLilly/85091b9f61e66256a69a7909a05337fd</a></p>
-<p>I would change the interfaces, so the functions that can be skipped over are first in the &bdquo;chain&ldquo;. It&rsquo;s easier to skip over the first five functions (for example), than to create interfaces and functions that let you optionally skip over the first two functions, then the fifth function, then the seventh function.<br />You might also want to integrate the Builder pattern, as mentioned in one of the questions below.</p>
+<p>I would change the interfaces, so the functions that can be skipped over are first in the &bdquo;chain&ldquo;. It&rsquo;s easier to skip over the first five functions (for example), than to create interfaces and functions that let you optionally skip over the first two functions, then the fifth function, then the seventh function.<br>You might also want to integrate the Builder pattern, as mentioned in one of the questions below.</p>
 <p><strong>Q: How does this compare to the "Curiously Recurring Template Pattern" such as expressed <a href="http://zpbappi.com/curiously-recurring-template-pattern-in-csharp/">here</a>?</strong></p>
 <p>A: That pattern is an interesting way to do method chaining. Although, it looks like you will still need to create individual interfaces, to enforce any grammar rules.</p>
 <p><strong>Q: Can't you just use annotations to require a certain order and ensure parameters contain data?</strong></p>
@@ -154,7 +156,7 @@ author: "Iveta Moldavcuk"
 <p>A: If I was building the ReportGenerator class for a real program, I would probably have a function for passing in a list of Salesperson IDs (as if the function was receiving a list of checked items in a datagrid that displayed the salespeople).</p>
 <p>Inside that function, I would add the IDs from that passed parameters into the private _includedSalespoersonIDs variable, if that ID was not already in the list.</p>
 <p><strong>Q: Is this the only way to implement fluent interfaces? If not, what are the other approaches and how are they different from your approach?</strong></p>
-<p>A: This is the only way I&rsquo;ve used. You might be able do something similar with extension methods that only work for specific datatypes (which would be the interfaces we use for the grammar). But, method seems less clear, to me.<br /> If anyone is aware of a different method, please share it.</p>
+<p>A: This is the only way I&rsquo;ve used. You might be able do something similar with extension methods that only work for specific datatypes (which would be the interfaces we use for the grammar). But, method seems less clear, to me.<br> If anyone is aware of a different method, please share it.</p>
 <p><strong>Q: How would you implement the IncludeSalespersonID function within the report class or option that are mutually exclusive when the report is actually being built?</strong></p>
 <p>A: When you create your fluent interface&rsquo;s grammar rules, you should design it to prevent mutually-exclusive functions. For example, in the ReportGenerator fluent interface, you can call &ldquo;IncludeAllSalespeople&rdquo;, or you can call &ldquo;IncludeSalespersonID&rdquo;. You can call &ldquo;IncludeUnshippedOrders&rdquo;, or you can call &ldquo;ExcludeUnshippedOrders&rdquo;. You can only call one, or the other &ndash; not both.</p>
 <p><strong>Q: How exception handling works in fluent interface? How it works with optional parameters?</strong></p>
@@ -166,7 +168,7 @@ author: "Iveta Moldavcuk"
 <p>If you show the users (or business analysts) the concept of method chaining, they should be able to create the grammar for you, using business terms. Then, you could use that to build the required fluent interfaces.</p>
 <p>This is definitely an idea I want to think about some more. It may be a great way to deal with correctly understanding complex business requirements.</p>
 <p><strong>Q: If include All categories is optional, will the group by sort by be available to continue with the BuildReport? So, the order would include a Build report method for all functions that are deemed optional?</strong></p>
-<p>A: If you build the grammar to allow that, it should let you create that as a valid &ldquo;chain&rdquo;. I think the answer to the first question (&lt;a href="https://gist.github.com/ScottLilly/85091b9f61e66256a69a7909a05337fd"&gt;see source code here&lt;/a&gt;) will show how to do that.<br /> Please let me know if that sample doesn&rsquo;t answer your question.</p>
+<p>A: If you build the grammar to allow that, it should let you create that as a valid &ldquo;chain&rdquo;. I think the answer to the first question (&lt;a href="https://gist.github.com/ScottLilly/85091b9f61e66256a69a7909a05337fd"&gt;see source code here&lt;/a&gt;) will show how to do that.<br> Please let me know if that sample doesn&rsquo;t answer your question.</p>
 <p><strong>Q: How to handle exception thrown by preceding method? How to stop chaining, or ignore error if not critical and continue chaining?</strong></p>
 <p>A: The chaining functions only set the values of the private variables, and &ldquo;return this&rdquo;. So, there should not ever be an exception &ndash; unless you add your own data validation in those functions. In that case, when the code is run, and an invalid parameter is passed, it will throw whatever type of exception you specify, and stop executing.</p>
 <p>You could put logic into the chaining functions that would check if the passed parameter is invalid. If it is, instead of having the function throw an exception, you could have it determine a good (or default) value to use.</p>
@@ -185,8 +187,8 @@ author: "Iveta Moldavcuk"
 <p>&nbsp;</p>
 <div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
 <h3 style="text-align: center; margin-bottom: 10px;">About the speaker, Scott Lilly</h3>
-<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="{{site.baseurl}}/assets/images/blog/2017-04-06-webinar_recording_fluent_interfaces/scottlilly.jpg" alt="Scott Lilly" />
-<p style="margin-bottom: 10px;">Scott Lilly is a C# developer, creator of "Learn C# by Building a Simple RPG", and lean practitioner.<br /> Scott develops line-of-business systems for corporate clients, and publishes videos and tutorials for C# developers.<br /><a href="http://scottlilly.com/">Scott's blog</a>.</p>
+<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2017-04-06-webinar_recording_fluent_interfaces/scottlilly.jpg" alt="Scott Lilly">
+<p style="margin-bottom: 10px;">Scott Lilly is a C# developer, creator of "Learn C# by Building a Simple RPG", and lean practitioner.<br> Scott develops line-of-business systems for corporate clients, and publishes videos and tutorials for C# developers.<br><a href="http://scottlilly.com/">Scott's blog</a>.</p>
 </div>
 </div>
 <p>&nbsp;</p>

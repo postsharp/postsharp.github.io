@@ -8,8 +8,10 @@ permalink: /post/a-better-default-tostring-with-postsharp-community.html
 author: "Petr Hudeček"
 ---
 <p>During debugging and prototyping, we often rely on the ToString method to know what an object looks like. This works well for built-in types like integer and string but becomes less helpful for classes and structs unless we override the ToString method manually. Unfortunately, this requires a lot of boilerplate. In this article, I introduce <a href="https://github.com/postsharp/PostSharp.Community.ToString">PostSharp.Community.ToString</a>, a free and open-source extension to PostSharp that automatically generates the ToString method for you.</p>
+<!-- readmore-->
+
 <p>Here&rsquo;s what a debugger view of an object in Visual Studio might look like when you don&rsquo;t override ToString:&nbsp;</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2020-06-16-a_better_default_tostring_with_postsharp_community/tostring1.png" alt="" /></p>
+<p><img src="/assets/images/blog/2020-06-16-a_better_default_tostring_with_postsharp_community/tostring1.png" alt=""></p>
 <p>The values you see for strings and integers are valuable but the default ToString implementation on custom types is not as valuable. In this case, perhaps the only useful information it provides is that the variable or property isn&rsquo;t null. To learn more, I would need to expand.</p>
 <p>I could implement an override for ToString for each of these classes (Hero, AbilityScores, and HeldItem) by hand but that would mean writing and maintaining that code.&nbsp;</p>
 <p>Enter <a href="https://github.com/postsharp/PostSharp.Community.ToString">PostSharp.Community.ToString</a>, our new free and open-source PostSharp add-in that adds a better default ToString implementation.</p>
@@ -53,7 +55,7 @@ class TestClass
 <p>And now all classes in the assembly have a new and improved ToString implementation. (At least, all classes where I didn&rsquo;t override ToString manually: a &ldquo;real&rdquo; ToString method still takes precedence over a PostSharp-created one.)</p>
 <p>Our multicast attributes also have filters you can use to target a subset of classes, <a href="https://github.com/postsharp/Home/blob/master/multicasting.md">see multicasting.md for details</a>.</p>
 <p>And so, by adding this one line, now my debugger view looks like this:</p>
-<p>&nbsp;<img src="{{site.baseurl}}/assets/images/blog/2020-06-16-a_better_default_tostring_with_postsharp_community/tostring2.png" alt="" /></p>
+<p>&nbsp;<img src="/assets/images/blog/2020-06-16-a_better_default_tostring_with_postsharp_community/tostring2.png" alt=""></p>
 <p>And that is way more informative.</p>
 <p>I find this synthesized ToString method also valuable for rapid application development. When I&rsquo;m prototyping or creating a quick-and-dirty user interface, I can have many objects that are eventually displayed to the user by being ToString&rsquo;d. In situations where I don&rsquo;t care about the exact presentation of a class, a [ToString] attribute will say everything there is to say about an object and can be appropriate.</p>
 <h2>Conclusion</h2>

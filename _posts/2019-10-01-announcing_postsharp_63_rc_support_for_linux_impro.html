@@ -8,15 +8,17 @@ permalink: /post/announcing-postsharp-63-rc-support-for-linux-improved-vsx-perfo
 author: "Lejla Rasic"
 ---
 <p>We're excited to announce the release of PostSharp 6.3 RC, available for download on <a href="https://www.postsharp.net/downloads/postsharp-6.3">our website</a> and from <a href="https://www.nuget.org/profiles/PostSharp">nuget.org</a> (make sure to enable the pre-release option). The most anticipated feature of this release is the support for Linux and macOS build agents. Additionally, we significantly improved the responsiveness of PostSharp Tools for Visual Studio thanks to a full async redesign.</p>
+<!-- readmore-->
+
 <h2>Support for Linux and macOS</h2>
 <p>The wait is over! PostSharp has supported .NET Standard and .NET Core for a long time, but it still could only run on Windows-based build agents. Starting from PostSharp 6.3, we now support Linux and macOS build agents.</p>
 <p>Note that development is still only officially supported on Visual Studio for Windows. Although you can probably live without the code editor extensions and additional tool windows provided by PostSharp Tools for Visual Studio, you would be missing the debugger integration. Without our Visual Studio plug-in, debugging a PostSharp-enhanced application can be confusing. If you don't mind, feel free to develop on Linux or macOS too.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-10-01-announcing_postsharp_63_rc_support_for_linux_impro/image (4).png" alt="" /></p>
+<p><img src="/assets/images/blog/2019-10-01-announcing_postsharp_63_rc_support_for_linux_impro/image (4).png" alt=""></p>
 <h2>Improved responsiveness of PostSharp Tools for Visual Studio</h2>
 <p>PostSharp is now a well-behaved asynchronous extension, so you should no longer experience UI freezes because of PostSharp. That was especially laborious because even a thing like getting a dependency from a service locator now needs to be asynchronous. We now stick to the letter of the new async orthodoxy and we must concede, it's for the best.</p>
 <h2>Support for shared and multi-targeted projects</h2>
 <p>PostSharp Tools for Visual Studio now works properly with files that are shared between several projects, and with multi-targeted projects. When editing a source file shared by several projects or targets, and if different aspects are used (e.g. using conditional compilation), the code adornments and tooltips now accurately reflect the aspects applied for the current project and/or target. The Aspect Explorer has been updated as well. Previously, PostSharp Tools for Visual Studio did not differentiate assemblies of the same name.</p>
-<p><img src="{{site.baseurl}}/assets/images/blog/2019-10-01-announcing_postsharp_63_rc_support_for_linux_impro/image (5).png" alt="" width="900px" /></p>
+<p><img src="/assets/images/blog/2019-10-01-announcing_postsharp_63_rc_support_for_linux_impro/image (5).png" alt="" width="900px"></p>
 <h2>Support for per-monitor awareness of DPI</h2>
 <p>Several users were affected by a new option of Visual Studio 2019: support for per-monitor awareness of DPI. This option became enabled by default in VS 2019.3 and the number of affected users grew.</p>
 <p>We're now happy to say that this issue is solved. We had to rewrite most of our old WinForms code to WPF and we took this opportunity to better respect color themes and icon sets. The result: a much smoother experience.</p>

@@ -7,7 +7,9 @@ categories: [Tutorial]
 permalink: /post/implementing-undo-redo-with-aspects.html
 author: "Gael Fraiteur"
 ---
-<p align="right"><a href="http://www.sharpcrafters.com/downloads/blog/2010-11-UndoRedo.zip" target="_blank">Download the source code for this post.</a></p>  <p>Undo-redo is one of those features we don’t notice any more. It is however one of the most annoying to program because it requires so much menial code. Fortunately, aspect-oriented programming (AOP) renders this task virtually effortless.</p>  <p>There are two ways to implement an undo-redo feature. The first way, in a model-view-controller, is to put the feature inside the controller (each command implementation in the controller is responsible for generating another command, reversing the effect of the first one). The second way is to record all changes on the model. We’ll focus on this one and demonstrate how you could use an aspect to automatically record any change to domain objects.</p>  <h4>Designing the undo-redo system</h4>  <p>First, let me remind you that aspect-oriented programming is not opposed to object-oriented programming in any way; therefore a good aspect-oriented design must always start with a good object-oriented design.</p>  <p>In our design, every single change to a model object (such as changing the value of a field or added an object to a collection) is modeled as an object implementing the interface <b>IUndoItem</b>, with the following semantics:</p>  <pre>public interface IUndoItem
+<p align="right"><a href="http://www.sharpcrafters.com/downloads/blog/2010-11-UndoRedo.zip" target="_blank">Download the source code for this post.</a></p>
+<!-- readmore-->
+  <p>Undo-redo is one of those features we don’t notice any more. It is however one of the most annoying to program because it requires so much menial code. Fortunately, aspect-oriented programming (AOP) renders this task virtually effortless.</p>  <p>There are two ways to implement an undo-redo feature. The first way, in a model-view-controller, is to put the feature inside the controller (each command implementation in the controller is responsible for generating another command, reversing the effect of the first one). The second way is to record all changes on the model. We’ll focus on this one and demonstrate how you could use an aspect to automatically record any change to domain objects.</p>  <h4>Designing the undo-redo system</h4>  <p>First, let me remind you that aspect-oriented programming is not opposed to object-oriented programming in any way; therefore a good aspect-oriented design must always start with a good object-oriented design.</p>  <p>In our design, every single change to a model object (such as changing the value of a field or added an object to a collection) is modeled as an object implementing the interface <b>IUndoItem</b>, with the following semantics:</p>  <pre>public interface IUndoItem
 {
   void Redo();
   void Undo();
@@ -23,7 +25,7 @@ author: "Gael Fraiteur"
 
 <pre>/// <summary>
 /// Aspect that, when applied on a field (directly or indirectly, using multicasting),
-/// registers all changes to that field into the <see cref="UndoManager" />.
+/// registers all changes to that field into the <see cref="UndoManager"></see>.
 /// </summary>
 [Serializable]
 [MulticastAttributeUsage( MulticastTargets.Field )]
@@ -32,8 +34,8 @@ public class UndoableAttribute : LocationInterceptionAspect
     /// <summary>
     /// Method invoked whenever a field value is changed.
     /// </summary>
-    /// <param name="args" />Information about the field being changed and 
-    /// the new value.</param>
+    /// <param name="args">Information about the field being changed and 
+    /// the new value.
     public override void OnSetValue( LocationInterceptionArgs args )
     {
         // Store the new and old values.
@@ -52,7 +54,7 @@ public class UndoableAttribute : LocationInterceptionAspect
     }
 
     /// <summary>
-    /// Encapsulates a change of field value as an <see cref="IUndoItem" />.
+    /// Encapsulates a change of field value as an <see cref="IUndoItem"></see>.
     /// </summary>
     private class UndoField : IUndoItem
     {
@@ -61,7 +63,7 @@ public class UndoableAttribute : LocationInterceptionAspect
         private readonly object oldValue;
         private readonly object newValue;
 
-        public UndoField( ILocationBinding binding, object instance, <br />                          object oldValue, object newValue )
+        public UndoField( ILocationBinding binding, object instance, <br>                          object oldValue, object newValue )
         {
             this.binding = binding;
             this.instance = instance;
