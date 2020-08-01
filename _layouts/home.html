@@ -8,8 +8,8 @@
 					<div class="post_data">
 						<figure>
 							<a href="{{site.baseurl}}{{ post.url }}">
-								{% if post.folderName %}
-								<img src="{{site.baseurl}}/assets/images/blog/{{post.folderName}}/{{post.folderName}}.{{post.featImgExt}}"
+								{% if post.image %}
+								<img src="{{post.image}}"
 									alt="{{post.title}}">
 								{% else %}
 								<img src="{{site.baseurl}}/assets/images/blog/ps-no-featimg.jpg">
@@ -59,8 +59,8 @@
 	<div class="blog_item">
 		<figure>
 			<a href="{{site.baseurl}}{{ post.url }}">
-				{% if post.folderName %}
-				<img src="{{site.baseurl}}/assets/images/blog/{{post.folderName}}/{{post.folderName}}.{{post.featImgExt}}"
+				{% if post.image %}
+				<img src="{{post.image}}"
 					alt="{{post.title}}">
 				{% else %}
 				<img src="{{site.baseurl}}/assets/images/blog/ps-no-featimg.jpg">
@@ -89,8 +89,8 @@
 	<div class="blog_item">
 		<figure>
 			<a href="{{site.baseurl}}{{ post.url }}">
-				{% if post.folderName %}
-				<img src="{{site.baseurl}}/assets/images/blog/{{post.folderName}}/{{post.folderName}}.{{post.featImgExt}}"
+				{% if post.image %}
+				<img src="{{post.image}}"
 					alt="{{post.title}}">
 				{% else %}
 				<img src="{{site.baseurl}}/assets/images/blog/ps-no-featimg.jpg">
