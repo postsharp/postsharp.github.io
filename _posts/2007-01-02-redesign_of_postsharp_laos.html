@@ -8,7 +8,7 @@ permalink: /post/redesign-of-postsharp-laos.html
 author: "Gael Fraiteur"
 ---
 <p>I took the last opportunity to c<a href="http://www.postsharp.org/about/news/development/new-rc-of-beta-1/view">hange the public interface of PostSharp Laos</a>. Hopefully, for most of you, the changes will be trivial and a find-and-replace will do the job.</p>
-<!-- readmore-->
+<!--readmore-->
 
 <p>The <span style="font-style: italic;">old</span> design was to pass a lot of parameter to each method like <span style="font-style: italic;">OnEntry</span> or <span style="font-style: italic;">OnExit</span>, for instance. Each piece of context (object instance, array of arguments, arrays of generic arguments, ...) was passed as a standalone parameter.</p>
 <p>This kind of design had serious drawbacks. The main is flexibility, i.e. forward compatibility. If I want to add a new information to the context, I have to add a new parameter... and break the public interface.</p>

@@ -8,7 +8,7 @@ permalink: /post/postsharp-threading-toolkit-thread-dispatching.html
 author: "Karol Waledzik"
 ---
 <p>Following the announcement of our new PostSharp Threading Toolkit, today I would like to show you some of its capabilities, starting with method dispatching.</p>
-<!-- readmore-->
+<!--readmore-->
   <p>Typical applications often include long-running operations that should be scheduled to run in a background thread, often invoked with a fire-and-forget approach.</p>  <p>This is doubly true in case of thick client applications. Almost all desktop applications need to load some data from disk, download it from network or perhaps call a WCF service. These operations take time and if you execute them from the main application thread, they are going to block the message loop and even prevent the user interface from being drawn. This is the “frozen application” syndrome that frustrates so many users.</p>  <h2>Non-Solution 1: Manual thread dispatching</h2>  <p>The obvious solution is to run the operation in a background thread, so that the message loop is not blocked. In .NET this can be done in several ways, typically using ThreadPool or Tasks. The code may not be as pretty as you would like it to be, but it works. Things get worse when you need to display the progress of the operation or notify the user when you are done. Whether you are developing in WinForms or WPF, you will not be allowed to interact with the UI from a background thread and have to resort to Control.Invoke() or Dispatcher object, resulting in code resembling this snippet:</p>  <pre>private void onButtonClick(object sender, EventArgs e)
 {
    Task.Factory.StartNew(() =&gt;

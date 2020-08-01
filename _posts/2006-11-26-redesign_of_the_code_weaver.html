@@ -8,7 +8,7 @@ permalink: /post/redesign-of-the-code-weaver.html
 author: "Gael Fraiteur"
 ---
 <p>The ones who already use the Code Weaver will maybe get angry but that's something I needed to do before going beta: I have redesigned quite deeply the low-level code weaver. Most changes are documented in the CHANGELOG.txt file.</p>
-<!-- readmore-->
+<!--readmore-->
 
 <p>So what has changed?</p>
 <p>First, the notions of local and global advices has been deprecated. There is instead a unified notion of method-level advices and unified semantics to express what is called elsewhere <span style="font-style: italic;">pointcuts</span>, i.e. to apply advices to join points. When you add an advice to the weaver, you can now specify on which <span style="font-style: italic;">methods</span> it applies and on which <span style="font-style: italic;">operands</span>. We use the IEnumerable interface to pass sets of methods and operands, so it should be forward compatible with C# 3.0 / LINQ.</p>

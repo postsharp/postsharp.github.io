@@ -8,7 +8,7 @@ permalink: /post/configuring-postsharp-diagnostics-toolkits.html
 author: "Igal Tabachnik"
 ---
 <p>One of the ideas behind the PostSharp Toolkits was a zero code change requirement, that would allow you to simply install the relevant toolkit from NuGet, rebuild your project and that’s it. To achieve that, we have revived the PostSharp XML configuration. The XML configuration is the unification of the Plug-in and Project models in the project loader. Let’s have a look on how PostSharp Diagnostics Toolkits use this XML configuration.</p>
-<!-- readmore-->
+<!--readmore-->
   <h3></h3>  <h2>PSPROJ XML Configuration</h2>  <p>After installing the PostSharp Diagnostics Toolkits via NuGet, a file with the .psproj extension will be created, named after the current project. The .psproj files are an XML representation of the PostSharp Project structure – containing the configuration of the application, with resolved properties and references.</p>  <p>Let’s take a look at the default configuration that is produced by the PostSharp Diagnostic Toolkit package:</p>  <pre>&lt;?xml version=&quot;1.0&quot; encoding=&quot;utf-8&quot; ?&gt;
 &lt;!-- Default project used when PostSharp is detected according to project references. --&gt;
 &lt;Project xmlns=&quot;http://schemas.postsharp.org/1.0/configuration&quot; <br>    ReferenceDirectory=&quot;{$ReferenceDirectory}&quot;&gt;&#160;&#160; <br>&#160;<br>  &lt;Property Name=&quot;LoggingBackend&quot; Value=&quot;trace&quot; /&gt;<br>&#160;<br>  &lt;Using File=&quot;default&quot;/&gt;<br>  &lt;Using File=&quot;..\..\Build\bin\{$Configuration}\PostSharp.Toolkit.Diagnostics.Weaver.dll&quot;/&gt;

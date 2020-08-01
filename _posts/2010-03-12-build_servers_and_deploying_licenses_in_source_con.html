@@ -8,7 +8,7 @@ permalink: /post/build-servers-and-deploying-licenses-in-source-control.html
 author: "Gael Fraiteur"
 ---
 <p>I got many questions last weeks about deploying PostSharp 2.0 to a build server and deploying licenses in the source control repository. Since these issues are somehow related, I answer them in a single post.</p>
-<!-- readmore-->
+<!--readmore-->
   <p>The updated CTP 4 (build 1009) contains two improvements that are good to know about.</p>  <h2>1. Running PostSharp in an unattended session</h2>  <p><a href="http://www.ISerializable.com">Roy Osherove</a> reported a problem when PostSharp 2.0 runs in a GUI-less build server. The cause of the issue was the tray icon of the pipe server. The new build will <em>not</em> attempt to open the tray icon if PostSharp detects that it runs in unattended mode. </p>  <p>PostSharp uses the property <a href="http://msdn.microsoft.com/en-us/library/system.environment.userinteractive.aspx">Environment.UserInteractive</a> to determine whether the process is attended or not. If, for some reason, this detection gives unsuccessful, you can forbid the pipe server to open the tray icon by setting the following machine-level registry setting: </p>  <p>Windows 64-bit: </p>  <pre>[HKEY_LOCAL_MACHINE\SOFTWARE\Wow6432Node\SharpCrafters\PostSharp 2.0]
 &quot;TrayIconDisabled&quot;=dword:00000001&gt;</pre>
 

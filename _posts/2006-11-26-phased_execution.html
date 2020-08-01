@@ -8,7 +8,7 @@ permalink: /post/phased-execution.html
 author: "Gael Fraiteur"
 ---
 <p>There is a lot of new things to tell today. To make it simpler I will make a post for each of them. Let me start with the first: phased execution.</p>
-<!-- readmore-->
+<!--readmore-->
 
 <p>You probably know that PostSharp projects are composed of tasks. Indexing types is a task, weaving is a task, and even compiling back the code is a task. What you maybe don't know if that tasks are grouped in phase. PostSharp defines four standard phases: load, analyze, transform and generate.</p>
 <p>When you execute a <span style="font-style: italic;">single</span> project, i.e. when you transform a <span style="font-style: italic;">single</span> module, the situation is trivial: we execute one phase after the other.</p>

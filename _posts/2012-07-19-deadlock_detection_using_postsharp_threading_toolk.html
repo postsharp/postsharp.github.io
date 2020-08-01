@@ -8,7 +8,7 @@ permalink: /post/deadlock-detection-using-postsharp-threading-toolkit.html
 author: "Karol Waledzik"
 ---
 <p><span style="font-weight: normal">We’ve all experienced, with great frustration, desktop application freeze: the user interface becomes unresponsive and, after a while, the message “Not Responding” is displayed in the title bar and the only escape is to kill the process. Typically, application freezes are the result of a deadlock where the foreground thread, instead of processing the message loop, waits for some resource to be released by a background thread, which in turn waits for the foreground thread to release some other resource.</span></p>
-<!-- readmore-->
+<!--readmore-->
   <h2>Deadlocks Defined</h2>  <p>A deadlock is a situation in which two or more competing actions are waiting for each other to finish, and thus neither ever does. Whenever you’re using locks there is a risk of deadlocks.</p>  <p>There are four main conditions necessary for a deadlock to occur:</p>  <p>a) <em>A limited number of instances of a particular resource.</em> In the case of a monitor in C# (what you use when you use the lock keyword), this limited number is one, since a monitor is a mutual-exclusion lock.</p>  <p>b) <em>The ability to hold one resource and request another.</em> In C#, this can be done by locking on one object and then locking on another before releasing the first lock, for example:</p>  <pre>lock(a)
 {
    lock(b)

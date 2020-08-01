@@ -8,7 +8,7 @@ permalink: /post/improve-exception-handling-and-caching-using-postsharp.html
 author: "Britt King"
 ---
 <p><em>Marcus King recently released <a href="http://www.sharpcrafters.com/media/tutorials" target="_blank">3 screencasts</a> showing how to address exception handling and caching.       <br>We asked him to introduce his work in this guest post.</em></p>
-<!-- readmore-->
+<!--readmore-->
   <p>How often do I have to keep solving the same problem?&#160; As developers we’ve all been there, each project we work on we have to do the same ole’ thing we’ve done a thousand times before.&#160; Luckily in most cases there are good native features built into the language or third party frameworks that are available to reduce the tedious chore of writing basic code yet again.&#160; However, there are a lot of times when OOP doesn’t provide us with a good way to solve a recurring problem.&#160; I’m guessing since your reading the SharpCrafter’s Blog you see that this is the point where AOP steps in and fills the gap left by OOP.&#160; I recently did a video tutorial on improving exception handing&#160; using AOP via PostSharp.&#160; Traditionally in applications we need to catch when certain exceptions are thrown and do something with the exception by either logging it, calling another workflow, wrapping the exception inside of another one, or simply swallowing the exception, or some combination of all.&#160; Let’s say for example we have a class we use to call a remote web service to retrieve data for our application.</p>  <pre>public class StockService
 {
     public StockDetails GetStockDetails( string symbol )

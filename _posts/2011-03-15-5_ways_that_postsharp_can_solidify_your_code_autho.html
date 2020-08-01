@@ -8,7 +8,7 @@ permalink: /post/5-ways-that-postsharp-can-solidify-your-code-authorization.html
 author: "Matthew Groves"
 ---
 <p><em>Source code used in these blog posts is <a href="https://github.com/mgroves/PostSharp5">available on GitHub</a></em></p>
-<!-- readmore-->
+<!--readmore-->
 
 <p>One of the best uses of AOP is to take cross-cutting concerns that repeat themselves over and over in your system, and move them into their own class.  This is a version of the Single Responsibility Principle (SRP).  Authentication and authorization are important parts of many applications, but too often the code to check if a user is authorized is spread all over the app, making logic changes difficult and regression common.  A class should have one and only one reason to change, so let's get the "auth" stuff into its own class.</p>
 <p>The main functionality of authentication isn't something that's normally spread out through an entire application.  In a web app, for instance, login and authentication is typically done on one login page (if it's done at the web application level at all--it could be done at the server level), and login information is stored in some sort of token with an expiration on it so that the user is automatically logged out after a certain period of time.  The only cross-cutting concern then, is that each web page that requires authentication needs to verify that the user is still logged in.  You could certainly use PostSharp to do this, but it really isn't (in my opinion) a particularly strong use-case for PostSharp.</p>
