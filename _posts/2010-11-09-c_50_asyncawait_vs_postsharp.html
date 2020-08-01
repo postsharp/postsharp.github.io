@@ -8,7 +8,7 @@ permalink: /post/c-50-asyncawait-vs-postsharp.html
 author: "Gael Fraiteur"
 ---
 <p>Greetings from TechEd in Berlin. I’ve just attended two sessions about the future and the design process of C# from Mads Togersen, the C# product manager.</p>
-<!--readmore-->
+<!-- readmore -->
   <p>As you all already know, the next version of C# will introduce two new keywords: <strong>async</strong> and <strong>await</strong>. The storyline of the demonstration of Anders Heljsber and Mads Togersen is strikingly similar to <a href="http://www.sharpcrafters.com/media/sc2010-preview" target="_blank">my typical demonstration scenario</a>: we start with long operation running in (and actually freezing) the GUI thread, then create a little mess trying to make this run in the background, then create a bigger mess by adding exception handling to this, and finally clean up that mess by the use of the new feature – PostSharp or C#. This is no coincidence we’re using the same sample. It’s because both the PostSharp team and the C# team are focused on solving important issues.</p>  <p>Beyond the similarity of the issue we try to solve in our demo, there are important differences in the way we address it. Let’s make a quick clarification.</p>  <p>Suppose we start with the following code:</p>  <pre>private void okButton_Click( object sender, RoutedEventHandler e ) 
 { 
   try 

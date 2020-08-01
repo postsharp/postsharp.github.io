@@ -8,7 +8,7 @@ permalink: /post/experimental-support-for-asp-net.html
 author: "Gael Fraiteur"
 ---
 <p>I have just checked in a library (actually, only two classes) allowing to use PostSharp in ASP.NET projects. The stuff is hosted at http://code.google.com/p/postsharp-user-plugins/. The reason why it did not work previously is that ASP.NET compilation does not go through MSBuild, so PostSharp was simply not invoked.</p>
-<!--readmore-->
+<!-- readmore -->
 
 <p><p></p>
 <p>Indeed, MSBuild has its own compilation mechanism. Fortunately, it has an extension point that seems just done for PostSharp: the <strong>IAssemblyPostProcessor</strong> interface. As you may imagine, it allows to post-process the compiled assembly.</p>

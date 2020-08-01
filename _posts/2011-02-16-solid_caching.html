@@ -8,7 +8,7 @@ permalink: /post/solid-caching.html
 author: "Gael Fraiteur"
 ---
 <p><em>Source code used in these blog posts is <a href="https://github.com/mgroves/PostSharp5">available on GitHub</a></em></p>
-<!--readmore-->
+<!-- readmore -->
   <p>Sometimes there's just no way to speed up an operation. Maybe it's dependent on a service that's on some external web server, or maybe it's a very processor intensive operation, or maybe it's fast by itself, but a bunch of concurrent requests would suck up all your resources. There are lots of reasons to use caching. PostSharp itself doesn't provide a caching framework for you (again, PostSharp isn't reinventing the wheel, it's just making it easier to use), but it does provide you with a way to (surprise) reduce boilerplate code, stop repeating yourself, and separate concerns into their own classes.</p>  <p>Suppose I run a car dealership, and I need to see how much my cars are worth. I'll use an application that looks up the blue book value given a make &amp; model, and year. However, the blue book value (for the purposes of this demonstration) changes often, so I decide to use a web service to look up the blue book value. But, the web service is slow, and I have a lot of cars on the lot and being traded in all the time. Since I can't make the web service any faster, let's cache the data that it returns, so I can reduce the number of web service calls.</p>  <p>Since a main feature of PostSharp is intercepting a method before it is actually invoked, it should be clear that we'd start by writing a MethodInterceptionAspect:</p>  <pre>[Serializable]
 public class CacheAttribute : MethodInterceptionAspect
 {

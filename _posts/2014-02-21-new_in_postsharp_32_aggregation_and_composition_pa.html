@@ -8,7 +8,7 @@ permalink: /post/new-in-postsharp-32-aggregation-and-composition-patterns.html
 author: "Gael Fraiteur"
 ---
 <p><em>NOTE: This blog post is about an available pre-release of PostSharp. You can install <strong>PostSharp 4.0</strong> only using NuGet by enabling the “Include pre-release” option.</em></p>
-<!--readmore-->
+<!-- readmore -->
 
 <p>At PostSharp Technologies, we see our role as making it easier to build good software. We believe that source code, and not UML diagrams or documentation, should be the reference artifact. If the goal is to make it easier to build good software, then we should necessarily focus on making source code simpler. Ideally, the source code should be at the same level of abstraction as our thinking. So if we are thinking in terms of design patterns, we should be able to code in terms of design patterns. Unfortunately, conventional compilers have no concept of design patterns. This is why we built PostSharp: to empower developers to tell their compiler <em>what</em> needs to be done, not <em>how</em> to do it.</p>
 <p>In <strong>PostSharp 4.0</strong>, we decided to implement more design patterns and to do it better. After some reflection, it became clear that many design patterns rely on a fundamental concept: the parent-child relationship. This is so common that we easily forget about it. Yet how many times did you find yourself implementing a parent-child relationship manually?</p>

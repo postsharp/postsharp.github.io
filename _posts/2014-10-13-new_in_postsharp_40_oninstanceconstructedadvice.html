@@ -8,7 +8,7 @@ permalink: /post/new-in-postsharp-40-oninstanceconstructedadvice.html
 author: "Gael Fraiteur"
 ---
 <p>As we&rsquo;re progressing in the RC cycle of PostSharp 4.0, I would like to shed some light on a feature that has been often requested in the past, and is finally available in PostSharp 4.0: <a href="http://doc.postsharp.net/t_postsharp_aspects_advices_oninstanceconstructedadvice">OnInstanceConstructedAdvice</a>.</p>
-<!--readmore-->
+<!-- readmore -->
 
 <p>The objective of this advice is to provide a way for the aspect to execute code when instances of the target class are &ldquo;fully constructed&rdquo;. What does that mean to be &ldquo;fully constructed&rdquo;? In short, it means that all instance constructors in the chain have been invoked. Note that it is <em>not</em> the same as having an <em>OnSuccess</em> advice on the public constructor: such advice would be executed even if the current constructor is not the last in the chain.</p>
 <h2>Example</h2>

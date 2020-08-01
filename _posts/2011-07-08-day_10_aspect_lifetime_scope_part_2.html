@@ -8,7 +8,7 @@ permalink: /post/day-10-aspect-lifetime-scope-part-2.html
 author: "Dustin Davis"
 ---
 <p>Continuing from yesterday, we’re covering the lifetime and scope of aspects. Today we’ll look at the scope of aspects.</p>
-<!--readmore-->
+<!-- readmore -->
   <h3>Scope</h3>  <p>Aspects come in two scopes, static and instance. Static scoped aspects are created and initialized at compile time for consumption at runtime using a singleton pattern. Instance scoped aspects are a bit different. Instanced scoped aspects use a prototype pattern by creating and initializing the aspect at compile time, but at run time when a new instance of a target member’s declaring type is created, a new instance of the aspect is created and used. </p>  <p>Static scoped aspects have the same lifetime as the application while instance scoped aspects have the same lifetime as the instance of the type the aspect was applied to. </p>  <p>However, no matter which scope an aspect will have, PostSharp creates an instance of the aspect for each target in which the aspect has been applied. No doubt this is all confusing so let's see what's going on with a demo. </p>  <h3>Aspect demo</h3>  <p>To make sense of all of this, let's start with a basic aspect.</p>  <pre>[Serializable]
 public class TestAspect : LocationInterceptionAspect
 {

@@ -8,7 +8,7 @@ permalink: /post/postsharp-principals-day-11-e28093-interception-e28093-part-3.h
 author: "Dustin Davis"
 ---
 <p>Previously we’ve covered interception for methods and “locations” (fields/properties). Today we’re going to finish up interception by looking at the EventInterceptionAspect. </p>
-<!--readmore-->
+<!-- readmore -->
   <h3>Intercepting Events</h3>  <p>Events in .NET are similar to automatic properties. They look like fields, but you can override their underlying methods, Get and Set. Events don’t have Get or Set methods, instead they have Add and Remove methods. PostSharp allows us to intercept these Add and Remove methods as well as the invocation of the event using the EventInterceptionAspect base class. Let’s have a look</p>  <pre>[Serializable]
 public class EventAspect : EventInterceptionAspect
 {
