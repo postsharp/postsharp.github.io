@@ -7,6 +7,7 @@ categories: [Test]
 permalink: /post/test-with-markdown.html
 author: "Lejla"
 image: 
+tag: featured
 ---
 
 This is the summary
