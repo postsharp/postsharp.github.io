@@ -1,5 +1,5 @@
 .post_page {
-    margin: rem($page_space_from_top_mobile) $mobile_side_margins;
+    margin: rem($page_space_from_top_mobile) $mobile_side_margins;    
     h1 {
         margin-bottom: rem(18px);
         font-size: rem(16px);
@@ -26,6 +26,9 @@
     }
     .post_content {
         margin: rem(10px) 0 rem(80px);
+        ul{
+            line-height: 20px;            
+        }
     }
     .post_footer_share_buttons {
         padding-bottom: rem(15px);
@@ -164,7 +167,10 @@
         .post_content {
             max-width: 70%;
             margin-top: 40px;
-
+            ul{
+                font-size:rem(20px, 'desktop');
+                line-height: rem(30px, 'desktop');
+            }
             @supports (display: grid) {
                 grid-column: 1/4;
                 grid-row: 2/3;
