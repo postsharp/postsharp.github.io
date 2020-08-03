@@ -8,7 +8,8 @@ permalink: /post/postsharp-principals-day-15-e28093-introducing-members-and-inte
 author: "Dustin Davis"
 ---
 <p>Yesterday we introduced members into our target class. Today we&rsquo;re going to go the other way and introduce members from our target class into our aspect for consumption by the process of importing.</p>
-<!-- readmore -->
+
+
 
 <h3>Importing Members</h3>
 <p>There are cases when you will need to bring in a field or method from a target class so that you have access to it from within the aspect. What we&rsquo;re doing is making assumptions about the target. It&rsquo;s important to document what the aspect is assuming about the target code. Another approach instead of importing, is to cast the instance to a interface (or type) known to be implemented on the target.</p>

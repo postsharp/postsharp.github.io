@@ -7,24 +7,42 @@ categories: [General]
 permalink: /post/new-msbuild-integration.html
 author: "Gael Fraiteur"
 ---
-<p>Last week, Wang posted a very relevant remark: the integration of PostSharp in the build process of Visual Basic .NET projects simply did not work.</p>
-<!-- readmore -->
+<p>Last week, Wang posted a very relevant remark: the integration of PostSharp in the build process of Visual Basic .NET projects simply did not work.
 
-<p>The reason was simple: the integration was based on "compilation symbols" (or constants) defined at project-level. But VB.NET, at least in its Express edition, has <span style="font-style: italic;">no</span> compilation symbol.</p>
-<p>I had also been alerted by Denis from DataObjects.NET that adding a compilation symbol was not always acceptable.</p>
-<p>The design problem is: how to detect that PostSharp should be executed in a project? The major constraint is performance: we cannot load each assembly, and inspect, for instance, its custom attributes.</p>
-<p><span style="font-weight: bold;">The solution</span></p>
-<p>Finally the solution I selected is to inspect project dependencies and to enable PostSharp if the project refers (even indirectly) the <span style="font-weight: bold;">PostSharp.Public.dll</span> assembly. Inspection of dependencies is a standard part of the build process, so there is no additional cost.</p>
-<p>Does it work <span style="font-style: italic;">always</span>? It seems that it does. There are two major use cases of PostSharp as far as integration is concerned:</p>
-<p><ul><li>Explicit PostSharp project file: a <span style="font-style: italic;">psproj</span> file is present in the C#, J# or VB.NET project file. The presence of the <span style="font-style: italic;">psproj</span> is detected by MSBuild so the project does not need to reference PostSharp.Public.dll.
-<p></p></li><li>Automatic detection of tasks: this is the most user-friendly case. Tasks are detected automatically based on custom attributes or referenced assemblies. In order to use automatic detection, the project <span style="font-style: italic;">must</span> refer, at least indirectly, PostSharp.Public.dll.</li></ul>As you can see, in both use cases, PostSharp is properly detected.
-<p><span style="font-weight: bold;">Forbidding PostSharp</span></p>
-<p>Now what if you refer PostSharp.Public.dll but your <span style="font-style: italic;">do not</span> want your assembly to be post-compiled. Then you have two solutions:</p>
-<p><ul><li>If you are using C# or J#, you can define the NOPOSTCOMPILE compilation symbol ("constant").
-<p></p></li><li>Otherwise, you have to edit the project file (e.g. <span style="font-style: italic;">.vbproj</span>) and add the following property:</li></ul><blockquote style="font-family: courier new;">&lt;PropertyGroup&gt;
-<p>&lt;SkipPostSharp&gt;True&lt;/SkipPostSharp&gt;</p>
-<p>&lt;/PropertyGroup&gt;</p></blockquote>
-<p><span style="font-weight: bold;">Summary</span></p>
-<p>If you are a <span style="font-style: italic;">user</span> of PostSharp, you don't have to do anything any more to 'call' PostSharp: this is done automatically. However, if you <span style="font-style: italic;">develop </span>aspects or plugins using PostSharp and don't want your aspect libraries to be post-compiled, you have to forbid PostSharp as stated above.</p>
-<p>These features are available from revision 126 (1.0.4.126).</p>
+
+
+<p>The reason was simple: the integration was based on "compilation symbols" (or constants) defined at project-level. But VB.NET, at least in its Express edition, has <span style="font-style: italic;">no</span> compilation symbol.
+</p>
+<p>I had also been alerted by Denis from DataObjects.NET that adding a compilation symbol was not always acceptable.
+</p>
+<p>The design problem is: how to detect that PostSharp should be executed in a project? The major constraint is performance: we cannot load each assembly, and inspect, for instance, its custom attributes.
+</p>
+<p><span style="font-weight: bold;">The solution</span>
+</p>
+<p>Finally the solution I selected is to inspect project dependencies and to enable PostSharp if the project refers (even indirectly) the <span style="font-weight: bold;">PostSharp.Public.dll</span> assembly. Inspection of dependencies is a standard part of the build process, so there is no additional cost.
+</p>
+<p>Does it work <span style="font-style: italic;">always</span>? It seems that it does. There are two major use cases of PostSharp as far as integration is concerned:
+</p>
+<p><ul><li>Explicit PostSharp project file: a <span style="font-style: italic;">psproj</span> file is present in the C#, J# or VB.NET project file. The presence of the <span style="font-style: italic;">psproj</span> is detected by MSBuild so the project does not need to reference PostSharp.Public.dll.
+
+<p></p></li><li>Automatic detection of tasks: this is the most user-friendly case. Tasks are detected automatically based on custom attributes or referenced assemblies. In order to use automatic detection, the project <span style="font-style: italic;">must</span> refer, at least indirectly, PostSharp.Public.dll.</li></ul>As you can see, in both use cases, PostSharp is properly detected.
+
+<p><span style="font-weight: bold;">Forbidding PostSharp</span>
+</p>
+<p>Now what if you refer PostSharp.Public.dll but your <span style="font-style: italic;">do not</span> want your assembly to be post-compiled. Then you have two solutions:
+</p>
+<p><ul><li>If you are using C# or J#, you can define the NOPOSTCOMPILE compilation symbol ("constant").
+
+<p></p></li><li>Otherwise, you have to edit the project file (e.g. <span style="font-style: italic;">.vbproj</span>) and add the following property:</li></ul><blockquote style="font-family: courier new;">&lt;PropertyGroup&gt;
+
+<p>&lt;SkipPostSharp&gt;True&lt;/SkipPostSharp&gt;
+</p>
+<p>&lt;/PropertyGroup&gt;</p></blockquote>
+
+<p><span style="font-weight: bold;">Summary</span>
+</p>
+<p>If you are a <span style="font-style: italic;">user</span> of PostSharp, you don't have to do anything any more to 'call' PostSharp: this is done automatically. However, if you <span style="font-style: italic;">develop </span>aspects or plugins using PostSharp and don't want your aspect libraries to be post-compiled, you have to forbid PostSharp as stated above.
+</p>
+<p>These features are available from revision 126 (1.0.4.126).
+</p>
 <p>Enjoy!</p>

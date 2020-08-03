@@ -8,7 +8,8 @@ permalink: /post/day-3-applying-aspects-with-multicasting-part-2.html
 author: "Dustin Davis"
 ---
 <p><a href="http://www.sharpcrafters.com/downloads/blog/2011-06-DustinOnPostSharp-Week1.zip">Download demo project source code</a></p>
-<!-- readmore -->
+
+
   <p>Yesterday we started looking at multicasting. Today we’ll go even further with assembly level declarations and how to prevent aspects from being applied.</p>  <h3>Assembly Level Declaration</h3>  <p>At the highest level we have assembly declarations. This is a powerful feature that allows us to achieve many tasks. Before we explore the details, let’s see it in action. Remove any aspect declarations you have currently. </p>  <p>Note: Depending on your own tastes, you can apply this assembly declaration in any file. Commonly, these are put in the AssemblyInfo.cs file, but they can go anywhere. I recommend putting them in relevant class files to keep the visibility or creating an AspectInfo.cs file to keep them in. Putting them in the AssemblyInfo.cs could be a problem since it's a rarely used file.</p>  <pre>[assembly: PostSharpDemo1.MethodTraceAspect()]
 namespace PostSharpDemo1
 {

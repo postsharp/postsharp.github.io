@@ -7,68 +7,131 @@ categories: [General]
 permalink: /post/first-version-of-postsharp4unity.html
 author: "Gael Fraiteur"
 ---
-<p>PostSharp4Unity modifies assemblies after compilation to make objects</p>
+<p>PostSharp4Unity modifies assemblies after compilation to make objects
+
+
 <!-- readmore -->
 
-<p>self-configurable: you don't need to call a factory method; you can use the</p>
-<p>default constructor. All you have to do is to decorate your class with the</p>
-<p>custom attribute "Configurable". It smells like Spring, isn't it ;-).</p>
-<p>It is available from</p>
-<p><a class="externalLink" href="http://code.google.com/p/postsharp-user-plugins/"></a></p>
-<p>http://code.google.com/p/postsharp-user-plugins/<span class="externalLinkIcon"></span>.</p>
-<p>I have updated the StopLight sample. The first change is on the</p>
-<p>StoplightForm class:</p>
-<p><pre>[Configurable]
-<p>public partial class StoplightForm : Form, IStoplightView</p>
-<p>  {</p>
-<p></p></pre>
-<p>Then, in Program.Main, you can use the default constructor:</p>
-<p><pre>Application.Run(new StoplightForm());
-<p></p></pre>
-<p>Unfortunately, that's not all. Since Unity has no notion of context registry</p>
-<p>(i.e. no notion of "current container"), you have to build a basic one:</p>
-<p><pre>
-<p>public sealed class UnityContainerProvider : IUnityContainerProvider</p>
-<p>{</p>
-<p>   private readonly IUnityContainer container;</p>
-<p>    public UnityContainerProvider()</p>
-<p>    {</p>
-<p>       this.container = new UnityContainer()</p>
-<p>         .Register&lt;ILogger, TraceLogger&gt;()</p>
-<p>         .Register&lt;IStoplightTimer, RealTimeTimer&gt;();</p>
-<p>    }</p>
-<p>    public IUnityContainer  CurrentContainer</p>
-<p>     { get { return this.container; } }</p>
-<p>}  </p></pre>
-<p>Then tell</p>
-<p>PostSharp4Unity to build your container: <pre>[assembly: DefaultUnityContainerProvider(
-<p>  typeof(UnityContainerProvider))]</p>
-<p></p></pre>
-<p>As you can see, there is a little of set up to do, but it's only once per</p>
-<p>assembly. (And would be useless if there were some Unity-wide notion of</p>
-<p>context registry or default container.) At this price, you can use Unity</p>
-<p>with any object without having to construct them using a factory method.</p>
-<p>Pay attention that your</p>
-<p>'configurable' objects are now configured <b>before</b> the constructor is</p>
-<p>executed, and not <b>after</b>. So, in the class StoplightForm, we have to</p>
-<p>move the view initialization at the end of the constructor:</p>
-<p><pre>[Configurable]
-<p>public partial class StoplightForm : Form, IStoplightView</p>
-<p>{</p>
-<p>   private StoplightPresenter presenter;</p>
-<p>   public StoplightForm()</p>
-<p>   {</p>
-<p>      InitializeComponent();</p>
-<p>      presenter.SetView(this);</p>
-<p>    }</p>
-<p>   [Dependency]</p>
-<p>    public StoplightPresenter Presenter</p>
-<p>    {</p>
-<p>      get { return presenter; }</p>
-<p>      set { presenter = value; }</p>
-<p>    }</p>
-<p></p></pre>
-<p>There are still some problems being discussed, but at least you have the</p>
-<p>first bits.</p>
-<p>Happy PostSharping!</p>
+<p>self-configurable: you don't need to call a factory method; you can use the
+</p>
+<p>default constructor. All you have to do is to decorate your class with the
+</p>
+<p>custom attribute "Configurable". It smells like Spring, isn't it ;-).
+</p>
+<p>It is available from
+</p>
+<p><a class="externalLink" href="http://code.google.com/p/postsharp-user-plugins/">
+</a></p>
+<p>http://code.google.com/p/postsharp-user-plugins/<span class="externalLinkIcon"></span>.
+</p>
+<p>I have updated the StopLight sample. The first change is on the
+</p>
+<p>StoplightForm class:
+</p>
+<p><pre>[Configurable]
+
+<p>public partial class StoplightForm : Form, IStoplightView
+</p>
+<p>  {
+</p>
+<p></p></pre>
+
+<p>Then, in Program.Main, you can use the default constructor:
+</p>
+<p><pre>Application.Run(new StoplightForm());
+
+<p></p></pre>
+
+<p>Unfortunately, that's not all. Since Unity has no notion of context registry
+</p>
+<p>(i.e. no notion of "current container"), you have to build a basic one:
+</p>
+<p><pre>
+
+<p>public sealed class UnityContainerProvider : IUnityContainerProvider
+</p>
+<p>{
+</p>
+<p>   private readonly IUnityContainer container;
+</p>
+<p>    public UnityContainerProvider()
+</p>
+<p>    {
+</p>
+<p>       this.container = new UnityContainer()
+</p>
+<p>         .Register&lt;ILogger, TraceLogger&gt;()
+</p>
+<p>         .Register&lt;IStoplightTimer, RealTimeTimer&gt;();
+</p>
+<p>    }
+</p>
+<p>    public IUnityContainer  CurrentContainer
+</p>
+<p>     { get { return this.container; } }
+</p>
+<p>}  </p></pre>
+
+<p>Then tell
+</p>
+<p>PostSharp4Unity to build your container: <pre>[assembly: DefaultUnityContainerProvider(
+
+<p>  typeof(UnityContainerProvider))]
+</p>
+<p></p></pre>
+
+<p>As you can see, there is a little of set up to do, but it's only once per
+</p>
+<p>assembly. (And would be useless if there were some Unity-wide notion of
+</p>
+<p>context registry or default container.) At this price, you can use Unity
+</p>
+<p>with any object without having to construct them using a factory method.
+</p>
+<p>Pay attention that your
+</p>
+<p>'configurable' objects are now configured <b>before</b> the constructor is
+</p>
+<p>executed, and not <b>after</b>. So, in the class StoplightForm, we have to
+</p>
+<p>move the view initialization at the end of the constructor:
+</p>
+<p><pre>[Configurable]
+
+<p>public partial class StoplightForm : Form, IStoplightView
+</p>
+<p>{
+</p>
+<p>   private StoplightPresenter presenter;
+</p>
+<p>   public StoplightForm()
+</p>
+<p>   {
+</p>
+<p>      InitializeComponent();
+</p>
+<p>      presenter.SetView(this);
+</p>
+<p>    }
+</p>
+<p>   [Dependency]
+</p>
+<p>    public StoplightPresenter Presenter
+</p>
+<p>    {
+</p>
+<p>      get { return presenter; }
+</p>
+<p>      set { presenter = value; }
+</p>
+<p>    }
+</p>
+<p></p></pre>
+
+<p>There are still some problems being discussed, but at least you have the
+</p>
+<p>first bits.
+</p>
+<p>Happy PostSharping!
+</p>
 <p>Gael</p>
