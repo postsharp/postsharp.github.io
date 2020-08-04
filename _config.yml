@@ -19,6 +19,8 @@ linkedin_username: postsharp
 
 main_website_url: https://www.postsharp.net
 
+title_separator: "|"
+
 #excerpt_separator: "<!-- readmore -->"
 
 plugins:
