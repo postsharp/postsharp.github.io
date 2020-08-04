@@ -12,7 +12,8 @@ author: "Gael Fraiteur"
 </span>way to add generic constraints for enums and delegates</a>. He noticed that, 
 while the C# compiler forbids such constructions, it is perfectly possibly in MSIL. 
 And he is fully right with this.</p>
-<!-- readmore -->
+
+
 
 <p>Jon uses a post-build step to add modify generic constraints. 
 His process: ILDASM, then find-and-replace, then ILASM. That’s possible because 

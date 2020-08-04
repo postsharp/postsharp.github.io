@@ -8,7 +8,8 @@ permalink: /post/postsharp-principals-day-13-e28093-aspect-providers-e28093-part
 author: "Dustin Davis"
 ---
 <p>When it comes to building complex aspects to solve a specific problem or implement a pattern, the base classes such as OnMethodBoundaryAspect and LocationInterceptionAspect aren’t always up-to the job. We covered the IAspectProvider yesterday, which allows us to dynamically tell PostSharp which aspects to apply to a target at compile time. Today we’re going to build complex aspects that encapsulate multiple transformations in a single aspect. </p>
-<!-- readmore -->
+
+
   <h3>Advices and Pointcuts</h3>  <p>Before we continue, we should cover some vocabulary. We’ve avoided the use of these terms until now to avoid any confusion.</p>  <p>· Advice – “An advice is anything that adds a behavior or a structural element to an element of code. For instance, introducing a method into a class, intercepting a property setter, or catching exceptions, are advices.” </p>  <p>· Pointcut – “A pointcut is a function returning a set of elements of code to which advices apply. For instance, a function returning the set of properties annotated with the custom attribute DataMember is a pointcut.”</p>  <p>When we override the OnEntry method when building an aspect based on OnMethodBoundaryAspect, we’re providing the advice to implement. By default the pointcut would be all methods in a class, if the class was decorated with our aspect based on the OnMethodBoundaryAspect base class. </p>  <p>PostSharp provides us with a set of attributes for declaring advice and pointcuts in any combination under a single aspect. Let’s have a look at an example to give a better picture</p>  <pre>[Serializable]
 public class ComplexAspect : TypeLevelAspect
 {

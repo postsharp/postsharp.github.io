@@ -19,7 +19,7 @@ linkedin_username: postsharp
 
 main_website_url: https://www.postsharp.net
 
-excerpt_separator: "<!-- readmore -->"
+#excerpt_separator: "<!-- readmore -->"
 
 plugins:
   - jekyll-feed

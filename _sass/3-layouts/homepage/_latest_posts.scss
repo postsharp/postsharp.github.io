@@ -231,7 +231,7 @@
                 justify-self: end;
                 font-size: rem(18px, "desktop");
                 display: flex;
-                align-items: end;
+                align-items: center;
                 height: 50px;
                 align-self: end;
             }
@@ -242,6 +242,7 @@
             line-height: 26px;
             order:2;
             margin-left: 63px;
+            margin-top:0;
             @supports (display: grid) {
                 //                grid-column: 3 / 4;
                 //                align-self: end;
@@ -252,7 +253,7 @@
             margin: 0;            
             width: 260px;
             height: 36px;
-            margin-bottom: 7px;
+            margin-bottom: 0px;
             font-size: rem(18px, "desktop");
             display: flex;
             flex-wrap: nowrap;
