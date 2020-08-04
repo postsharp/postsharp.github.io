@@ -107,7 +107,10 @@
     transition: all .5s ease;
 
     figure{
-        margin-bottom: rem(17px);
+        margin-bottom: rem(17px);    
+        img{
+            border-bottom:1px solid $light_gray;
+        }
     }
 
     h3{
