@@ -221,7 +221,7 @@
             line-height: rem(30px, "dekstop");
             @supports (display: grid) {
                 grid-column: 2 / 4;
-                align-self: end;
+                align-self: center;
             }
         }
         .pagination_and_read_button {
