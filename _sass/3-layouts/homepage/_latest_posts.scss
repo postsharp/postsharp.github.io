@@ -35,6 +35,10 @@
         font-size: 11px;
         line-height: 20px;        
     }
+    h3 a{
+        color:black;
+        text-decoration: none;
+    }
     .read_button {
         display: block;
         width: 100%;
@@ -259,8 +263,7 @@
             flex-wrap: nowrap;
             position: unset;
 
-            @supports (display: grid) {
-                
+            @supports (display: grid) {                
                 //                grid-column: 2 / 3;
                 //                grid-row: 4 / 5;
                 //                align-self: end;

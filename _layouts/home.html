@@ -16,7 +16,7 @@
 								{% endif %}
 							</a>
 						</figure>
-						<h3>{{post.title | strip_html | strip_newlines | truncate: 150}}</h3>
+						<h3><a href="{{site.baseurl}}{{ post.url }}">{{post.title | strip_html | strip_newlines | truncate: 150}}</a></h3>
 
 						<div class="post_details_and_tag">
 							<div class="post_details">
