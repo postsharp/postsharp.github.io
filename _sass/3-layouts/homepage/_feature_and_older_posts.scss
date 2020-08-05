@@ -192,6 +192,24 @@
     }
 
 }
+@media screen and (min-width: 768px) and (max-width: 1210px) {
+    .featured_posts, .older_posts{        
+        padding: 0 rem($desktop_side_margins , 'desktop')/3 3rem;
+        margin-top: 100px;
+        @supports(display: grid){
+            grid-template-columns: repeat(2, minmax(270px, 1fr)) ;
+            gap:rem(40px, 'desktop') rem(40px, 'desktop')
+        }     
+        .sidebar_left,.sidebar_right{
+            display: none;
+        }
+        h2{
+//            margin-bottom: -10px;
+//            padding-bottom:10px;
+            grid-column: 1/3;
+        }        
+    }
+}
 @media screen and (min-width: 1580px){ 
     section.categories{
         display: none;
