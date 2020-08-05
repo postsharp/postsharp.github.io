@@ -6,9 +6,11 @@ date: 2020-06-16 09:40:00 +02:00
 categories: [Community]
 permalink: /post/a-better-default-tostring-with-postsharp-community.html
 author: "Petr Hudeček"
+image: /assets/images/blog/2020-06-16-a_better_default_tostring_with_postsharp_community/a-better-default-tostring-with-postsharp-community-min.jpg
 ---
 <p>During debugging and prototyping, we often rely on the ToString method to know what an object looks like. This works well for built-in types like integer and string but becomes less helpful for classes and structs unless we override the ToString method manually. Unfortunately, this requires a lot of boilerplate. In this article, I introduce <a href="https://github.com/postsharp/PostSharp.Community.ToString">PostSharp.Community.ToString</a>, a free and open-source extension to PostSharp that automatically generates the ToString method for you.</p>
-<!-- readmore -->
+
+
 
 <p>Here&rsquo;s what a debugger view of an object in Visual Studio might look like when you don&rsquo;t override ToString:&nbsp;</p>
 <p><img src="/assets/images/blog/2020-06-16-a_better_default_tostring_with_postsharp_community/tostring1.png" alt=""></p>

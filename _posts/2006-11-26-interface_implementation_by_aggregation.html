@@ -7,27 +7,46 @@ categories: [General]
 permalink: /post/interface-implementation-by-aggregation.html
 author: "Gael Fraiteur"
 ---
-<p>I have written that the newly redesigned Code Weaver now support type-level advices (well, to be precise, type-level join points). The first implementation is the new <span style="font-weight: bold;">AggregationAspect</span></p>
-<!-- readmore -->
+<p>I have written that the newly redesigned Code Weaver now support type-level advices (well, to be precise, type-level join points). The first implementation is the new <span style="font-weight: bold;">AggregationAspect</span>
 
-<p>in PostSharp Laos.</p>
-<p><p>So what's aggregation?</p>
-<p></p>Say you want to implement a collection (<span style="font-weight: bold;">ICollection</span>) based on an <span style="font-weight: bold;">ArrayList</span>, but you want to hide ArrayList and don't want to implement each method manually. PostSharp can do it for you.
-<p><p>Look at the following code sample:</p><pre>[SimpleAggregate(
-<p>  ImplementationType=<span style="color: rgb(16, 0, 160);">typeof</span>(ArrayList),</p>
-<p>  InterfaceType=<span style="color: rgb(16, 0, 160);">typeof</span>(ICollection))]</p>
-<p><span style="color: rgb(16, 0, 160);">internal</span> <span style="color: rgb(16, 0, 160);">class</span> <span style="font-family:mon;"><span>Aggregated</span></span>Collection</p>
-<p>{</p>
-<p>}</p></pre>After processing by PostSharp, the <b>AggregatedCollection </b>class will implement the <b>ICollection</b><b> </b>collection using <b>the ArrayList </b>implementation.
-<p>Looks magic? If you inspect the generated code (the Roeder's Reflector is always useful for this), you will see a new field <span style="font-weight: bold;">~aggregated~0 </span>of type <span style="font-weight: bold;">ICollection </span>and all methods of this interface, for instance:</p>
-<p><pre>IEnumerator IEnumerable.<b>GetEnumerator</b>()
-<p>{</p>
-<p><span style="color: rgb(16, 0, 160);">  return</span> <span style="color: rgb(16, 0, 160);">this</span>.~aggregated~0.GetEnumerator();</p>
-<p>}</p>
-<p></p></pre>The aggregated object is constructed inside the constructor of AggregatedCollection:
-<p><pre><span style="color: rgb(16, 0, 160);">public</span> <b>AggregatedCollection</b>()
-<p>{</p>
-<p><span style="color: rgb(16, 0, 160);">  this</span>.~aggregated~0 = (ICollection)</p>
-<p> ~PostSharp~Laos~Implementation.customAttribute0.</p>
-<p>           CreateAggregatedObject(<span style="color: rgb(16, 0, 160);">this</span>);</p>
+<p>in PostSharp Laos.
+</p>
+<p><p>So what's aggregation?
+</p>
+<p></p>Say you want to implement a collection (<span style="font-weight: bold;">ICollection</span>) based on an <span style="font-weight: bold;">ArrayList</span>, but you want to hide ArrayList and don't want to implement each method manually. PostSharp can do it for you.
+
+<p><p>Look at the following code sample:</p><pre>[SimpleAggregate(
+
+<p>  ImplementationType=<span style="color: rgb(16, 0, 160);">typeof</span>(ArrayList),
+</p>
+<p>  InterfaceType=<span style="color: rgb(16, 0, 160);">typeof</span>(ICollection))]
+</p>
+<p><span style="color: rgb(16, 0, 160);">internal</span> <span style="color: rgb(16, 0, 160);">class</span> <span style="font-family:mon;"><span>Aggregated</span></span>Collection
+</p>
+<p>{
+</p>
+<p>}</p></pre>After processing by PostSharp, the <b>AggregatedCollection </b>class will implement the <b>ICollection</b><b> </b>collection using <b>the ArrayList </b>implementation.
+
+<p>Looks magic? If you inspect the generated code (the Roeder's Reflector is always useful for this), you will see a new field <span style="font-weight: bold;">~aggregated~0 </span>of type <span style="font-weight: bold;">ICollection </span>and all methods of this interface, for instance:
+</p>
+<p><pre>IEnumerator IEnumerable.<b>GetEnumerator</b>()
+
+<p>{
+</p>
+<p><span style="color: rgb(16, 0, 160);">  return</span> <span style="color: rgb(16, 0, 160);">this</span>.~aggregated~0.GetEnumerator();
+</p>
+<p>}
+</p>
+<p></p></pre>The aggregated object is constructed inside the constructor of AggregatedCollection:
+
+<p><pre><span style="color: rgb(16, 0, 160);">public</span> <b>AggregatedCollection</b>()
+
+<p>{
+</p>
+<p><span style="color: rgb(16, 0, 160);">  this</span>.~aggregated~0 = (ICollection)
+</p>
+<p> ~PostSharp~Laos~Implementation.customAttribute0.
+</p>
+<p>           CreateAggregatedObject(<span style="color: rgb(16, 0, 160);">this</span>);
+</p>
 <p>}</p></pre>Still looks magic?

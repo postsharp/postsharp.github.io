@@ -6,12 +6,10 @@
 # 'jekyll serve'. If you change this file, please restart the server process.
 
 # Site settings
-title: PostSharp
+title: PostSharp Blog
 email: hello@postsharp.net
 description: > # this means to ignore newlines until "baseurl:"
-  Write an awesome description for your new site here. You can edit this
-  line in _config.yml. It will appear in your document head meta (for
-  Google search results) and in your feed.xml site description.
+  Announcements, opinions, tips and tricks from PostSharp Technologies.
 baseurl: "" # the subpath of your site, e.g. /blog
 url: "https://postsharp.github.io" # the base hostname & protocol for your site
 twitter_username: postsharp
@@ -21,7 +19,7 @@ linkedin_username: postsharp
 
 main_website_url: https://www.postsharp.net
 
-excerpt_separator: "<!-- readmore -->"
+#excerpt_separator: "<!-- readmore -->"
 
 plugins:
   - jekyll-feed
