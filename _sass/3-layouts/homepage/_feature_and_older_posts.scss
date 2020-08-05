@@ -153,7 +153,13 @@
         }    
         figure{
             margin-bottom: rem(37px, 'desktop');
-        }        
+        }       
+        .item_details_container{
+            display: flex;
+            flex-flow: column wrap;
+            justify-content: space-between;
+            height:465px;          
+        } 
         h3{
             margin: 0px 40px 45px ;
             font-size:rem(20px, 'desktop');
