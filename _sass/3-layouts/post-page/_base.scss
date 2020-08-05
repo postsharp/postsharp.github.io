@@ -53,7 +53,7 @@
             display: none;
         }
     }
-    pre.prettyprint, code.prettyprint {
+    pre.prettyprint {
         border: 2px solid $header_newsletter_bg_color;
         overflow: auto;
         padding: 15px 30px;
@@ -164,7 +164,7 @@
                 @supports (display: grid) {
                     grid-column: 2 / 4;
                     grid-row: 3 /4;
-                    align-self: end;
+                    align-self: center;
                     font-size: rem(20px, "desktop");
                     line-height: rem(30px, "desktop");
                 }
