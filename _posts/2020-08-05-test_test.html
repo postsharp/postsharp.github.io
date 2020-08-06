@@ -1,0 +1,59 @@
+---
+layout: post 
+comments: true
+title: "Test with Markdown"
+date: 2020-07-22 10:15:00 +02:00
+categories: [Opinion]
+permalink: /post/test-test.html
+author: "Gael Fraiteur"
+image: /assets/images/blog/2020-07-22-thinking_beyond_roslyn_source_generators_and_aspec/roslyn-source-generators.jpg
+tag: featured
+---
+<p>This is summary.</p>
+
+
+
+<p>In an industry where&nbsp;<em>hacking</em>&nbsp;is so celebrated, I would like today to offer the opposite:<em>&nbsp;a survey of the activity of building software from a humanist and cognitive point of view.</em></p>
+<h2>What are Roslyn source generators?</h2>
+<p>If you haven&rsquo;t read about source generators, then, in a nutshell, it&rsquo;s a new extensibility point of the Roslyn compiler that allows you (and any NuGet package) to dynamically emit new C# code and add it to the compilation in progress. Source generators receive an object model representing the code being compiled and, based on that, can emit new code. They cannot, however, modify existing code.</p>
+<p>Strictly speaking, Roslyn source generators don&rsquo;t enable any scenario that was impossible before. The novelty with Roslyn source generators is that they are built into the Roslyn compiler, which gives two advantages. First, the build will be faster because the first stage of the compilation will need to be performed only once instead of twice. Second, since the C# compiler is hosted in the IDE, the code-behind artifacts will be visible at design time in the IDE using tools like IntelliSense.</p>
+<p>Source code generators are by design&nbsp;<em>additive only</em>, i.e. you can add new files to the compilation (possibly new partial classes), but you cannot modify existing ones. If you&rsquo;re facing a problem that you would naturally address by editing existing code and that could not be isolated into a partial class, then a source generator is not the right job for the task.</p>
+<p>To illustrate this rule, I will take an example directly from Microsoft&rsquo;s materials, and I will show why it could be considered as an abusive use of this technology.</p>
+<p>Let&rsquo;s look at the code, reproduced from Microsoft&rsquo;s&nbsp;<a href="https://github.com/dotnet/roslyn-sdk/blob/master/samples/CSharp/SourceGenerators/GeneratedDemo/UseAutoNotifyGenerator.cs" target="_blank">samples</a>:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">public partial class UserClass
+{
+    [AutoNotify]
+    private bool _boolProp;
+ 
+
+    [AutoNotify(PropertyName = "Count")]
+    private int _intProp;
+}</pre>
+<p>&nbsp;</p>
+<p>The source generator would generate the following partial class:</p>
+<p>&nbsp;</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">public partial class UserClass : INotifyPropertyChanged
+{
+    public bool BoolProp
+    {
+        get =&gt; _boolProp;
+        set
+        {
+            _boolProp = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("UserBool"));
+        }
+    }
+ 
+    public int Count
+    {
+        get =&gt; _intProp;
+        set
+        {
+            _intProp = value;
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs("Count"));
+        }
+    }
+ 
+    public event PropertyChangedEventHandler PropertyChanged;
+}<br><br></pre>
+<p>&nbsp;</p>
