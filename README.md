@@ -1,4 +1,4 @@
-# postsharp.github.io
+# PostSharp Blog
 
 This is the source code of https://blog.postsharp.net/.
 
