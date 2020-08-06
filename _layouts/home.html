@@ -67,9 +67,11 @@
 				{% endif %}
 			</a>
 		</figure>
-		<h3>{{post.title}}</h3>
-		<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
-		<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
+		<div class="item_details_container">
+			<h3>{{post.title}}</h3>
+			<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
+			<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
+		</div>
 	</div>
 	{% endfor %}
 	<div class="sidebar_left"></div>
@@ -97,9 +99,11 @@
 				{% endif %}
 			</a>
 		</figure>
-		<h3>{{post.title}}</h3>
-		<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
-		<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
+		<div class="item_details_container">
+			<h3>{{post.title}}</h3>
+			<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
+			<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
+		</div>
 	</div>
 	{% endfor %}
 	<div class="sidebar_left"></div>
