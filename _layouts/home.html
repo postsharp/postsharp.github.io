@@ -35,7 +35,7 @@
 										<span>{{post.categories}}</span></a></div>{% endif %}
 							</div>
 						</div>
-						<p class="post_excerpt">
+						<p class="post_excerpt swiper-no-swiping">
 							{{ post.excerpt | strip_html | strip_newlines | truncate: 220 }}
 						</p>
 
@@ -68,7 +68,7 @@
 			</a>
 		</figure>
 		<div class="item_details_container">
-			<h3>{{post.title}}</h3>
+			<a href="{{site.baseurl}}{{ post.url }}"><h3>{{post.title}}</h3></a>
 			<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
 			<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
 		</div>
@@ -100,7 +100,7 @@
 			</a>
 		</figure>
 		<div class="item_details_container">
-			<h3>{{post.title}}</h3>
+			<a href="{{site.baseurl}}{{ post.url }}"><h3>{{post.title}}</h3></a>
 			<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
 			<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
 		</div>
