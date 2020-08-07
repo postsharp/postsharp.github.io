@@ -26,7 +26,7 @@
     }
     .post_content {
         margin: rem(10px) 0 rem(80px);
-        ul{
+        ul,ol{
             line-height: 20px;            
         }
  
@@ -173,7 +173,7 @@
         .post_content {
             max-width: 70%;
             margin-top: 40px;
-            ul{
+            ul,ol{
                 font-size:rem(20px, 'desktop');
                 line-height: rem(30px, 'desktop');
             }
