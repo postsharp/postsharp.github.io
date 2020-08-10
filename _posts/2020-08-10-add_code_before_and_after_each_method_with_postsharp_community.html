@@ -23,7 +23,7 @@ image: /assets/images/blog/2020-08-10-add_code_before_and_after_each_method_with
     <li>Override one or more of its methods. Often you will override <em>OnExit</em>, which gets executed immediately after the target method ends.</li>
     <li>Apply the aspect to a target method by annotating that method with the aspect as an attribute.</li>
     </ol>
-<p>After you do this, then each time the annotated method is executed, the code in your OnExit method will be executed right afterwards.</p>
+<p>After you do this, then each time the annotated method is executed, the code in your <em>OnExit</em> method will be executed right afterwards.</p>
 <p>I’ll use a couple of examples from my own projects to show how this can be useful.</p>
 <h2>Example 1: [ThenSave]</h2>
 <p>Suppose you’re creating a video game and some data, such as the player’s number of experience points or the achievements they have unlocked, should persist after the game closes.</p>
