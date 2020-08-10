@@ -39,13 +39,13 @@ class PlayerInformation
     public void AddAchievement(Achievement achievement)
     {
         ...
-      }
+    }
 }</pre>
 <p>&nbsp;</p>
 <p>Where the <em>[ThenSave]</em> aspect means “When this method completes, save this information to disk.”</p>
 <p>The code for the <em>[ThenSave]</em> class is this:</p>
 <pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[Serializable]
-    internal class ThenSaveAttribute : OnMethodBoundaryAspect
+internal class ThenSaveAttribute : OnMethodBoundaryAspect
 {
     public override void OnExit(MethodExecutionArgs args)
     {
@@ -108,7 +108,7 @@ class PlayerInformation
 <p>To avoid writing this code, possibly in many places, you could annotate the <em>UnreliableCode</em> method with a method boundary aspect where you override the <em>OnException</em> method. You can then decide what code executes in the <em>catch</em> block and whether the exception should be swallowed or rethrown by the aspect.</p>
 <p>This is how the aspect could look like:</p>
 <pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[Serializable]
-    internal class LogAndSwallowAttribute : OnMethodBoundaryAspect
+internal class LogAndSwallowAttribute : OnMethodBoundaryAspect
 {
     public override void OnException(MethodExecutionArgs args)
     {
