@@ -1,0 +1,128 @@
+---
+layout: post 
+comments: true
+title: "Add code before and after each method with PostSharp Community"
+date: 2020-08-10 09:40:00 +02:00
+categories: [PostSharp Community]
+permalink: /post/Add-code-before-and-after-each-method-with-PostSharp-Community.html
+author: "Petr Hudeček"
+image: /assets/images/blog/2020-08-10-add_code_before_and_after_each_method_with_postsharp_community/Method-Boundary-Aspect.jpg
+---
+<p>The most basic feature of PostSharp is adding code at the beginning and end of target methods. Of course, this is not all that PostSharp is doing, but it is a powerful and widely applicable feature.</p>
+
+
+
+<p>And, as of PostSharp 6.6, it is available for free in our PostSharp Community edition. There is no longer any restriction on the number of types that can be enhanced with it.</p>
+<p>We call this feature the method boundary aspect. It is also known as a method decorator in other frameworks.</p>
+<h2>How to use it</h2>
+<p>Here’s how you can add the method boundary aspect to your code:</p>
+<ol>
+    <li>Install the package <a href="https://www.nuget.org/packages/PostSharp">PostSharp</a> into your project.</li>
+    <li>Get <a href="https://www.postsharp.net/get/free">a free PostSharp Community license</a>, you’ll be asked for it the first time you run the build.</li>
+    <li>Create a class that extends <a href="https://doc.postsharp.net/t_postsharp_aspects_onmethodboundaryaspect">OnMethodBoundaryAspect.</a></li>
+    <li>Override one or more of its methods. Often you will override <em>OnExit</em>, which gets executed immediately after the target method ends.</li>
+    <li>Apply the aspect to a target method by annotating that method with the aspect as an attribute.</li>
+    </ol>
+<p>After you do this, then each time the annotated method is executed, the code in your OnExit method will be executed right afterwards.</p>
+<p>I’ll use a couple of examples from my own projects to show how this can be useful.</p>
+<h2>Example 1: [ThenSave]</h2>
+<p>Suppose you’re creating a video game and some data, such as the player’s number of experience points or the achievements they have unlocked, should persist after the game closes.</p>
+<p>You don’t generally want to save at the moment the game closes: you won’t have the opportunity if it crashes and you’re generally not supposed to block an Alt+F4 event, which many players use to quit a game. So a good approach is to save immediately after the persistent data changes.</p>
+<p>With PostSharp, you could do it like this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">
+class PlayerInformation
+{
+    public int ExperiencePoints { get; [ThenSave] set; }
+    public List<Achievement> Achievements { get; }
+    
+    [ThenSave]
+    public void AddAchievement(Achievement achievement)
+    {
+        ...
+      }
+}</pre>
+<p>&nbsp;</p>
+<p>Where the <em>[ThenSave]</em> aspect means “When this method completes, save this information to disk.”</p>
+<p>The code for the <em>[ThenSave]</em> class is this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[Serializable]
+    internal class ThenSaveAttribute : OnMethodBoundaryAspect
+{
+    public override void OnExit(MethodExecutionArgs args)
+    {
+        XmlSave.Save((PlayerInformation)args.Instance); // serializes and saves to disk
+    }
+}</pre>
+<p>&nbsp;</p>
+<p>The parameter <em>MethodExecutionArgs</em> contains some information about how and where the method was called. In this case, we’re only interested in the instance of <em>PlayerInformation</em>, and we don’t plan to use <em>[ThenSave]</em> on any other class, so we can hard cast <em>args.Instance</em> to <em>PlayerInformation</em> here.</p>
+<p>Notice I could also add the aspect to the method setter. PostSharp also allows you to do <a href="https://doc.postsharp.net/location-interception">location interception aspects</a>, which act on properties themselves, but those aren’t in the Community edition. But, a setter is technically just a method so you can apply the free method boundary aspect to it! Loophole ^^!</p>
+<h2>Example 2: [InitializeIfNeeded]</h2>
+<p>In some lazy initialization patterns, you don’t want to initialize an instance in its constructor, but you can’t allow public methods to execute until initialization has taken place. This leads to code such as this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">
+    class AccountRepository
+    {
+        public bool Exists(string accountNumber)
+        {
+            InitializeIfNeeded();
+            return ...;
+        }
+        public Account FetchAccount(string accountNumber)
+        {
+            InitializeIfNeeded();
+            return ...;
+        }
+    }</pre>
+    <p>&nbsp;</p>
+<p>You could replace the calls to <em>InitializeIfNeeded()</em> with a method boundary aspect that executed that code before the actual method body, but then you’re just using an attribute instead of a line of code and you’re not getting much benefit.</p>
+<p>But, you could also use <a href="https://doc.postsharp.net/attribute-multicasting">multicasting</a> and add the attribute to the class <em>AccountRepository</em> itself. In PostSharp, adding a method boundary aspect to a class means <em>“add this aspect to all methods in this class”,</em> so your code would look like this:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">
+        [InitializeIfNeeded(
+            AttributeTargetMembers = MulticastTargets.Method, // don’t apply to constructor
+            AttributeTargetMemberAttributes = MulticastAttributes.Public // no private
+        )]
+        class AccountRepository
+        {
+            public bool Exists(string accountNumber)
+            {
+                return ...;
+            }
+            public Account FetchAccount(string accountNumber)
+            {
+                return ...;
+            }
+        }</pre>
+<p>&nbsp;</p>
+<p>As a bonus, you eliminate the bugs that could occur if you added a new public method and forgot to add the initialization code to it.</p>
+<h2>Example 3: [LogAndSwallow]</h2>
+<p>I have seen the “log and swallow exception” pattern in several projects now:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">
+    try
+    {
+        UnreliableCode();
+    }
+    catch (Exception e)
+    {
+        Log(e);
+    }</pre>
+<p>&nbsp;</p>
+<p>It is useful both if you’re the consumer of <em>UnreliableCode</em> and you need to protect your application from it, or if you’re the author of <em>UnreliableCode</em> and need to shield your consumer from possible errors in your code.</p>
+<p>To avoid writing this code, possibly in many places, you could annotate the <em>UnreliableCode</em> method with a method boundary aspect where you override the <em>OnException</em> method. You can then decide what code executes in the <em>catch</em> block and whether the exception should be swallowed or rethrown by the aspect.</p>
+<p>This is how the aspect could look like:</p>
+<pre class="brush: c-sharp; first-line: 1; tab-size: 4; toolbar: false; ">[Serializable]
+    internal class LogAndSwallowAttribute : OnMethodBoundaryAspect
+{
+    public override void OnException(MethodExecutionArgs args)
+    {
+        Log.WriteLine(args.Exception.ToString()); // log
+        args.FlowBehavior = FlowBehavior.Continue; // swallow
+    }
+}</pre>
+<p>&nbsp;</p>
+<h2>What’s actually compiled </h2>
+<p>Let’s look at the class <em>PlayerInformation</em> from our first example under a decompiler and see what’s actually in the resulting assembly!</p>
+<p><img src="/assets/images/blog/2020-08-10-add_code_before_and_after_each_method_with_postsharp_community/method-boundary.png" alt="method-boundary"></p>
+<p>The getter is unchanged but the setter is restructured: the actual method body <em>(ExperiencePoints = value;)</em> is wrapped in a <em>try/finally</em> construct and our aspect code is executed in the <em>finally</em> block.</p>
+<p>That’s because we used an <em>OnExit</em> override which happens regardless of whether the target method throws an exception. If we used <em>OnSuccess</em> instead, there would be no <em>try/finally</em> and the call to our aspect would happen immediately after the method body.</p>
+<p>Then there’s the symbol <>z__a_1.a0. That’s a static field, synthesized by PostSharp, that holds the instance of the ThenSave aspect for the <em>PlayerInformation</em> class. It’s shared among all instances of that class, which is why you need to get the instance from the <em>MethodExecutionArgs</em> and you don’t have it available as a field.</p>
+<h2>Conclusion</h2>
+<p>Method boundary aspect is the most basic feature of PostSharp Community, but also possibly the most widely useful.</p>
+<p>You can <a href="https://www.postsharp.net/get/community">get started with PostSharp Community here</a> or, for more details about the method boundary aspect, you can look at <a href="https://www.postsharp.net/blog/post/Day-4-OnMethodBoundaryAspect">our more in-depth blog post.</a> It’s older but still relevant.</p>
