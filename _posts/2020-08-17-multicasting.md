@@ -37,13 +37,13 @@ A method boundary aspect can target methods only, so if you apply it to a type, 
 
 In the following example, if you write the code on the left, PostSharp will transform your code at build time as though you actually wrote the code on the right, but you avoided some code duplication. 
 
-![diagram](/assets/images/blog/2020-08-17-multicasting/Diagram1.svg)
+<img src="/assets/images/blog/2020-08-17-multicasting/Diagram1.svg" alt="diagram" width="100%">
 
 Some attributes that enhance your code work on types rather than methods or members. For example, the community add-in [ToString](https://github.com/postsharp/PostSharp.Community.ToString) applies on types and synthesizes a ToString method for them.
 
 You can use multicasting here as well. If you apply the ToString attribute to your assembly, it will instead apply to all classes in that assembly. 
 
-![diagram](/assets/images/blog/2020-08-17-multicasting/Diagram2.svg)
+<img src="/assets/images/blog/2020-08-17-multicasting/Diagram2.svg" alt="diagram" width="100%">
 
 Note how properties of the add-in are copied to the actual target classes as well.
 
@@ -51,7 +51,7 @@ Note how properties of the add-in are copied to the actual target classes as wel
 
 We've seen that with multicasting, attributes "cascade down" from assemblies to types to members. 
 
-![diagram](/assets/images/blog/2020-08-17-multicasting/Diagram3.svg)
+<img src="/assets/images/blog/2020-08-17-multicasting/Diagram3.svg" alt="diagram" width="100%">
 
 _(Whether an attribute is type level or method level is determined by MulticastAttributeUsage. You can see [documentation](https://doc.postsharp.net/multicast-conceptual) for details.)_
 
@@ -81,9 +81,9 @@ This means "Apply _MyLog_ to all _OnClick_ handlers on _Form1_ for buttons with 
 
 ## Even more precise targeting with exclusion
 
-You can also use _AttributeExclude_ in combination with _AttributePriority_ to exclude some targets that you've previously included in multicasting. All attributes are processed in the order of _AttributePriority_ and what comes out at the end if the set of targets to which the attribute is applied.
+You can also use _AttributeExclude_ in combination with _AttributePriority_ to exclude some targets that you've previously included in multicasting. All attributes are processed in the order of _AttributePriority_ and what comes out at the end of this processing becomes the set of targets to which the attribute is applied.
 
-Here's an example:
+Here's an example where the first line applies the aspect to all public methods, and the second line excludes getters and setters from the set:
 
 ![code with exclusions](/assets/images/blog/2020-08-17-multicasting/AdvancedExample2.png)
  
