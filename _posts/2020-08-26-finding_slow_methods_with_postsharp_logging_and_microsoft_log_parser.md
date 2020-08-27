@@ -5,7 +5,7 @@ title: "Finding slow methods with PostSharp Logging and Microsoft Log Parser"
 date: 2020-08-26 09:40:00 +02:00
 categories: [Guest blog]
 permalink: /post/finding-slow-methods-with-postsharp-logging-and-microsoft-log-parser.html
-author: "Marko Padjen"
+author: "Marko Pađen"
 image: /assets/images/blog/2020-08-26-finding_slow_methods_with_postsharp_logging_and_microsoft_log_parser/Finding-Slow-Methods.jpg
 ---
 Marko Pađen, a full-stack freelance software engineer with 20 years of experience, wrote about his experience with PostSharp Logging. Read more about his take on logging and finding slow methods with PostSharp Logging and Microsoft Log Parser.
