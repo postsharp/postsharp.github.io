@@ -8,7 +8,7 @@ permalink: /post/finding-slow-methods-with-postsharp-logging-and-microsoft-log-p
 author: "Marko Pađen"
 image: /assets/images/blog/2020-08-26-finding_slow_methods_with_postsharp_logging_and_microsoft_log_parser/Finding-Slow-Methods.jpg
 ---
-Marko Pađen, a full-stack freelance software engineer with 20 years of experience, wrote about his experience with PostSharp Logging. Read more about his take on logging and finding slow methods with PostSharp Logging and Microsoft Log Parser.
+[Marko Pađen](https://www.linkedin.com/in/marko-pa%C4%91en/), a full-stack freelance software engineer with 20 years of experience, wrote about his experience with PostSharp Logging. Read more about his take on logging and finding slow methods with PostSharp Logging and Microsoft Log Parser.
 
 
 Logging is boring. Combing through the log files to find the problem source is not a thrill either. There are many logging frameworks and log parsers available which make your life easier, but you still have to do a lot of manual work. PostSharp reduces boilerplate code in general, and the developers put a lot of focus on logging.
