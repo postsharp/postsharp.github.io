@@ -23,7 +23,7 @@ My friend has a service, and clients are complaining it’s running slow. They d
 
 ## Ideas
 
-As we don’t know upfront what we need and what we don’t need, it would be useful to create logs on two verbosity levels: trace and warnings. Warnings will log our method execution overtime so we can identify the issue, and trace logs would provide any additional information. Then we can examine log files with Microsoft ***Log Parser 2.2*** and hopefully identify the issue.
+As we don’t know upfront what we need and what we don’t need, it would be useful to create logs on two verbosity levels: trace and warnings. Warnings will log our method execution overtime so we can identify the issue, and trace logs would provide any additional information. Then we can examine log files with ***Microsoft Log Parser 2.2*** and hopefully identify the issue.
 
 ## Implementation
 
@@ -122,7 +122,7 @@ Mode                LastWriteTime         Length Name
 -a----         8/2/2020   1:54 PM          12500 trace.log
 -a----         8/2/2020   1:54 PM           2255 warn.log
 ```
-## Log Analysis
+## Log analysis
 
 We will use Microsoft Log Parser 2.2 to search through these files. First file we focus on is `warn.log`.
 By specifying NLog file header (`Header = new SimpleLayout("Time|Level|Class|Method|Info")`) we have made SQL queries possible on warn.log.
@@ -192,11 +192,11 @@ Execution time:     0.01 seconds
 
 Here we see that our problem is most probably `ProcessRequest` while processing request 145, so we have something to focus on.
 
-## Other Automated Logging benefits
+## Other automated logging benefits
 
 There are a few other things I liked about PostSharp Logging:
 
-### Clean Code
+### Clean code
 
 First one is very obvious: you don’t have to write code yourself, plus you get a cleaner code. You will remove all those `.Warn("About some potential issue!")` and `.Error(ex, $"Something happened with {request}!")` and make more space for a real business-related code. That code you wrote is probably just repeating the previous line in a log-ready way. Additionally, while changing the actual code, you may forget to change the logging part as well, making log files incomplete or incorrect.
 
