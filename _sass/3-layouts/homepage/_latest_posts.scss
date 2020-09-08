@@ -3,7 +3,7 @@
     padding: 0 rem($mobile_side_margins);
     @media screen and (min-width: rem($mobile_breakpoint, 'desktop')) {
         margin-top: $page_space_from_top_desktop;
-        padding: 0 rem($desktop_side_margins, "desktop");
+        padding: 0 rem($desktop_side_margins, "desktop") / 3;
     }
     @media screen and (min-width: $mobile_breakpoint) and (max-width: 1400px) {
         padding: 0 rem($desktop_side_margins, "desktop") / 3;
@@ -56,6 +56,9 @@
     }
     .swiper-container {
         height: 175vw;
+    }
+    .swiper-button-next:after, .swiper-button-prev:after{
+        color: #d5d5d5;
     }
     .swiper-pagination-bullet {
         width: 36px;
@@ -142,6 +145,7 @@
                 width: 90%;
                 height: 480px;
                 gap: rem(10px, "desktop") rem(55px, "desktop");
+                margin:0 auto
             }
         }
         h3 {
@@ -306,11 +310,18 @@
         }
     }
 }
-@media screen and (min-width: $mobile_breakpoint) and (max-width: 1580px) {
+@media screen and (min-width: $mobile_breakpoint) and (max-width: 1340px) {
     .latest_posts {
         .post_data {
             width: 100%;
         }
+    }
+}
+@media screen and (max-width: 1340px) {
+    .latest_posts{
+        .swiper-button-next, .swiper-button-prev{
+            display: none;
+        }        
     }
 }
 
