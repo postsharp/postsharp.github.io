@@ -47,7 +47,10 @@
                 display: block;
             }
             .date {
-                width: 35%;
+                width: 18%;
+            }
+            .author{
+                width: 23%;
             }
         }
         ul {
@@ -62,11 +65,14 @@
                     display: block;
                 }
                 time {
-                    width: 35%;
+                    width: 18%;
                     color: $gray;
                 }
+                span.author_name{
+                    width: 23%;
+                }
                 a {
-                    width: 65%;
+                    width: 59%;
                     color: $accent_color01;
                     text-decoration: none;
                     transition: all 300ms ease-in-out;
