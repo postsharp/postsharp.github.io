@@ -37,6 +37,7 @@
 </head>
 
 <body>
+    {% if include.noheader != "true" %}
     <header>        
         <div class="items_wrapper">
             <a class="logo" href="{{site.main_website_url}}/"><img src="{{site.baseurl}}/assets/images/postsharp_logo.svg" alt="postsharp logo"></a>
@@ -49,3 +50,4 @@
             </nav>
         </div>
     </header>
+    {% endif %}

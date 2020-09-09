@@ -1,0 +1,22 @@
+{% include header.html title="featured posts" noheader="true" %}
+<section class="iframe_featured_posts">
+	{% for post in site.tags.featured limit:3 %}
+	<div class="blog_item">
+		<figure>
+			<a href="{{site.baseurl}}{{ post.url }}">
+				{% if post.image %}
+				<img src="{{post.image}}"
+					alt="{{post.title}}">
+				{% else %}
+				<img src="{{site.baseurl}}/assets/images/blog/ps-no-featimg.jpg">
+				{% endif %}
+			</a>
+		</figure>
+		<div class="item_details_container">
+			<a href="{{site.baseurl}}{{ post.url }}"><h3>{{post.title}}</h3></a>
+			<p class="post_excerpt">{{ post.excerpt | strip_html | strip_newlines | truncate: 240 }}</p>
+			<a class="read_button" href="{{site.baseurl}}{{ post.url }}">READ</a>
+		</div>
+	</div>
+	{% endfor %}
+</section>
