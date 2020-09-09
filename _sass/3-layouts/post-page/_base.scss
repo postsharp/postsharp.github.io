@@ -18,7 +18,7 @@
     .post_details {
         margin-bottom: rem(27px);
         font-size: rem(9px);
-        font-family: $ff-headings;
+        font-family: $ff-texts;
         color: $light_gray;
         span {
             color: $accent_color01;
@@ -123,7 +123,7 @@
             .post_details {
                 font-size: rem(18px, "desktop");
                 //margin-top: rem(20px, "desktop");
-                font-family: $ff-headings;
+//                font-family: $ff-headings;
                 margin-top: 0;
                 margin-right: 60px;
                 line-height: 30px;                
