@@ -115,8 +115,6 @@
 }
 @media screen and (min-width: 768px) and (max-width: 1210px) {
     .iframe_featured_posts{        
-        padding-bottom:50px;
-        margin-top: 100px;
         @supports(display: grid){
             grid-template-columns: repeat(2, minmax(270px, 1fr)) ;
             gap:rem(40px, 'desktop') rem(40px, 'desktop')
