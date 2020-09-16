@@ -37,7 +37,7 @@ From now on, the sky is the limit. Introducing advanced functionalities like the
 
 Building Threat Manager would not have been possible, if not for selected few third-party libraries and tools. One of them was PostSharp, which I did know for having used it on some other personal projects I worked on in the past. When I started Threats Manager, PostSharp was not much for me: I did use it just for a couple of simple scenarios:
 
-- To inject parameter validation code, using Contracts like NotNull and Required,
+- to inject parameter validation code, using Contracts like NotNull and Required,
 - to automatically verify if a class has been correctly initialized, using a custom OnMethodBoundaryAspect intercepting the method entry and exiting automatically if the object has not been initialized, yet,
 - to propagate the Dirty status from the objects to the whole document, with an attribute that would allow marking the context as Dirty automatically, as soon as some property is set.
 
