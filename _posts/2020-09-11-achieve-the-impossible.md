@@ -302,7 +302,7 @@ They said it was impossible. Now it is a reality.
 
 That&#39;s all for now. Safe Threat Modeling to everyone!
 
-## Biography
+## About the author
 
 *Simone Curzi is a Principal Consultant from Microsoft Consulting Services. Simone has a 20 year experience covering various technical roles in Microsoft Services, and has fully devoted himself to Security for more than 5 years. A renowed Threat Modeling and Microsoft Security Development Lifecycle (SDL) expert, Simone is also one of the leaders of the Worldwide Microsoft Community on Application Security and a SME for the Security Community.*
 
