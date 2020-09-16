@@ -306,6 +306,4 @@ That&#39;s all for now. Safe Threat Modeling to everyone!
 
 *Simone Curzi is a Principal Consultant from Microsoft Consulting Services. Simone has a 20 year experience covering various technical roles in Microsoft Services, and has fully devoted himself to Security for more than 5 years. A renowed Threat Modeling and Microsoft Security Development Lifecycle (SDL) expert, Simone is also one of the leaders of the Worldwide Microsoft Community on Application Security and a SME for the Security Community.*
 
-*Some of Simone's contributions are available through his Blog, which can be accessed from [https://simonesecurity.com](https://simoneonsecurity.com)*
-
-*He can also be reached via his [LinkedIn profile](https://www.linkedin.com/in/simone-curzi-a357b334/).*
+*Some of Simone's contributions are available through his [blog](https://simoneonsecurity.com). He can also be reached via his [LinkedIn profile](https://www.linkedin.com/in/simone-curzi-a357b334/).*
