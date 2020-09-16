@@ -2,13 +2,15 @@
 layout: post 
 comments: true
 title: "How to revolutionize security, during your free time"
+date: 2020-09-16 10:40:00 +02:00
+categories: [Guest article]
 permalink: /post/how-to-revolutionize-security.html
 author: "Simone Curzi"
-published: false
-excerpt_separator: <!--more-->
+image: /assets/images/blog/2020-09-11-achieve-the-impossible/how-to-revolutionize-security.jpg
+
 ---
 When you need to address a very urgent need, but you do not have the time to address it, adopting the right tools becomes very important. The author of this post, Simone Curzi, is a Principal Consultant from Microsoft Services, and this post introduces his story and how he has succeeded in making his vision real, in his spare time, thanks to PostSharp.
-<!-- more -->
+
 ## Intro
 
 Let me introduce myself. I am Simone Curzi, a Principal Consultant from Microsoft Services. I am an Application Security and Threat Modeling expert, and as such, I have the opportunity and privilege to help a lot of organizations to be more secure. As a former developer and architect, my style is to seek every opportunity for improvement and to do what I deem necessary to achieve my goals. On that account, I am not shy about investing my free time and resources, and I have done that two or three times in the past years.
@@ -26,7 +28,7 @@ _Figure 1 – The Threats Manager Platform in action._
 
 The experience has then evolved, including advanced reporting capabilities and functionalities to design Roadmaps to help the Development Teams to understand how to mitigate the identified risks. With the Roadmap view, it is possible to simply drag &amp; drop the identified mitigation in the respective phase of the roadmap, to see the effect on the estimated residual risk. The resulting experience is integrated and straightforward, and allows even to understand that a specific combination of activities would allow reaching an acceptable residual risk after the Mid Term phase of the roadmap, as shown by the example below.
 
-![](/assets/images/blog/2020-09-11-achieve-the-impossible/Threats2.jpg)
+![](/assets/images/blog/2020-09-11-achieve-the-impossible/Threats2.png)
 _Figure 2 - The Roadmap tool and an example of mitigation planning._
 
 From now on, the sky is the limit. Introducing advanced functionalities like the integration with Issue Tracking and Agile Planning systems like Jira and Azure DevOps is only a matter of time.
