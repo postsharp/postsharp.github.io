@@ -28,7 +28,7 @@ _Figure 1 – The Threats Manager Platform in action._
 
 The experience has then evolved, including advanced reporting capabilities and functionalities to design Roadmaps to help the Development Teams to understand how to mitigate the identified risks. With the Roadmap view, it is possible to simply drag &amp; drop the identified mitigation in the respective phase of the roadmap, to see the effect on the estimated residual risk. The resulting experience is integrated and straightforward, and allows even to understand that a specific combination of activities would allow reaching an acceptable residual risk after the Mid Term phase of the roadmap, as shown by the example below.
 
-![](/assets/images/blog/2020-09-11-achieve-the-impossible/Threats2.png)
+![](/assets/images/blog/2020-09-11-achieve-the-impossible/Threats-img2.png)
 _Figure 2 - The Roadmap tool and an example of mitigation planning._
 
 From now on, the sky is the limit. Introducing advanced functionalities like the integration with Issue Tracking and Agile Planning systems like Jira and Azure DevOps is only a matter of time.
