@@ -4,6 +4,7 @@ comments: true
 title: "Collecting logs and multiplexing"
 permalink: /post/collecting-logs-and-multiplexing.html
 author: "Petr H."
+date: 2020-09-21 10:40:00 +02:00
 published: false
 ---
 In PostSharp 6.7, we are releasing two new features for PostSharp Logging: log collecting and the multiplexer logging backend. Log collecting allows you to reuse your existing logging code with PostSharp. And with the multiplexer backend, you can send your logging output to two or more targets (such as console and a third-party logging framework) at the same time.
