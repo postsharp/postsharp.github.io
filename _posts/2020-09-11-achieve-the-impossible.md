@@ -23,12 +23,12 @@ At the end of 2017, I decided to try a different route. I knew what I wanted fro
 
 The first release was little more than a design tool with specialized functions. Still, the main ideas were already there, including a sound object model based on standard terminology and essential concepts missing from the previous experience and a composable experience built as a blend of multiple functionalities that the user can select to get the tool she needs.
 
-![](/assets/images/blog/2020-09-11-achieve-the-impossible/Threats-1.jpg)
+![](/assets/images/blog/2020-09-11-achieve-the-impossible/Threats-img1.jpg)
 _Figure 1 – The Threats Manager Platform in action._
 
 The experience has then evolved, including advanced reporting capabilities and functionalities to design Roadmaps to help the Development Teams to understand how to mitigate the identified risks. With the Roadmap view, it is possible to simply drag &amp; drop the identified mitigation in the respective phase of the roadmap, to see the effect on the estimated residual risk. The resulting experience is integrated and straightforward, and allows even to understand that a specific combination of activities would allow reaching an acceptable residual risk after the Mid Term phase of the roadmap, as shown by the example below.
 
-![](/assets/images/blog/2020-09-11-achieve-the-impossible/Threats2.png)
+![](/assets/images/blog/2020-09-11-achieve-the-impossible/Threats-img2.png)
 _Figure 2 - The Roadmap tool and an example of mitigation planning._
 
 From now on, the sky is the limit. Introducing advanced functionalities like the integration with Issue Tracking and Agile Planning systems like Jira and Azure DevOps is only a matter of time.
@@ -37,7 +37,7 @@ From now on, the sky is the limit. Introducing advanced functionalities like the
 
 Building Threat Manager would not have been possible, if not for selected few third-party libraries and tools. One of them was PostSharp, which I did know for having used it on some other personal projects I worked on in the past. When I started Threats Manager, PostSharp was not much for me: I did use it just for a couple of simple scenarios:
 
-- To inject parameter validation code, using Contracts like NotNull and Required,
+- to inject parameter validation code, using Contracts like NotNull and Required,
 - to automatically verify if a class has been correctly initialized, using a custom OnMethodBoundaryAspect intercepting the method entry and exiting automatically if the object has not been initialized, yet,
 - to propagate the Dirty status from the objects to the whole document, with an attribute that would allow marking the context as Dirty automatically, as soon as some property is set.
 
