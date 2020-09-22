@@ -17,7 +17,7 @@ With log collecting, you can use your existing logging statements in greater har
 ### What happens without log collecting?
 Suppose, for example, that your codebase is using [NLog](https://nlog-project.org/) to log events. Previously, you could add PostSharp `[Log]` attributes and have both your NLog loggers and PostSharp `[Log]` attributes send events to the same NLog targets. Your system looked like this:
 
-<img src="/assets/images/blog/2020-09-16-collecting-logs-and-multiplexer/LogCollecting_WithoutSvg.svg" />
+<img src="/assets/images/blog/2020-09-16-collecting-logs-and-multiplexer/LogCollecting_WithoutSvg.svg" width="100%" />
 
 But the resulting output wasn't perfect. If your code was this:
 
@@ -45,7 +45,7 @@ There was a way around this issue: using [manual logging events of PostSharp](ht
 
 But with log collecting, you can set up your system differently:
 
-<img src="/assets/images/blog/2020-09-16-collecting-logs-and-multiplexer/LogCollecting_WithSvg.svg" />
+<img src="/assets/images/blog/2020-09-16-collecting-logs-and-multiplexer/LogCollecting_WithSvg.svg" width="100%" />
 
 Collecting logs means that when you use NLog statements, the logging events go to PostSharp instead of NLog targets. PostSharp can then enrich those logging events with its own data and send them to final NLog targets as though you used PostSharp manual logging API.
  
