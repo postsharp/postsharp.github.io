@@ -10,6 +10,7 @@ image: /assets/images/blog/2020-10-01-blazor_support_6_7/blazor-support.jpg
 ---
 Today we would like to announce that the preview of Blazor support is now available in PostSharp 6.7. Blazor is a framework from Microsoft for client-side web development using .NET and C# instead of JavaScript. If you want to learn more about the framework, visit [Blazor.net](https://blazor.net).
 
+## Intro
 Because PostSharp works on the IL level and conforms to the CLI specification, there’s usually little development work required on our side when adding support for a new platform. However, a lot of effort goes into work on our build configuration and automation system, to make sure that we can successfully execute all of our test suites on the target platform (and in some cases on physical devices). This was also the case with Blazor. We even had to build our own test runner based on Xunit that executes the tests within the web browser.
 
 Overall, we’re very happy with the results of our tests: you can use PostSharp Framework and selected Patterns libraries in your Blazor applications today. Please read below for more detailed information about supported use cases.
@@ -25,10 +26,10 @@ Second, some of the Patterns libraries are not applicable to the Blazor platform
 | PostSharp.Patterns.Common        | Yes
 | PostSharp.Patterns.Aggregation   | Yes
 | PostSharp.Patterns.Model         | Yes
-| PostSharp.Patterns.Diagnostics   | Yes(backends that support NetStandard)
+| PostSharp.Patterns.Diagnostics   | Yes
 | PostSharp.Patterns.Threading     | N/A
 | PostSharp.Patterns.Xaml          | N/A
-| PostSharp.Patterns.Caching       | Yes (IMemoryCache backend)
+| PostSharp.Patterns.Caching       | Yes
 
 
 ## Configuring the Blazor linker
