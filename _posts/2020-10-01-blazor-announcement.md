@@ -9,7 +9,7 @@ author: "Alexander D."
 image: /assets/images/blog/2020-10-01-blazor_support_6_7/blazor-support.jpg
 published: false
 ---
-Today we would like to announce that the preview of Blazor support is now available in PostSharp 6.7. Blazor is a framework from Microsoft for client-side web development using .NET and C# instead of JavaScript. If you want to learn more about the framework, visit [Blazor.net] (https://blazor.net).
+Today we would like to announce that the preview of Blazor support is now available in PostSharp 6.7. Blazor is a framework from Microsoft for client-side web development using .NET and C# instead of JavaScript. If you want to learn more about the framework, visit [Blazor.net](https://blazor.net).
 
 Because PostSharp works on the IL level and conforms to the CLI specification, there’s usually little development work required on our side when adding support for a new platform. However, a lot of effort goes into work on our build configuration and automation system, to make sure that we can successfully execute all of our test suites on the target platform (and in some cases on physical devices). This was also the case with Blazor. We even had to build our own test runner based on Xunit that executes the tests within the web browser.
 
