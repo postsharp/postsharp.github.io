@@ -15,9 +15,9 @@ In this article, I will describe how to best use both of these new features.
 With log collecting, you can use your existing logging statements in greater harmony with PostSharp's automatic logging.
 
 ### What happens without log collecting?
-Suppose, for example, that your codebase is using [NLog](TODO) to log events. Previously, you could add PostSharp `[Log]` attributes and have both your NLog loggers and PostSharp `[Log]` attributes send events to the same NLog targets. Your system looked like this:
+Suppose, for example, that your codebase is using [NLog](https://nlog-project.org/) to log events. Previously, you could add PostSharp `[Log]` attributes and have both your NLog loggers and PostSharp `[Log]` attributes send events to the same NLog targets. Your system looked like this:
 
-<img src="WithoutLogCollecting.svg" />
+<img src="/assets/images/blog/2020-09-16-collecting-logs-and-multiplexer/LogCollecting_WithoutSvg.svg" width="100%" />
 
 But the resulting output wasn't perfect. If your code was this:
 
@@ -39,13 +39,13 @@ Notice two inconveniences: First, the text "Manual." isn't indented to the right
 
 Both problems have the same root cause: that PostSharp doesn't ever process the manual logging line. The call to `Info` above is not intercepted by PostSharp so PostSharp can't add the information it has about the class and about indentation. This means that your NLog formatting string needs to include the class information, and we get the ugly duplication.
 
-There was a way around this issue: using [manual logging events of PostSharp](TODO) but compared to the abilities of other logging frameworks, PostSharp manual event creation might not be as easy to use, and of course, switching to it would require that you rewrite your logging code.
+There was a way around this issue: using [manual logging events of PostSharp](https://doc.postsharp.net/manual-logging) but compared to the abilities of other logging frameworks, PostSharp manual event creation might not be as easy to use, and of course, switching to it would require that you rewrite your logging code.
 
 ### How log collecting can help
 
 But with log collecting, you can set up your system differently:
 
-<img src="WithLogCollecting.svg" />
+<img src="/assets/images/blog/2020-09-16-collecting-logs-and-multiplexer/LogCollecting_WithSvg.svg" width="100%" />
 
 Collecting logs means that when you use NLog statements, the logging events go to PostSharp instead of NLog targets. PostSharp can then enrich those logging events with its own data and send them to final NLog targets as though you used PostSharp manual logging API.
  
@@ -68,12 +68,12 @@ If you already use a combination of manual logging and PostSharp logging, and yo
 Here's how you use it:
 
 1. Upgrade your PostSharp NuGet packages to the most recent 6.7 version (minimum 6.7.8).
-2. Set up log collecting for your logging framework by following our documentation. We can do log collecting for [Serilog](TODO), [NLog](TODO), [Log4Net](TODO), [Trace](TODO), [TraceSource](TODO) and [ASP.NET](TODO).
-3. You can now use `[Log]` attributes [according to our documentation](TODO) and the logging features of your logging framework, at the same time, and still have a clean output.
+2. Set up log collecting for your logging framework by following our documentation. We can do log collecting for [Serilog](https://doc.postsharp.net/6.7/serilog), [NLog](https://doc.postsharp.net/6.7/nlog), [Log4Net](https://doc.postsharp.net/6.7/log4net), [Trace](https://doc.postsharp.net/6.7/logging-trace), [TraceSource](https://doc.postsharp.net/6.7/logging-tracesource) and [ASP.NET](https://doc.postsharp.net/6.7/logging-aspnetcore).
+3. You can now use `[Log]` attributes [according to our documentation](https://doc.postsharp.net/add-logging) and the logging features of your logging framework, at the same time, and still have a clean output.
 
 ## Multiplexing
 
-The multiplexer is a new [logging backend](TODO) that sends PostSharp logging output to two or more other logging backends.
+The multiplexer is a new [logging backend](https://doc.postsharp.net/6.7/add-logging#s2) that sends PostSharp logging output to two or more other logging backends.
 
 For example, you can send all of your logging to Serilog, logging from user-relevant classes to console, and logging of errors or critical errors to a Loupe server. Multiplexing is like having two or more sinks/appenders/targets/providers in other logging frameworks. 
 
@@ -105,13 +105,13 @@ MultiplexerBackend multiplexer = new MultiplexerBackend(serilog, console, loupe)
 LoggingServices.DefaultBackend = multiplexer; // send our logging events to all three backends
 ```
 
-You can learn more about [multiplexing in PostSharp in our documentation](TODO).
+You can learn more about [multiplexing in PostSharp in our documentation](https://doc.postsharp.net/6.7/multiplexer).
 
 ## Conclusion
 Logging code can be pervasive and difficult to change once in your codebase, but with log collecting, you don't need to change it when you adopt PostSharp. You can supplement your existing logging with PostSharp automatic logging and they will work perfectly together.
 
 The multiplexer enables several new scenarios, including sending your logging output to targets in different logging frameworks at the same time. 
 
-You can learn more about these new features, [log collecting](TODO) and [the multiplexer](TODO), in our documentation.
+You can learn more about these new features, [log collecting](https://doc.postsharp.net/6.7/log-collecting) and [the multiplexer](https://doc.postsharp.net/6.7/multiplexer), in our documentation.
 
  
