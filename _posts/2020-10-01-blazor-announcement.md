@@ -31,20 +31,6 @@ Second, some of the Patterns libraries are not applicable to the Blazor platform
 | PostSharp.Patterns.Caching       | Yes (IMemoryCache backend)
 
 
-| Package                          |                    | Supported1
-|----------------------------------|--------------------|------------
-| PostSharp                        |                    |Yes
-| PostSharp.Patterns.Common        |                    |Yes
-| PostSharp.Patterns.Aggregation   |                    |Yes
-| PostSharp.Patterns.Model         |                    |Yes
-| PostSharp.Patterns.Diagnostics   |                    |Yes (backends that support NetStandard)
-| PostSharp.Patterns.Threading     |                    |N/A
-| PostSharp.Patterns.Xaml          |                    |N/A
-| PostSharp.Patterns.Caching       |                    |Yes (IMemoryCache backend)
-
-
-
-
 ## Configuring the Blazor linker
 By default all Blazor applications use a linker in the Release build configuration. The purpose of the linker is to discard unused code and reduce the size of the application. Linking is based on static analysis and it cannot correctly detect all the code used by PostSharp.
 
