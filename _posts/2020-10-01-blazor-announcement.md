@@ -5,7 +5,7 @@ title: "Blazor support in PostSharp 6.7"
 date: 2020-10-01 12:40:00 +02:00
 categories: [Announcement]
 permalink: /post/blazor-support-6.7.html
-author: "Alexander D."
+author: "Alexander Dolin"
 image: /assets/images/blog/2020-10-01-blazor_support_6_7/blazor-support.jpg
 ---
 Today we would like to announce that the preview of Blazor support is now available in PostSharp 6.7. Blazor is a framework from Microsoft for client-side web development using .NET and C# instead of JavaScript. If you want to learn more about the framework, visit [Blazor.net](https://blazor.net).
