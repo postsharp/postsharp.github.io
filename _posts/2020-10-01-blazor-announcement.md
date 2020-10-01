@@ -9,13 +9,13 @@ author: "Alexander D."
 image: /assets/images/blog/2020-10-01-blazor_support_6_7/blazor-support.jpg
 published: false
 ---
-Today we would like to announce that the preview of Blazor support is now available in PostSharp 6.7. Blazor is a framework from Microsoft for client-side web development using .NET and C# instead of JavaScript. If you want to learn more about the framework, visit https://blazor.net.
+Today we would like to announce that the preview of Blazor support is now available in PostSharp 6.7. Blazor is a framework from Microsoft for client-side web development using .NET and C# instead of JavaScript. If you want to learn more about the framework, visit [Blazor.net] (https://blazor.net).
 
 Because PostSharp works on the IL level and conforms to the CLI specification, there’s usually little development work required on our side when adding support for a new platform. However, a lot of effort goes into work on our build configuration and automation system, to make sure that we can successfully execute all of our test suites on the target platform (and in some cases on physical devices). This was also the case with Blazor. We even had to build our own test runner based on Xunit that executes the tests within the web browser.
 
 Overall, we’re very happy with the results of our tests: you can use PostSharp Framework and selected Patterns libraries in your Blazor applications today. Please read below for more detailed information about supported use cases.
 
-# What is supported
+## What is supported
 First of all, PostSharp supports Blazor as a runtime platform only via .NET Standard. You can use PostSharp in your .NET Standard libraries and then reference these libraries in your Blazor application project. Adding PostSharp directly to a Blazor application project is not supported.
 
 Second, some of the Patterns libraries are not applicable to the Blazor platform and therefore are not supported. See the table below for the list of the PostSharp packages that support Blazor.
@@ -31,7 +31,7 @@ Second, some of the Patterns libraries are not applicable to the Blazor platform
 | PostSharp.Patterns.Xaml          | N/A
 | PostSharp.Patterns.Caching       | Yes (IMemoryCache backend)
 
-# Configuring the Blazor linker
+## Configuring the Blazor linker
 By default all Blazor applications use a linker in the Release build configuration. The purpose of the linker is to discard unused code and reduce the size of the application. Linking is based on static analysis and it cannot correctly detect all the code used by PostSharp.
 
 To prevent the linker from removing the required code you need a custom linker configuration in your project. The configuration procedure is described on the Microsoft Docs page: [Configure the Linker for ASP.NET Core Blazor](https://docs.microsoft.com/en-us/aspnet/core/blazor/host-and-deploy/configure-linker). Please use the following code as your linker configuration file: 
@@ -86,7 +86,7 @@ You can also find the following log message in the web browser console:
 Method failed with exception WebException 'Service unavailable.'. Sleeping 3 s and retrying. This was our attempt #1.
 ```
 
-# Summary
+## Summary
 You can start using PostSharp 6.7 in your Blazor applications today.
 
 Please note that Blazor support is still in preview status and some of the listed packages may have unresolved compatibility issues with Blazor.
