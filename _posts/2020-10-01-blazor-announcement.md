@@ -44,6 +44,7 @@ To prevent the linker from removing the required code you need a custom linker c
 </linker>
 ```
 
+
 # Example
 Let's look at a simple Blazor application that uses PostSharp Aspect Framework. The full source code of this example is published in our [samples browser](https://samples.postsharp.net/f/PostSharp.Samples.Blazor.AutoRetry/). The project is based on the standard Visual Studio template "Blazor WebAssembly App".
 
