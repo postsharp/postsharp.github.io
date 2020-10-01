@@ -19,13 +19,13 @@ First of all, PostSharp supports Blazor as a runtime platform only via .NET Stan
 
 Second, some of the Patterns libraries are not applicable to the Blazor platform and therefore are not supported. See the table below for the list of the PostSharp packages that support Blazor.
 
-| Package                          | Supported1
+| Package                          | Supported
 |----------------------------------|----------:
 | PostSharp                        | Yes
 | PostSharp.Patterns.Common        | Yes
 | PostSharp.Patterns.Aggregation   | Yes
 | PostSharp.Patterns.Model         | Yes
-| PostSharp.Patterns.Diagnostics   | Yes (backends that support NetStandard)
+| PostSharp.Patterns.Diagnostics   | <dl><dd>Yes</dd> (backends that support NetStandard)
 | PostSharp.Patterns.Threading     | N/A
 | PostSharp.Patterns.Xaml          | N/A
 | PostSharp.Patterns.Caching       | Yes (IMemoryCache backend)
