@@ -31,16 +31,16 @@ Second, some of the Patterns libraries are not applicable to the Blazor platform
 | PostSharp.Patterns.Caching       | Yes (IMemoryCache backend)
 
 
-| Package                          |     | Supported
-|----------------------------------|-----|------------
-| PostSharp                        |     |Yes
-| PostSharp.Patterns.Common        |     |Yes
-| PostSharp.Patterns.Aggregation   |     |Yes
-| PostSharp.Patterns.Model         |     |Yes
-| PostSharp.Patterns.Diagnostics   |     |Yes (backends that support NetStandard)
-| PostSharp.Patterns.Threading     |     |N/A
-| PostSharp.Patterns.Xaml          |     |N/A
-| PostSharp.Patterns.Caching       |     |Yes (IMemoryCache backend)
+| Package                          |          | Supported
+|----------------------------------|----------|------------
+| PostSharp                        |          |Yes
+| PostSharp.Patterns.Common        |          |Yes
+| PostSharp.Patterns.Aggregation   |          |Yes
+| PostSharp.Patterns.Model         |          |Yes
+| PostSharp.Patterns.Diagnostics   |          |Yes (backends that support NetStandard)
+| PostSharp.Patterns.Threading     |          |N/A
+| PostSharp.Patterns.Xaml          |          |N/A
+| PostSharp.Patterns.Caching       |          |Yes (IMemoryCache backend)
 
 
 
