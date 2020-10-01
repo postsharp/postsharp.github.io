@@ -19,7 +19,7 @@ First of all, PostSharp supports Blazor as a runtime platform only via .NET Stan
 
 Second, some of the Patterns libraries are not applicable to the Blazor platform and therefore are not supported. See the table below for the list of the PostSharp packages that support Blazor.
 
-| Package                          | Supported
+| Package                          | Supported1
 |----------------------------------|----------:
 | PostSharp                        | Yes
 | PostSharp.Patterns.Common        | Yes
