@@ -2,7 +2,7 @@
 layout: post 
 comments: true
 title: "Collecting logs and multiplexing"
-date: 2020-10-05 15:30:00 +02:00
+date: 2020-10-05 15:00:00 +02:00
 categories: [Features]
 permalink: /post/collecting-logs-and-multiplexing.html
 author: "Petr H."
