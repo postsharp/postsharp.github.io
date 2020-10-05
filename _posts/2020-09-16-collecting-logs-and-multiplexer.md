@@ -2,8 +2,11 @@
 layout: post 
 comments: true
 title: "Collecting logs and multiplexing"
+date: 2020-10-05 15:30:00 +02:00
+categories: [Features]
 permalink: /post/collecting-logs-and-multiplexing.html
 author: "Petr H."
+image: /assets/images/blog/2020-10-05-collecting-logs-and-multiplexer/logging-bridges.jpg
 published: false
 ---
 In PostSharp 6.7, we are releasing two new features for PostSharp Logging: log collecting and the multiplexer logging backend. Log collecting allows you to reuse your existing logging code with PostSharp. And with the multiplexer backend, you can send your logging output to two or more targets (such as console and a third-party logging framework) at the same time.
@@ -17,7 +20,7 @@ With log collecting, you can use your existing logging statements in greater har
 ### What happens without log collecting?
 Suppose, for example, that your codebase is using [NLog](https://nlog-project.org/) to log events. Previously, you could add PostSharp `[Log]` attributes and have both your NLog loggers and PostSharp `[Log]` attributes send events to the same NLog targets. Your system looked like this:
 
-<img src="/assets/images/blog/2020-09-16-collecting-logs-and-multiplexer/LogCollecting_WithoutSvg.svg" width="100%" />
+<img src="/assets/images/blog/2020-10-05-collecting-logs-and-multiplexer/LogCollecting_WithoutSvg.svg" width="100%" />
 
 But the resulting output wasn't perfect. If your code was this:
 
@@ -45,7 +48,7 @@ There was a way around this issue: using [manual logging events of PostSharp](ht
 
 But with log collecting, you can set up your system differently:
 
-<img src="/assets/images/blog/2020-09-16-collecting-logs-and-multiplexer/LogCollecting_WithSvg.svg" width="100%" />
+<img src="/assets/images/blog/2020-10-05-collecting-logs-and-multiplexer/LogCollecting_WithSvg.svg" width="100%" />
 
 Collecting logs means that when you use NLog statements, the logging events go to PostSharp instead of NLog targets. PostSharp can then enrich those logging events with its own data and send them to final NLog targets as though you used PostSharp manual logging API.
  
