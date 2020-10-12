@@ -3,7 +3,7 @@
 	{% for post in site.tags.featured limit:3 %}
 	<div class="blog_item">
 		<figure>
-			<a href="{{site.baseurl}}{{ post.url }}">
+			<a href="{{site.baseurl}}{{ post.url }}" target="_PARENT">
 				{% if post.image %}
 				<img src="{{post.image}}"
 					alt="{{post.title}}">
