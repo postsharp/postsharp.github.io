@@ -4,7 +4,7 @@ comments: true
 title: "Announcing PostSharp 6.7 RC: Support for Blazor and Xamarin, and better integration with other logging frameworks "
 date: 2020-10-13 11:30:00 +02:00
 categories: [Announcement]
-permalink: /post/postsharp-6-7-rc-blazor-xamrin-support-and-enhanced-logging-features.html
+permalink: /post/postsharp-6-7-rc-blazor-xamarin-support-and-enhanced-logging-features.html
 author: "Lejla Rasic"
 image: /assets/images/blog/2020-10-13-6-7-RC-announcement/6-7-RC-square.jpg
 ---
