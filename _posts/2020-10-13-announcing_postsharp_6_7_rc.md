@@ -10,7 +10,7 @@ image: /assets/images/blog/2020-10-13-6-7-RC-announcement/6-7-RC-square.jpg
 ---
 We are happy to announce that PostSharp 6.7 RC is available today. Included in this release are support for Xamarin and Blazor as well as introduction of two new features for PostSharp Logging: collecting logs from other logging frameworks into PostSharp Logging, and writing from [PostSharp Logging](https://www.postsharp.net/logging) into multiple target frameworks. 
 
-This version is available for [download](https://www.postsharp.net/download) on our website.
+This version is available for [download](https://www.postsharp.net/downloads/postsharp-6.7/v6.7.9) on our website and the packages for 6.7.9-rc are now available as prerelease on [NuGet](https://www.nuget.org/profiles/PostSharp).
 
 ## Blazor support  
 
@@ -26,7 +26,7 @@ Find further details about Blazor support on our blog post [here](https://blog.p
 
 As we have already announced in [PostSharp 6.7 preview blog post](https://blog.postsharp.net/post/postsharp-6-7-preview-support-for-xamarin-and-net-5.html), we are excited for bringing back Xamarin support. Just like with Blazor support, you will be able to use PostSharp in .NET Standard projects that can then be referenced in your Xamarin application project. The support includes creating custom aspects as well as using PostSharp Pattern Libraries. 
 
-Note that with Xamarin, we still just support .NET Standard libraries, so you cannot use PostSharp on a project that is built for Xamarin. 
+Note that with Xamarin, we still just support .NET Standard libraries, so you cannot use PostSharp on the Xamarin-targeting project itself.. 
 
 ## Better integration with other logging frameworks  
 
