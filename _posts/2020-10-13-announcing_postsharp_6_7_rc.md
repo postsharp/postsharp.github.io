@@ -8,7 +8,9 @@ permalink: /post/postsharp-6-7-rc-blazor-xamrin-support-and-enhanced-logging-fea
 author: "Lejla Rasic"
 image: /assets/images/blog/2020-10-13-6-7-RC-announcement/6-7-RC-square.jpg
 ---
-We are happy to announce that PostSharp 6.7 RC is available today. Included in this release are support for Xamarin and Blazor as well as introduction of two new features for PostSharp Logging: collecting logs from other logging frameworks into PostSharp Logging, and writing from [PostSharp Logging](https://www.postsharp.net/logging) into multiple target frameworks. This version is available for download on our website.
+We are happy to announce that PostSharp 6.7 RC is available today. Included in this release are support for Xamarin and Blazor as well as introduction of two new features for PostSharp Logging: collecting logs from other logging frameworks into PostSharp Logging, and writing from [PostSharp Logging](https://www.postsharp.net/logging) into multiple target frameworks. 
+
+This version is available for [download](https://www.postsharp.net/download) on our website.
 
 ## Blazor support  
 
