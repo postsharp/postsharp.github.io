@@ -9,7 +9,9 @@ author: "Petr Hudecek and Jim Wright"
 image: /assets/images/blog/2020-10-15-improved-debugging-with-conveyor-and-postsharp-logging/partner-conveyor.jpg
 
 ---
-If you're developing a web application, there are times you want to test and debug it from devices other than your development machine: from a phone that's not connected to the local network,  for instance, or from an online service if you're building a webhook. In this article, we'll show how you can do that -- even if the website is not yet deployed -- and also how you can find errors in your code in such a situation with detailed automatic logging. We will be using Conveyor, a tool that [builds a tunnel between your local machine and the Internet](https://conveyor.cloud) and PostSharp Logging, which [adds highly detailed logging to your .NET projects with zero impact on source code](https://www.postsharp.net/logging).
+If you're developing a web application, there are times you want to test and debug it from devices other than your development machine: from a phone that's not connected to the local network,  for instance, or from an online service if you're building a webhook. In this article, we'll show how you can do that -- even if the website is not yet deployed -- and also how you can find errors in your code in such a situation with detailed automatic logging. 
+
+We will be using Conveyor, a tool that [builds a tunnel between your local machine and the Internet](https://conveyor.cloud) and PostSharp Logging, which [adds highly detailed logging to your .NET projects with zero impact on source code](https://www.postsharp.net/logging).
 
 ## Example application
 We'll start with an example ASP.NET application: a time tracker that allows users to register time spent working. [You can download the code from GitHub](https://github.com/keyoti/Conveyor-Examples/tree/master/PostSharp-Conveyor-Example-Timesheet).
