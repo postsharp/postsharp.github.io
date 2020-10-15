@@ -11,7 +11,7 @@ image: /assets/images/blog/2020-10-15-improved-debugging-with-conveyor-and-posts
 ---
 If you're developing a web application, there are times you want to test and debug it from devices other than your development machine: from a phone that's not connected to the local network,  for instance, or from an online service if you're building a webhook. In this article, we'll show how you can do that -- even if the website is not yet deployed -- and also how you can find errors in your code in such a situation with detailed automatic logging. 
 
-We will be using Conveyor, a tool that [builds a tunnel between your local machine and the Internet](https://conveyor.cloud) and PostSharp Logging, which [adds highly detailed logging to your .NET projects with zero impact on source code](https://www.postsharp.net/logging).
+We will be using Conveyor, a tool that [builds a tunnel between your local machine and the Internet](https://conveyor.cloud?utm_source=postsharp&utm_medium=referral&utm_campaign=partner-postsharp ) and PostSharp Logging, which [adds highly detailed logging to your .NET projects with zero impact on source code](https://www.postsharp.net/logging).
 
 ## Example application
 We'll start with an example ASP.NET application: a time tracker that allows users to register time spent working. [You can download the code from GitHub](https://github.com/keyoti/Conveyor-Examples/tree/master/PostSharp-Conveyor-Example-Timesheet).
@@ -31,7 +31,7 @@ Download and install [the Conveyor extension](https://marketplace.visualstudio.c
 
 <img src="/assets/images/blog/2020-09-25-conveyor/ConveyorForm.PNG" width="100%" />
 
-Alternatively (eg. if your test phone isn't on the same LAN), you can also tunnel the connection through a Conveyor server over the internet ([here's an explanation](https://conveyor.cloud/Help/Setup_remote_connection_Visual_Studio_IIS_Express)). To do this, click “Access Over Internet” and follow the prompts which include registering on the Conveyor website.
+Alternatively (eg. if your test phone isn't on the same LAN), you can also tunnel the connection through a Conveyor server over the internet ([here's an explanation](https://conveyor.cloud/Help/Setup_remote_connection_Visual_Studio_IIS_Express?utm_source=postsharp&utm_medium=referral&utm_campaign=partner-postsharp)). To do this, click “Access Over Internet” and follow the prompts which include registering on the Conveyor website.
 
 Eventually, you will get a URL that you can connect to from your phone or tablet, wherever they are.
 
@@ -102,4 +102,4 @@ This is a good clue: it is likely that the bug is in identifying whether a devic
 ## Conclusion
 In this article, we presented two ways to improve your debugging experience: with Conveyor, you gain the ability to access your local development server from other devices, or even from the internet, and with PostSharp Logging, you can add useful detailed and automatic logging.
 
-You can learn more about [Conveyor](https://conveyor.cloud/) and about [PostSharp Logging](https://www.postsharp.net/logging) at their respective websites, and you can download [our example project from GitHub](https://github.com/keyoti/Conveyor-Examples/tree/master/PostSharp-Conveyor-Example-Timesheet).
+You can learn more about [Conveyor](https://conveyor.cloud?utm_source=postsharp&utm_medium=referral&utm_campaign=partner-postsharp ) and about [PostSharp Logging](https://www.postsharp.net/logging) at their respective websites, and you can download [our example project from GitHub](https://github.com/keyoti/Conveyor-Examples/tree/master/PostSharp-Conveyor-Example-Timesheet).
