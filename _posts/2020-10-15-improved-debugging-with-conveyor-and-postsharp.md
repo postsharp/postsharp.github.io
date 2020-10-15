@@ -2,9 +2,12 @@
 layout: post
 comments: true
 title: "Debugging from devices with Conveyor and PostSharp Logging"
+date: 2020-10-15 16:50:00 +02:00
+categories: [Partnership]
 permalink: /post/improved-debugging-with-conveyor-and-postsharp-logging.html
 author: "Petr Hudecek and Jim Wright"
-published: false
+image: /assets/images/blog/2020-10-15-improved-debugging-with-conveyor-and-postsharp-logging/partner-conveyor.jpg
+
 ---
 If you're developing a web application, there are times you want to test and debug it from devices other than your development machine: from a phone that's not connected to the local network,  for instance, or from an online service if you're building a webhook. In this article, we'll show how you can do that -- even if the website is not yet deployed -- and also how you can find errors in your code in such a situation with detailed automatic logging. We will be using Conveyor, a tool that [builds a tunnel between your local machine and the Internet](https://conveyor.cloud) and PostSharp Logging, which [adds highly detailed logging to your .NET projects with zero impact on source code](https://www.postsharp.net/logging).
 
