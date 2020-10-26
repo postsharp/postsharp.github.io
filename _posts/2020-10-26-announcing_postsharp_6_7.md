@@ -15,17 +15,19 @@ Starting from 6.7 release, the support for [Xamarin](https://blog.postsharp.net/
 
 Here is the summary of all new features in PostSharp 6.7: 
 
-- Blazor support  
+- **Blazor support**  
 
 You can now use PostSharp Framework and selected Patterns libraries in your Blazor applications. Note that adding PostSharp directly to a Blazor application project is not supported. Read more [here](https://blog.postsharp.net/post/blazor-support-6.7.html). 
 
-- Xamarin support
+- **Xamarin support**
 
 You will be able to use PostSharp in .NET Standard projects that can then be referenced in your Xamarin application project. Note that with Xamarin, we still just support .NET Standard libraries, so you cannot use PostSharp on the Xamarin-targeting project itself. Read more [here](https://blog.postsharp.net/post/postsharp-6-7-rc-blazor-xamarin-support-and-enhanced-logging-features.html).  
 
-- Better integration with other logging frameworks  
+- **Better integration with other logging frameworks**  
 
 There is no need to replace your existing logging code when adopting PostSharp to your projects and the multiplexer features now enables several new scenarios, including sending your logging output to targets in different logging frameworks at the same time. Read more [here](https://blog.postsharp.net/post/collecting-logs-and-multiplexing.html).  
+
+<p>&nbsp;</p>
 
 For more details, please read the [6.7 RC announcement](https://blog.postsharp.net/post/postsharp-6-7-rc-blazor-xamarin-support-and-enhanced-logging-features.html).  
 
