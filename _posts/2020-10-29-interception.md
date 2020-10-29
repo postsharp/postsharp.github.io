@@ -2,14 +2,13 @@
 layout: post 
 comments: true
 title: "Intercepting methods with PostSharp Community"
+date: 2020-10-29 12:10:00 +02:00
+categories: [PostSharp Community]
 permalink: /post/intercepting-methods.html
 author: "Petr H."
-published: false
-excerpt_separator: <!--more-->
+image: /assets/images/blog/2020-10-29-intercepting_methods_with_PS_community/Method Interception-PostSharp-Community.jpg
 ---
 **Method interception** is a technique where you annotate a method and then when it's called, an interceptor is executed _instead of_ the method body. PostSharp Community, the free edition of PostSharp,  allows you to add such interceptors to your code.
-
-<!--more-->
 
 Let's examine method interception by going through some examples from my own use:
 
