@@ -26,9 +26,9 @@ layout: null
         {% endfor %}
         <image>
           {% if post.image %}
-          <url>{{ post.image }}</url>
+          <url>{{ site.url }}{{ post.image }}</url>
           {% else %}
-          <url>{{ site.baseurl }}/assets/images/blog/ps-no-featimg.jpg</url>
+          <url>{{ site.url }}/assets/images/blog/ps-no-featimg.jpg</url>
         </image>
       </item>
     {% endfor %}
