@@ -24,6 +24,12 @@ layout: null
         {% for cat in post.categories %}
         <category>{{ cat | xml_escape }}</category>
         {% endfor %}
+        <image>
+          {% if post.image %}
+          <url>{{post.image}}</url>
+          {% else %}
+          <url>{{site.baseurl}}/assets/images/blog/ps-no-featimg.jpg</url>
+        </image>
       </item>
     {% endfor %}
   </channel>
