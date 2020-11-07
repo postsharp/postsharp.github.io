@@ -7,9 +7,6 @@
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
-
-
       gtag('config', 'UA-699551-1');
     </script>
     <meta charset="UTF-8">
@@ -32,6 +29,7 @@
     <link href="{{site.baseurl}}/assets/fonts/LatoLatin/LatoLatin-Regular.woff2?etag=3cd36578026d6c12eddf9a5c671a251d" rel="preload" as="font" crossorigin="anonymous" />
     <link href="{{site.baseurl}}/assets/fonts/LatoLatin/LatoLatin-Bold.woff2?etag=3ff66ada9b57d10c17e415222486ec21" rel="preload" as="font"  crossorigin="anonymous" />
     <link href="{{site.baseurl}}/assets/fonts/Monosten/Monosten-A.woff2?etag=9bdc03646207a5354c40167543f428b6" rel="preload" as="font" crossorigin="anonymous"  />
+    <link rel="alternate" type="application/rss+xml" href="{{site.baseurl}}/feed.xml" />
     <title>{% if include.title And include.title != "" And include.title != nil %}{{include.title}}
         {{site.title_separator}} {% endif %} {{site.title}} </title>
 </head>
