@@ -29,6 +29,7 @@ layout: null
           <url>{{ site.url }}{{ post.image }}</url>
           {% else %}
           <url>{{ site.url }}/assets/images/blog/ps-no-featimg.jpg</url>
+          {% endif %}
         </image>
       </item>
     {% endfor %}
