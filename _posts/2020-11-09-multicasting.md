@@ -2,10 +2,11 @@
 layout: post 
 comments: true
 title: "Multicasting: Enhance a group of methods with just one attribute"
+date: 2020-11-09 17:50:00 +02:00
+categories: [PostSharp Community]
 permalink: /post/multicasting-enhance-a-group-of-methods-with-one-attribute.html
 author: "Petr H."
-published: false
-excerpt_separator: <!--more-->
+image: /assets/images/blog/2020-11-09-multicasting/MulticastingSquare.png
 ---
 Attribute multicasting, in PostSharp, is a way to apply an aspect (such as method interception) to many types or methods with just one attribute instance. It's at the core of the ability of PostSharp to reduce the number of lines of code in your project.
 
