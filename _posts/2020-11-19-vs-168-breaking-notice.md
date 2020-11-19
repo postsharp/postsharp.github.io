@@ -28,7 +28,7 @@ You will get a warning about unsupported .NET SDK version and subsequent build f
 
 ## Why does it happen?
 
-Because the Visual Studio Installer uninstalls the old .NET Core SDK and installs .NET 5.0 SDK instead, and versions of PostSharp prior to 6.8 do not support .NET 5.0 SDK.
+Because the Visual Studio Installer installs .NET 5.0 SDK, which becomes the default SDK for all projects or repoes that are not pinned to a specific SDK version. Versions of PostSharp prior to 6.8 do not support .NET 5.0 SDK, try to build anyway, but fail.
 
 ## What can you do?
 
