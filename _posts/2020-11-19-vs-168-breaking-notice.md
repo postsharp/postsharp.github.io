@@ -6,6 +6,7 @@ date: 2020-11-09 17:50:00 +02:00
 categories: [General]
 permalink: /post/updating-to-vs-168-breaks-build.html
 author: "Gael Fraiteur"
+image: /assets/images/blog/2020-11-19-breaking-build/PostSharp.jpg
 ---
 
 We want to notify you that PostSharp may fail your builds after updating Visual Studio to version 16.8. This happens because .NET 5.0 SDK is installed together
