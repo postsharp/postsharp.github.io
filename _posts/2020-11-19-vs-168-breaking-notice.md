@@ -2,7 +2,7 @@
 layout: post 
 comments: true
 title: "Action required: updating to Visual Studio 16.8 may break your build with PostSharp 6.5-6.7"
-date: 2020-11-09 17:50:00 +02:00
+date: 2020-11-19 14:00:00 +02:00
 categories: [General]
 permalink: /post/updating-to-vs-168-breaks-build.html
 author: "Gael Fraiteur"
