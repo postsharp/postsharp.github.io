@@ -11,8 +11,8 @@ published: false
 ---
 
 PostSharp Logging makes it so easy to add logging to your application that you can easily end up capturing gigabytes 
-of data every minute. As it goes, most of this data won't ever be useful,	but takes an overhead on run-time performance,
-network bandwidth, and storage. The ability to trace an application at a high level of detail only very useful
+of data every minute. As it goes, most of this data won't ever be useful, but it takes an overhead on run-time performance,
+network bandwidth, and storage. The ability to trace an application at a high level of detail is only useful
 if you are be able to select *when* you want to log. PostSharp 6.8 makes it much easier.
 
 <!--more-->
@@ -112,7 +112,7 @@ You can download the source code of this example on [GitHub](https://github.com/
       Debug     | Custom | AspNetCoreLogging | GET / | Success: StatusCode = 200.
       ```
 
-So far so good, but you will soon discovered that the amount of information is overwhelming.
+So far so good, but you will soon discover that the amount of information is overwhelming.
 
 ## Step 2. Configure verbosity using a configuration file
 
@@ -186,7 +186,7 @@ Now suppose your application has been deployed to production for a while and you
 frequent errors for some specific query string. You want to gather more detailed logs about these
 requests, but without redeploying your app.
 
-To get prepared for this scenario, you need to store your logging configuration within your application, 
+To get prepared for this scenario, you need to store your logging configuration not within your application, 
 but in a cloud storage service (or any HTTP server).
 
 In this example we will use Google Drive. With the Share option of Google Drive, create a _public_ link to this file,
@@ -223,7 +223,7 @@ the next time the configuration is fetched.
 
 ### What can possibly go wrong?
 
-When you modification a configuration, you will need to monitor your log for a few minutes to make sure you didn't
+When you modify a configuration, you will need to monitor your log for a few minutes to make sure you didn't
 do a mistake. If the configuration file is incorrect, your application will continue to work as usually, but
 the verbosity configuration file will be partially or totally ignored.
 
@@ -259,7 +259,7 @@ often than not, you need basic logging for 99.9% of your requests and super-deta
 when you app runs in production, you don't want to redeploy it just to change the level of logging.
 
 With PostSharp Logging 6.8, it is now a question of minutes to implement this scenario. You can store your logging 
-configuration in an online drive and configure your application load it periodically.
+configuration in an online drive and configure your application to reload it periodically.
 
 
 Happy PostSharping!
