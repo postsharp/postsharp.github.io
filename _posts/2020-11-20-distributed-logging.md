@@ -280,7 +280,7 @@ Here is how to define a baggage for an execution context:
       [Log(AttributeExclude = true)]
       class Baggage
       {
-            [LoggingPropertyOptions(IsBaggage =true)]
+            [LoggingPropertyOptions(IsBaggage = true)]
             public string User { get; set; }
       }
       ```
@@ -295,12 +295,12 @@ Here is how to define a baggage for an execution context:
             private async Task ProcessRequest()
             {
                   // ...
-            using (logSource.Debug.OpenActivity(Formatted("Processing the request.."),
-                        new OpenActivityOptions(new Baggage { User = "Gaius Julius Caesar" })))
-            {
-                  await QueueProcessor.ProcessQueue(".\\My\\Queue");
+                  using (logSource.Debug.OpenActivity(Formatted("Processing the request.."),
+                              new OpenActivityOptions(new Baggage { User = "Gaius Julius Caesar" })))
+                  {
+                        await QueueProcessor.ProcessQueue(".\\My\\Queue");
+                  }
             }
-
       }
       ```
 
