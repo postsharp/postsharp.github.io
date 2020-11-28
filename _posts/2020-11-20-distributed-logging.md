@@ -23,15 +23,15 @@ More and more vendors allow you to store logs from several applications in the c
 which makes them easier to retrieve and analyze. Elasticsearch is an open-source document database that is often
 used to store distributed logs. Elasticsearch has an adapter for Serilog and is easy to use from .NET. 
 
-Even with Elasticsearch, the developer is still responsible of properly setting the correlation ids and the cross-context
+Even with Elasticsearch, the developer is still responsible of properly setting the correlation IDs and the cross-context
 properties. And, of course, as a developer you also have to add logging to your entire application -- which takes
 a lot of effort and results in annoying boilerplate.
 
-The mission of PostSharp Logging 6.8 has always been to add logging to your apps automatically, without affecting
+The mission of PostSharp Logging has always been to add logging to your apps automatically, without affecting
 your source code. Starting with version 6.8, it also integrates much better with scenarios of distributed logging.
 
 The rest of this article is based on a sample available on [GitHub](https://github.com/postsharp/PostSharp.Samples/tree/master/Diagnostics/PostSharp.Samples.Logging.ElasticStack). This sample is composed of a command-line client and an ASP.NET Core Web API.
-In the rest of this article, for simplicity, we will assume that every role of your application of both a client
+In the rest of this article, for simplicity, we will assume that every role of your application is both a client
 and a server.
 
 
@@ -242,12 +242,12 @@ and the Fime Filter field `@timestamp`.
 
 ## Step 6. Isolate a specific request
 
-So far we've been able to gather a long list of log requests, but what is we want a consistent view of
+So far we've been able to gather a long list of log requests, but what if we want a consistent view of
 a single request?
 
 This is simple thanks to the `fields.EventId` property. This identifier is _synthetic_, i.e. made of several
-parts, and _cross-process_. A the identifier of child activity or scope always starts with the identifier of
-its logical parent, even if its resides in a different process. To filter all log records of a single request,
+parts, and _cross-process_. And the identifier of child activity or scope always starts with the identifier of
+its logical parent, even if it resides in a different process. To filter all log records of a single request,
 we need to find the identifier of the root node we're interested in, then look for all log records whose identifer
 _starts with_ the parent identifier.
 
@@ -273,7 +273,7 @@ this header and interpret it properly.
 Here is how to define a baggage for an execution context:
 
 
-1. Define a class with all need properties. Exclude this class from logging and
+1. Define a class with all needed properties. Exclude this class from logging and
    mark the cross-process properties with ` [LoggingPropertyOptions(IsBaggage = true)]`.
 
       ```cs
@@ -315,17 +315,17 @@ is being preserved across processes:
 
 You now probably have way too much logging in your application. Even if Elasticsearch is open source, operating a
 node in production is not cheap because of the resources it consumes. Therefore, you will need to keep your database
-within a manageable size: probably a few gigabytes. Therefore, it's important to only log the requests that are
+within a manageable size: probably a few gigabytes. Therefore, it's desirable to only log the requests that are
 important to you.
 
-PostSharp Logging can be configured to log every request with an different level of verbosity -- for instance
+PostSharp Logging can be configured to log every request with a different level of verbosity -- for instance
 just warnings by default, but everything for the `/invoice` API when it comes from the IP `12.64.347.3`. For
 details, see TODO.
 
 ## Summary
 
 Producing a highly-detailed log of a distributed .NET application has become much simpler with PostSharp 6.8.
-By adding two packages to your project -- once for incoming HTTP requests and one for outgoing requests --
+By adding two packages to your project -- one for incoming HTTP requests and one for outgoing requests --
  and calling their initialization method (one for the server), PostSharp Logging will start producing cross-process
  event identifiers that are easy to filter. It also supports _baggage_, i.e. cross-process logging properties.
 
