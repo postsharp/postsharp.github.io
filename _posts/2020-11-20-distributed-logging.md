@@ -1,7 +1,7 @@
 ---
 layout: post 
 comments: true
-title: "Distributed Logging with PostSharp and Elastic Search"
+title: "Distributed logging with PostSharp, Serilog, and Elastic Search"
 date: 2020-11-22 14:50:00 +02:00
 categories: [General]
 permalink: /post/distributed-logging.html
@@ -10,8 +10,9 @@ image: /assets/images/blog/2020-11-19-breaking-build/PostSharp.jpg
 published: false
 ---
 
-This article shows how to log a distributed .NET application, for instance a set of microservices, with PostSharp
-Logging, Serilog, and Elasticsearch.
+When you have distributed application, for instance a set of microservices, it may be challenging to understand
+the execution logs unless you have the right logging settings and infrastructure in place. This
+article shows how to propertly configure PostSharp Logging, Serilog, and Elasticsearch for this scenario.
 
 <!--more-->
 

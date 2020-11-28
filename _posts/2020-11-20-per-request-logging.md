@@ -1,7 +1,7 @@
 ---
 layout: post 
 comments: true
-title: "New in PostSharp 6.8: Per-Request Logging"
+title: "Noisy logs? Improve your signal-to-noise ratio with per-request logging and sampling"
 date: 2020-11-22 12:50:00 +02:00
 categories: [General]
 permalink: /post/per-request-logging.html
@@ -10,10 +10,10 @@ image: /assets/images/blog/2020-11-19-breaking-build/PostSharp.jpg
 published: false
 ---
 
-PostSharp Logging makes it so easy to add logging to your application that you can easily end up capturing gigabytes 
-of data every minute. As it goes, most of this data won't ever be useful, but it takes an overhead on run-time performance,
-network bandwidth, and storage. The ability to trace an application at a high level of detail is only useful
-if you are be able to select *when* you want to log. PostSharp 6.8 makes it much easier.
+PostSharp Logging makes it so simple to add logging to your application that you can easily end up capturing gigabytes 
+of data every minute, taking a big overhead on run-time performance, network bandwidth, and storage. 
+But let's face it, most of this data won't ever be useful. Starting from v6.8, PostSharp Logging allows you
+to define precisely which requests should be logged in HD, and which not.
 
 <!--more-->
 
@@ -22,7 +22,7 @@ highest level of detail, especially for types of requests that are served 100 ti
 important to be able to decide, at run time, which requests need to be logged. You may choose to disable logging by 
 default and to enable logging only for select requests only.
 
-We call that that *per-request* or, more generally, *per-transaction* logging.
+We call that *per-request* or, more generally, *per-transaction* logging.
 
 It has been possible to do per-request logging with PostSharp for a long time, but with PostSharp 6.8, it becomes
 really easy.
