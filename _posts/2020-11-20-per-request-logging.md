@@ -3,11 +3,10 @@ layout: post
 comments: true
 title: "Noisy logs? Improve your signal-to-noise ratio with per-request logging and sampling"
 date: 2020-11-22 12:50:00 +02:00
-categories: [General]
+categories: [Features]
 permalink: /post/per-request-logging.html
 author: "Gael Fraiteur"
-image: /assets/images/blog/2020-11-19-breaking-build/PostSharp.jpg
-published: false
+image: /assets/images/blog/22020-11-30-per-request-logging/per-request logging-B.P-Sq.png
 ---
 
 PostSharp Logging makes it so simple to add logging to your application that you can easily end up capturing gigabytes 
