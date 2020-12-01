@@ -248,7 +248,7 @@ does not have a security gap.
 
 If your application also processes transactions (such as messages from a queue or message bus, or files from a directory),
 but is not based on ASP.NET Core, you can still use dynamic configuration but it takes a little more effort to
-prepare your code for it. See the documentation (TODO LINK) for details.
+prepare your code for it. See the [documentation](https://doc.postsharp.net/6.8/custom-logging-transactions) for details.
 
 
 ### Summary
