@@ -1,7 +1,7 @@
 ---
 layout: post 
 comments: true
-title: "Distributed logging with PostSharp, Serilog, and Elastic Search"
+title: "Distributed logging with Serilog, Elastic Search, and PostSharp 6.8"
 date: 2020-11-22 14:50:00 +02:00
 categories: [General]
 permalink: /post/distributed-logging.html
@@ -12,7 +12,7 @@ published: false
 
 When you have distributed application, for instance a set of microservices, it may be challenging to understand
 the execution logs unless you have the right logging settings and infrastructure in place. This
-article shows how to propertly configure PostSharp Logging, Serilog, and Elasticsearch for this scenario.
+article shows how to propertly configure PostSharp Logging 6.8, Serilog, and Elasticsearch for this scenario.
 
 <!--more-->
 
@@ -100,11 +100,18 @@ and a server.
         LoggingServices.DefaultBackend = backend;
       ```
 
-4. Set up PostSharp Logging to capture outgoing and incoming HTTP requests:
+4. Set up PostSharp Logging to capture outgoing and incoming HTTP requests. To enable correlation, we
+   have to pass an implementation of the `ICorrelationProtocol`. The only one that's available out of
+   the box is `LegacyHttpCorrelationProtocol`, which is called legacy because this is how it is called
+   in .NET (the specification of the replacement is not yet final):
 
       ```cs
-            AspNetCoreLogging.Initialize();
-            HttpClientLogging.Initialize(uri => uri.Port != 9200);
+      AspNetCoreLogging.Initialize( 
+            correlationProtocol: new LegacyHttpCorrelationProtocol() );
+            
+      HttpClientLogging.Initialize(
+            correlationProtocol: new LegacyHttpCorrelationProtocol(),
+            requestUriPredicate: uri => uri.Port != 9200);
       ```
 
 
@@ -114,7 +121,6 @@ Your web projects startup code should look now like this:
 ```cs
 public static void Main(string[] args)
 {
-
       // Configure Serilog to write to the console and to Elastic Search.
       using var logger = new LoggerConfiguration()
             .Enrich.WithProperty("Application", typeof(Program).Assembly.GetName().Name)
@@ -148,9 +154,7 @@ public static void Main(string[] args)
 
       // Execute the web app.
       CreateWebHostBuilder(args).Build().Run();
-      
 }
-
 ```
 
 
@@ -193,9 +197,9 @@ and the Fime Filter field `@timestamp`.
    
    <img src="/assets/images/blog/2020-11-23-distributed-logging/screenshot1.png"  style="zoom:0.55"/>
    
-  Here is the detail of one of those records:
+      Here is the detail of one of those records:
 
-      ```json
+      ```JSON
       {
       "_index": "logstash-2020.11.23",
       "_type": "logevent",
@@ -230,7 +234,7 @@ and the Fime Filter field `@timestamp`.
       }
       ```
 
-5. Add a few interesting columns to the table:
+4. Add a few interesting columns to the table:
 
       * `fields.Application`: the name of the originating application 
       * `level`: the severity of the message
@@ -319,8 +323,7 @@ within a manageable size: probably a few gigabytes. Therefore, it's desirable to
 important to you.
 
 PostSharp Logging can be configured to log every request with a different level of verbosity -- for instance
-just warnings by default, but everything for the `/invoice` API when it comes from the IP `12.64.347.3`. For
-details, see TODO.
+just warnings by default, but everything for the `/invoice` API when it comes from the IP `12.64.347.3`. Details in [this blog post](https://blog.postsharp.net/post/per-request-logging.html).
 
 ## Summary
 
