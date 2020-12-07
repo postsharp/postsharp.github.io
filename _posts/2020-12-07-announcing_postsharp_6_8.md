@@ -20,7 +20,7 @@ We now fully support .NET 5. Additionally, we have tested PostSharp with C# 9 an
 
 PostSharp 6.8 includes several improvements in logging:
 
-- [Per-request logging](https://blog.postsharp.net/post/per-request-logging.html)
+### Per-request logging
 
 PostSharp Logging makes it very easy to create highly-detailed logs, but quite often too much is too much. Often, you need basic logging for 99.9% of your requests and super-detailed logging for 0.1%. And when your app runs in production, you don&#39;t want to redeploy it just to change the level of logging. This is now possible thanks to a file like this:
 
@@ -42,7 +42,7 @@ PostSharp Logging makes it very easy to create highly-detailed logs, but quite o
 
 You can store this file in a cloud drive and configure your application to reload it periodically. Read more in this [blog post](https://blog.postsharp.net/post/per-request-logging.html).
 
-- [Distributed logging](https://blog.postsharp.net/post/distributed-logging.html)
+### Distributed logging
 
 Producing a highly detailed log of a distributed .NET application has become much simpler with PostSharp 6.8. With distributed application, it may be challenging to understand the execution logs unless you have the right logging settings and infrastructure in place. You can [read here](https://blog.postsharp.net/post/distributed-logging.html) in details how you can now properly configure PostSharp Logging, Serilog and Elasticsearch for this scenario.
 
