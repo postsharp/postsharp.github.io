@@ -25,7 +25,6 @@ PostSharp Logging makes it very easy to create highly-detailed logs, but quite o
 
 ```xml
 <logging>
-
     <verbosity level='warning'/>
     <transactions>
         <policy type='AspNetCoreRequest'
