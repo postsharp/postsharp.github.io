@@ -50,7 +50,7 @@ Producing a highly detailed log of a distributed .NET application has become muc
 
 Since 6.6 version, we have introduced [per-usage licensing](https://blog.postsharp.net/post/postsharp-per-repo-subscriptions.html), a pricing model where you are not charged per daily unique active user but per amount of source code in which you use PostSharp. If you would like to use this licensing instead of the traditional per-developer licensing, it is now possible to know exactly how many lines of code you would be consuming with a per-usage subscription even if you don&#39;t have one yet. For details, see [Per-Usage Licenses](https://doc.postsharp.net/6.8/per-repo-licenses).
 
-# Summary
+## Summary
 
 In PostSharp 6.8 we implemented support for C# 9 and .NET 5, and you can now use PostSharp safely with these new technologies. In addition, 6.8 includes several important improvements in logging such as [per-request logging](https://blog.postsharp.net/post/per-request-logging.html) and [distributed logging](https://blog.postsharp.net/post/distributed-logging.html).
 
