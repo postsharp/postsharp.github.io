@@ -2,12 +2,11 @@
 layout: post 
 comments: true
 title: "Distributed logging with Serilog, Elastic Search, and PostSharp"
-date: 2020-12-02 16:30:00 +02:00
+date: 2020-12-07 12:56:00 +02:00
 categories: [Features]
 permalink: /post/distributed-logging.html
 author: "Gael Fraiteur"
 image: /assets/images/blog/2020-11-23-distributed-logging/Distributed logging-BP-Sq.png
-published: false
 ---
 
 When you have distributed application, for instance a set of microservices, it may be challenging to understand
