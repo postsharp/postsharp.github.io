@@ -1,7 +1,7 @@
 ---
 layout: post 
 comments: true
-title: "Announcing PostSharp 6.8 RC: Support for .NET 5 and C# 9 and improvements in logging"
+title: "Announcing PostSharp 6.8 RC: Support for .NET 5, C# 9 and improvements in logging"
 date: 2020-12-07 14:00:00 +02:00
 categories: [Announcement]
 permalink: /post/postsharp-6-8-support-for-net-5-and-csharp-9.html
