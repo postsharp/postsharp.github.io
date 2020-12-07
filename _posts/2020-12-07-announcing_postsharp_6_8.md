@@ -6,7 +6,7 @@ date: 2020-12-07 14:00:00 +02:00
 categories: [Announcement]
 permalink: /post/postsharp-6-8-support-for-net-5-and-csharp-9.html
 author: "Lejla Rasic"
-image: /assets/images/blog/2020-12-07-distributed-logging/postsharp-6.8-rc.png
+image: /assets/images/blog/2020-12-07-distributed-logging/PS-6-8-RC.png
 ---
 
 We are happy to announce the release of PostSharp 6.8 RC. Included in this release are support for .NET 5 and C# 9 as well as significant improvements in logging. This version is available for [download](https://www.postsharp.net/download) on our website.
