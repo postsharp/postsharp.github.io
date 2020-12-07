@@ -6,7 +6,7 @@ date: 2020-12-07 14:00:00 +02:00
 categories: [Announcement]
 permalink: /post/postsharp-6-8-support-for-net-5-and-csharp-9.html
 author: "Lejla Rasic"
-image: /assets/images/blog/2020-12-07-distributed-logging/PostSharp-6.8.png
+image: /assets/images/blog/2020-12-07-distributed-logging/postsharp-6.8-rc.png
 ---
 
 We are happy to announce the release of PostSharp 6.8 RC. Included in this release are support for .NET 5 and C# 9 as well as significant improvements in logging. This version is available for [download](https://www.postsharp.net/download) on our website.
@@ -42,9 +42,9 @@ PostSharp Logging makes it very easy to create highly-detailed logs, but quite o
 
 You can store this file in a cloud drive and configure your application to reload it periodically. Read more in this [blog post](https://blog.postsharp.net/post/per-request-logging.html).
 
-- Distributed logging [_Link to the blog post once published_]
+- [Distributed logging](https://blog.postsharp.net/post/distributed-logging.html)
 
-Producing a highly detailed log of a distributed .NET application has become much simpler with PostSharp 6.8. With distributed application, it may be challenging to understand the execution logs unless you have the right logging settings and infrastructure in place. You can read here [_Link to the blog post once published_] in details how you can now properly configure PostSharp Logging, Serilog and Elasticsearch for this scenario.
+Producing a highly detailed log of a distributed .NET application has become much simpler with PostSharp 6.8. With distributed application, it may be challenging to understand the execution logs unless you have the right logging settings and infrastructure in place. You can [read here](https://blog.postsharp.net/post/distributed-logging.html) in details how you can now properly configure PostSharp Logging, Serilog and Elasticsearch for this scenario.
 
 ## Usage measurement for per-usage licensing
 
