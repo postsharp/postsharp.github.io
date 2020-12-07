@@ -51,7 +51,7 @@ Since 6.6 version, we have introduced [per-usage licensing](https://blog.postsha
 
 # Summary
 
-In PostSharp 6.8 we implemented support for C# 9 and .NET 5, and you can now use PostSharp safely with these new technologies. In addition, 6.8 includes several important improvements in logging such as [per-request logging](https://blog.postsharp.net/post/per-request-logging.html) and distributed logging [_Link to the blog post once published_].
+In PostSharp 6.8 we implemented support for C# 9 and .NET 5, and you can now use PostSharp safely with these new technologies. In addition, 6.8 includes several important improvements in logging such as [per-request logging](https://blog.postsharp.net/post/per-request-logging.html) and [distributed logging](https://blog.postsharp.net/post/distributed-logging.html).
 
 We would recommend upgrading to 6.8 now as in our [latest announcement](https://blog.postsharp.net/post/updating-to-vs-168-breaks-build.html) we warned about the possibility of PostSharp 6.5 – 6.7 failing your build after updating Visual Studio to version 16.8. Read more about the issue and fixes [here.](https://blog.postsharp.net/post/updating-to-vs-168-breaks-build.html)
 
