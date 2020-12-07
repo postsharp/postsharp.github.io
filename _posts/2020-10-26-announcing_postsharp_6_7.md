@@ -7,7 +7,6 @@ categories: [Announcement]
 permalink: /post/postsharp-6-7-blazor-xamarin-support-and-enhanced-logging-features.html
 author: "Lejla Rasic"
 image: /assets/images/blog/2020-10-26-6-7-announcement/6.7.jpg
-tag: featured
 ---
 Just 2 weeks after releasing [PostSharp 6.7 RC](https://blog.postsharp.net/post/postsharp-6-7-rc-blazor-xamarin-support-and-enhanced-logging-features.html), we are happy to announce the general availability of PostSharp 6.7. This version is available for [download](https://www.postsharp.net/download) on our website.
 

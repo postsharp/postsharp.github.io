@@ -7,6 +7,7 @@ categories: [Features]
 permalink: /post/per-request-logging.html
 author: "Gael Fraiteur"
 image: /assets/images/blog/2020-11-30-per-request-logging/per-request logging-B.P-Sq.png
+tag: featured
 ---
 
 PostSharp Logging makes it so simple to add logging to your application that you can easily end up capturing gigabytes 
