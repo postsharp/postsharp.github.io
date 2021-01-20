@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: "Noisy logs? Improve your signal-to-noise ratio with per-request logging and sampling"
 date: 2020-11-30 17:00:00 +02:00
-categories: [Features]
+categories: [Logging]
 permalink: /post/per-request-logging.html
 author: "Gael Fraiteur"
 image: /assets/images/blog/2020-11-30-per-request-logging/per-request logging-B.P-Sq.png

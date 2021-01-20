@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: "Distributed logging with Serilog, Elastic Search, and PostSharp"
 date: 2020-12-07 13:00:00 +02:00
-categories: [Features]
+categories: [Logging]
 permalink: /post/distributed-logging.html
 author: "Gael Fraiteur"
 image: /assets/images/blog/2020-11-23-distributed-logging/Distributed logging-BP-Sq.png

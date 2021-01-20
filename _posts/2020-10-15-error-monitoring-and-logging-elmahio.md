@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: "Error monitoring and detailed logging of an ASP.NET Core application with PostSharp and elmah.io"
 date: 2020-10-15 11:50:00 +02:00
-categories: [Partnership]
+categories: [Logging]
 permalink: /post/error-monitoring-and-detailed-logging-asp-net-core-application.html
 author: "Petr H. and Thomas Ardal"
 image: /assets/images/blog/2020-10-15-error-monitoring-and-detailed-logging/partner-elmahio.jpg

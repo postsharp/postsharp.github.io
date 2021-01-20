@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: "Collecting logs and multiplexing"
 date: 2020-10-05 15:00:00 +02:00
-categories: [Features]
+categories: [Logging]
 permalink: /post/collecting-logs-and-multiplexing.html
 author: "Petr H."
 image: /assets/images/blog/2020-10-05-collecting-logs-and-multiplexer/logging-bridges.jpg

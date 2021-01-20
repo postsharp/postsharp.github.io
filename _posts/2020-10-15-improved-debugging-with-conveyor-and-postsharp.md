@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: "Debugging from devices with Conveyor and PostSharp Logging"
 date: 2020-10-16 10:00:00 +02:00
-categories: [Partnership]
+categories: [Logging]
 permalink: /post/improved-debugging-with-conveyor-and-postsharp-logging.html
 author: "Petr Hudecek and Jim Wright"
 image: /assets/images/blog/2020-10-15-improved-debugging-with-conveyor-and-postsharp-logging/partner-conveyor.jpg
