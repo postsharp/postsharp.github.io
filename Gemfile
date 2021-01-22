@@ -9,5 +9,6 @@ source "https://rubygems.org"
 # Happy Jekylling!
 #gem "jekyll", "~> 4.1.0"
 gem "github-pages", group: :jekyll_plugin
+gem 'wdm', '>= 0.1.0' if Gem.win_platform?
 #gem 'jekyll-autoprefixer'
 

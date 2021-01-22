@@ -54,7 +54,7 @@
         }
     }
     pre.prettyprint {
-        border: 2px solid $header_newsletter_bg_color;
+        border: 1px solid $light_gray;
         overflow: auto;
         padding: 15px 15px;
     }    
@@ -176,6 +176,13 @@
             ul,ol{
                 font-size:rem(20px, 'desktop');
                 line-height: rem(30px, 'desktop');
+            }
+            a {
+                text-decoration: none;
+            }
+
+            a:visited{
+                color: rgb(0,0,238);
             }
             @supports (display: grid) {
                 grid-column: 1/4;
