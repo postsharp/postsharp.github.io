@@ -141,6 +141,7 @@ Because the code of an SDK-based aspect weaver is naturally more complex and wou
 please go to [GitHub](https://github.com/postsharp/Caravela.Open.AutoCancellationToken) if you want to see the 
 source code of the aspect weaver.
 
+Here is some example input code:
 
 ```cs
 [AutoCancellationToken]
@@ -156,6 +157,9 @@ class C
     => await client.GetAsync("https://httpbin.org/delay/1");
 }
 ```
+
+What actually compiles is this. You can see that the aspect added  `CancellationToken` parameters and
+arguments as needed.
 
 ```cs
 [AutoCancellationToken]
