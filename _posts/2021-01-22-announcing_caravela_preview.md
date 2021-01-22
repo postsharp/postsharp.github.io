@@ -27,7 +27,7 @@ Today, we're demonstrating two components of PostSharp "Caravela":
 *  [Caravela.Framework.Sdk](https://github.com/postsharp/Caravela/blob/master/Caravela.Framework.Sdk.md) is a low-level extensibility point to the Roslyn compiler, similar to source
   generators, but allowing for arbitrary code modifications (instead of just additions of partial classes).
   This component can be compared to PostSharp SDK or Fody, but using the clean Roslyn code model instead of the
-  arcaduous MSIL one. This component is already very usable and useful today and is not expected to change much
+  arcane MSIL one. This component is already very usable and useful today and is not expected to change much
   in the future.
 
 In this blog post:
@@ -123,7 +123,7 @@ static int Add(int a, int b)
 ## Caravela.Framework.Sdk: hack the compiler
 
 At PostSharp we are not fans of hacking because it turns out to be a hassle to maintain in the long term
-(and we our frameworks are designed to make your code more maintanable), but sometimes there may be good reasons to
+(and our frameworks are designed to make your code more maintainable), but sometimes there may be good reasons to
 overcome the limitations of the language.
 
 [Caravela.Framework.Sdk](https://github.com/postsharp/Caravela/blob/master/Caravela.Framework.Sdk.md)
@@ -185,7 +185,7 @@ You will enjoy the following benefits with Caravela compared to PostSharp:
   does not require an external process,  and is therefore much faster;
 
 * **More powerful transformations**: The templating technology used by Caravela allows for more control over code 
-  than what was possible with PostSharp MSIL.
+  than what is possible with PostSharp MSIL.
 
 * **Better multi-platform support**: Caravela does not load the whole project being built in the compiler process, 
   therefore it avoids the  cross-compilation issues that have plagued PostSharp for many years;
@@ -196,7 +196,7 @@ You will enjoy the following benefits with Caravela compared to PostSharp:
 * **Better run-time performance**: Because of code generation improvements, you can create aspects that execute 
   much faster.
   
-* **Better debugging experience**:  You can switch from source code view to transformed code view can debug the code exactly  how it is executed.
+* **Better debugging experience**:  You can switch from source code view to transformed code view and debug the code exactly as it is executed.
 
 
 ## Benefits of PostSharp "Caravela" over Roslyn source generators
@@ -209,7 +209,7 @@ Unlike Roslyn source generators, PostSharp "Caravela":
      * using the C# language, with Intellisense and code validation (instead of building a string);
  
  * is therefore a real and complete framework for _aspect-oriented programming_ in C#, with the same level of
-   functionality than what exists in other languages (such as AspectJ for Java) -- which has never been the intent
+   functionality that exists in other languages (such as AspectJ for Java) -- which has never been the intent
    of Roslyn source generators.
 
 
@@ -256,5 +256,4 @@ For more information, please look at the home of PostSharp "Caravela" on [GitHub
 
 If you have any feedback or question regarding Caravela, 
 please [open an issue](https://github.com/postsharp/Caravela/issues/new), [start a discussion](https://github.com/postsharp/Caravela/discussions/new), or contact us directly at hello@postsharp.net.
-
 
