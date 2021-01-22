@@ -254,9 +254,9 @@ We don't know yet. The preview releases are being licensed under the terms of th
 ## Summary
 
 PostSharp "Caravela" is the future of aspect-oriented programming and metaprogramming in .NET. It will take us a long
-time to get there, but the possibilities are amazing and the pass much less rocky than 10 years ago.
+time to get there, but the possibilities are amazing and the path much less rocky than 10 years ago.
 
-For more information, please look at the home of PostSharp "Caravela" on [GitHub](https://github.com/postsharp/Caravela).
+For more information, please have a look at the home of PostSharp "Caravela" on [GitHub](https://github.com/postsharp/Caravela).
 
 If you have any feedback or question regarding Caravela, 
 please [open an issue](https://github.com/postsharp/Caravela/issues/new), [start a discussion](https://github.com/postsharp/Caravela/discussions/new), or contact us directly at hello@postsharp.net.
