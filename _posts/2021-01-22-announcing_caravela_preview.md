@@ -128,7 +128,7 @@ overcome the limitations of the language.
 
 [Caravela.Framework.Sdk](https://github.com/postsharp/Caravela/blob/master/Caravela.Framework.Sdk.md)
 offers direct access to Caravela's underlying code-modifying capabilities through Roslyn-based APIs. Aspect weavers
-written with Caravela SDK can perform arbitrary transformations of the project and syntax tree being compiled.
+written with Caravela SDK can perform arbitrary transformations of the project and syntax trees being compiled.
 
 ### Example: CancellationToken
 
@@ -194,20 +194,20 @@ You will enjoy the following benefits with Caravela compared to PostSharp:
 * **Better multi-platform support**: Caravela does not load the whole project being built in the compiler process, 
   therefore it avoids the  cross-compilation issues that have plagued PostSharp for many years;
 
-* **Better design-time experience**: You will see introduced members and interfaces in Intellisence because Caravela
-  will do that at design time and not at post-compilation time. No need for weird casts.
+* **Better design-time experience**: You will see introduced members and interfaces in Intellisense because Caravela
+  will do the work at design time and not at post-compilation time. No need for weird casts.
 
 * **Better run-time performance**: Because of code generation improvements, you can create aspects that execute 
   much faster.
   
-* **Better debugging experience**:  You can switch from source code view to transformed code view and debug the code exactly as it is executed.
+* **Better debugging experience**:  You can switch from source code view to transformed code view and debug exactly the code that is executed.
 
 
 ## Benefits of PostSharp "Caravela" over Roslyn source generators
 
 Unlike Roslyn source generators, PostSharp "Caravela":
 
- * can replace or enhance hand-written code (Roslyn source generators are additive only: you just can add partial classes);
+ * can replace or enhance hand-written code (Roslyn source generators are additive only: you can only add partial classes);
  * allows you to write aspects (or code transformations):
      * in your main project (instead of a separate project),
      * using the C# language, with Intellisense and code validation (instead of building a string);
@@ -225,7 +225,7 @@ Unlike Roslyn source generators, PostSharp "Caravela":
 Our current release plan with the MSIL-based PostSharp is:
 
 * 6.9 (Q1 2021): addressing performance issues in PostSharp Tools for Visual Studio.
-* 6.10 LTS (Q3 2021): support for .NET 6.
+* 6.10 LTS (Q4 2021): support for .NET 6.
 
 PostSharp 6.10 LTS will be our last supported version of the MSIL-based stack and we intend to support it
 until the end of 2022. We will work with our customers to ensure the smoothest possible transition.
@@ -260,4 +260,3 @@ For more information, please look at the home of PostSharp "Caravela" on [GitHub
 
 If you have any feedback or question regarding Caravela, 
 please [open an issue](https://github.com/postsharp/Caravela/issues/new), [start a discussion](https://github.com/postsharp/Caravela/discussions/new), or contact us directly at hello@postsharp.net.
-
