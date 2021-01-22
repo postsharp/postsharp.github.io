@@ -228,7 +228,8 @@ Our current release plan with the MSIL-based PostSharp is:
 * 6.10 LTS (Q3 2021): support for .NET 6.
 
 PostSharp 6.10 LTS will be our last supported version of the MSIL-based stack and we intend to support it
-until the end of 2022. We will work with our customers to ensure the smoothest possible transition.
+according to our support policies, that is, 1 year after Caravela reaches a first LTS version. 
+We will work with our customers to ensure the smoothest possible transition.
 
 ### Will PostSharp "Caravela" be compatible with PostSharp 6.*?
 
