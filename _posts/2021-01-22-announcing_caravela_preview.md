@@ -6,10 +6,10 @@ date: 2021-01-22 00:00:00 +02:00
 categories: [Announcement]
 permalink: /post/announcing-caravela-preview.html
 author: "Gael Fraiteur"
+image: /assets/images/blog/2021-01-25-caravela-announcement/Project Caravela 1.png
 tag: featured
-published: false
 ---
-Today we're excited to make a one-in-ten-years annoucement: we're releasing the first public
+Today we're excited to make a one-in-ten-years announcement: we're releasing the first public
 preview of PostSharp "Caravela", a Roslyn-based framework for code transformation and aspect-oriented 
 programming. 
 
