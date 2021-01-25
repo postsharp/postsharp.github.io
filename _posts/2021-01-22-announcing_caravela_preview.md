@@ -261,4 +261,4 @@ time to get there, but the possibilities are amazing and the path much less rock
 For more information, please have a look at the home of PostSharp "Caravela" on [GitHub](https://github.com/postsharp/Caravela).
 
 If you have any feedback or question regarding Caravela, 
-please [open an issue](https://github.com/postsharp/Caravela/issues/new), [start a discussion](https://github.com/postsharp/Caravela/discussions/new), or contact us directly at hello@postsharp.net.
+please [open an issue](https://github.com/postsharp/Caravela/issues/new), [start a discussion](https://github.com/postsharp/Caravela/discussions/new), or contact us directly at [hello@postsharp.net](hello@postsharp.net).
