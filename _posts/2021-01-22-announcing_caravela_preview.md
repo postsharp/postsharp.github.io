@@ -2,7 +2,7 @@
 layout: post 
 comments: true
 title: "Announcing PostSharp \"Caravela\""
-date: 2021-01-22 00:00:00 +02:00
+date: 2021-01-25 15:30:00 +02:00
 categories: [Announcement]
 permalink: /post/announcing-caravela-preview.html
 author: "Gael Fraiteur"
