@@ -165,7 +165,8 @@ arguments as needed.
 [AutoCancellationToken]
 class C
 {
-    public static async Task MakeRequests(System.Threading.CancellationToken cancellationToken = default)
+    public static async Task MakeRequests(
+      System.Threading.CancellationToken cancellationToken = default)
     {
         var client = new FakeHttpClient();
         await MakeRequest(client, cancellationToken);
