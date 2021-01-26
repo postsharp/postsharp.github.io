@@ -2,7 +2,7 @@
 layout: post 
 comments: true
 title: "PostSharp's Great Reset: Announcing Project \"Caravela\", a Roslyn-based aspect framework"
-date: 2021-01-25 00:00:00 +02:00
+date: 2021-01-25 15:30:00 +02:00
 categories: ["Announcement", "Caravela"]
 permalink: /post/announcing-caravela-preview.html
 author: "Gael Fraiteur"
@@ -149,12 +149,12 @@ class C
 {
     public static async Task MakeRequests()
     {
-        var client = new FakeHttpClient();
+        var client = new HttpClient();
         await MakeRequest(client);
     }
 
-    private static async Task MakeRequest(FakeHttpClient client) 
-    => await client.GetAsync("https://httpbin.org/delay/1");
+    private static async Task MakeRequest(HttpClient client) 
+        => await client.GetAsync("https://httpbin.org/delay/1");
 }
 ```
 
@@ -168,13 +168,13 @@ class C
     public static async Task MakeRequests(
       System.Threading.CancellationToken cancellationToken = default)
     {
-        var client = new FakeHttpClient();
+        var client = new HttpClient();
         await MakeRequest(client, cancellationToken);
     }
  
-    private static async Task MakeRequest(FakeHttpClient client, 
-            System.Threading.CancellationToken cancellationToken = default) 
-            => await client.GetAsync("https://httpbin.org/delay/1", cancellationToken);
+    private static async Task MakeRequest(HttpClient client,
+        System.Threading.CancellationToken cancellationToken = default) 
+        => await client.GetAsync("https://httpbin.org/delay/1", cancellationToken);
 }
 ```
 
