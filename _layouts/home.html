@@ -29,10 +29,14 @@
 								<div class="share_buttons">
 									{% include share_buttons.html %}
 								</div>
-								{% if post.categories[0].size > 1 %} <div class="post_category"><a
-										href="archive.html#{{post.categories[0] | downcase}}"><img
-											src="{{site.baseurl}}/assets/images/icons/tag_white.svg" alt="">
-										<span>{{post.categories}}</span></a></div>{% endif %}
+								{% for category in post.categories %}
+								<div class="post_category">
+									<a href="{{site.baseurl}}/archive.html#{{category | downcase }}">
+										<img src="{{site.baseurl}}/assets/images/icons/tag_white.svg" alt=""/>
+										<span>{{category}}</span>
+									</a>
+								</div>
+								{% endfor %}
 							</div>
 						</div>
 						<p class="post_excerpt swiper-no-swiping">

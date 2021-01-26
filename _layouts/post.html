@@ -17,7 +17,14 @@
                 <div class="share_buttons">
                     {% include share_buttons.html isPage = true %}
                 </div>
-                {% if page.categories[0].size > 1 %}<div class="post_category"><a href="{{site.baseurl}}/archive.html#{{page.categories[0] | downcase }}"><img src="{{site.baseurl}}/assets/images/icons/tag_white.svg" alt=""><span>{{page.categories}}</span></a></div>{% endif %}
+                {% for category in page.categories %}
+                <div class="post_category">
+                    <a href="{{site.baseurl}}/archive.html#{{category | downcase }}">
+                        <img src="{{site.baseurl}}/assets/images/icons/tag_white.svg" alt=""/>
+                        <span>{{category}}</span>
+                    </a>
+                </div>
+                {% endfor %}
             </div>
         </div>
         <div class="post_excerpt">

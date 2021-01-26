@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: "PostSharp's Great Reset: Announcing Project \"Caravela\", a Roslyn-based aspect framework"
 date: 2021-01-25 00:00:00 +02:00
-categories: [Announcement]
+categories: ["Announcement", "Caravela"]
 permalink: /post/announcing-caravela-preview.html
 author: "Gael Fraiteur"
 image: /assets/images/blog/2021-01-25-caravela-announcement/Project Caravela 1.png
