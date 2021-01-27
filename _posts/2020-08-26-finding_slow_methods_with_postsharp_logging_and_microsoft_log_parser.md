@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: "Finding slow methods with PostSharp Logging and Microsoft Log Parser"
 date: 2020-08-26 09:40:00 +02:00
-categories: [Guest article]
+categories: ["Guest article", "Logging"]
 permalink: /post/finding-slow-methods-with-postsharp-logging-and-microsoft-log-parser.html
 author: "Marko Pađen"
 image: /assets/images/blog/2020-08-26-finding_slow_methods_with_postsharp_logging_and_microsoft_log_parser/Finding-Slow-Methods.jpg
