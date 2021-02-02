@@ -15,6 +15,8 @@ This entry will describe how Argo Data used PostSharp diagnostics to provide log
 
 At Argo, our solution is composed of several different micro services that work together to produce the end results.  A service can call another service which can call another service, and so on, to provide the final payload to the caller.  This means that there are many layers of calls with multiple log files and possibly on multiple servers.  Tracking a single call through several services can be a daunting task.
 
+The source code is available at github on this [link](https://github.com/wrwoodman/ps-LoggingExample). 
+
 ### Tracking across Layers
 
 In order to track service calls across service boundaries, Argo introduced the concept of the “Unique Id” (UID).  This UID originates from the caller that calls the first service in the chain of calls.  The caller generates a GUID value and passes it in the header of the call as the UID.  A system of logging was then created whereby the UID was extracted from the header at the time the log message was written.  This shielded the developer from having to extract the UID from the header for every log message that was written.
