@@ -3,7 +3,7 @@ layout: post
 comments: true
 title: "Argo Data Logging Solution using PostSharp and NLog"
 date: 2021-02-03 16:30:00 +02:00
-categories: [Logging]
+categories: ["Logging", "Guest Article"]
 permalink: /post/argo-data-logging-solution-using-postsharp-and-nlog.html
 author: "Randall Woodman"
 image: /assets/images/blog/2021-02-03-argodata/Argodata2.png
