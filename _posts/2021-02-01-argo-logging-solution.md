@@ -45,25 +45,29 @@ In the middleware, several steps take place to set up the logging and inject the
 
 1. Extract the UID from the header
 2. Create an instance of LoggingPropertyData (class) and assign it the value for the UID.  (This class has a property called UniqueId.)
-3.	Create an activity and provide the properties to log.
-4.	Move to the next call in the series
-5.	Once the call returns, set the outcome to complete the activity.
+3. Create an activity and provide the properties to log.
+4. Move to the next call in the series
+5. Once the call returns, set the outcome to complete the activity.
 
 Here is the code to do that.  
+
+```cs
+var loggingPropertyData = new LoggingPropertyData { UniqueId = uniqueId };
+OpenActivityOptions options = new OpenActivityOptions(loggingPropertyData);
+
+using (var activity = _logSource.Default.OpenActivity(FormattedMessageBuilder.Formatted("Start request"), options))
+{
+    // Do logging or whatever
+    await _next(context);  // Move to the next item in the pipeline
+    // Do more stuff if desired
+    activity.SetOutcome(PostSharp.Patterns.Diagnostics.LogLevel.Info, FormattedMessageBuilder.Formatted("Request Completed."));
+}
+```
 
 The variable _logSource is defined as a static variable on the class as follows. This is the PostSharp LogSource instance.
 
 ```cs
 private static readonly LogSource _logSource = LogSource.Get();
-var loggingPropertyData = new LoggingPropertyData { UniqueId = uniqueId };
-OpenActivityOptions options = new OpenActivityOptions(loggingPropertyData);
-using (var activity = _logSource.Default.OpenActivity(FormattedMessageBuilder.Formatted("Start request"), options))
-{
-// Do logging or whatever
-await _next(context);  // Move to the next item in the pipeline
-// Do more stuff if desired
-    activity.SetOutcome(PostSharp.Patterns.Diagnostics.LogLevel.Info, FormattedMessageBuilder.Formatted("Request Completed."));
-}
 ```
 
 ## Extracting the UID
@@ -73,31 +77,31 @@ Getting the UID into the logging messages doesn’t do any good if it isn’t wr
 The work for this is found in overriding the Write method.  In that method, the VisitProperties method is used to find the UniqueId property and set that as a property on the backend logger.
 
 ```cs
-        protected override void Write(UnsafeString message)
-        {
-            try
-            {
-                string uniqueId = string.Empty;
-                var log = ((NLogLoggingTypeSource)TypeSource).Logger;
+protected override void Write(UnsafeString message)
+{
+    try
+    {
+        string uniqueId = string.Empty;
+        var log = ((NLogLoggingTypeSource)TypeSource).Logger;
 
-                this.Context.VisitProperties((string name, object value) =>
-                {
-                    if (name == "UniqueId")
-                    {
-                        if (value != null && !(value is string s && string.IsNullOrEmpty(s)))
-                        {
-                            uniqueId = value.ToString();
-                        }
-                    }
-                });
-                log.Properties[Constants.UniqueIdKey] = uniqueId;
-            }
-            catch (Exception exception)
+        this.Context.VisitProperties((string name, object value) =>
+        {
+            if (name == "UniqueId")
             {
-                Debug.WriteLine(exception);
+                if (value != null && !(value is string s && string.IsNullOrEmpty(s)))
+                {
+                    uniqueId = value.ToString();
+                }
             }
-            base.Write(message);
-        }
+        });
+        log.Properties[Constants.UniqueIdKey] = uniqueId;
+    }
+    catch (Exception exception)
+    {
+        Debug.WriteLine(exception);
+    }
+    base.Write(message);
+}
 ```
 In this code, the VisitProperties looks for the property UniqueId.  Recall that this is the name of a property found in the LoggingPropertyData class that was instantiated and assigned in the middleware. If found, it sets the local variable uniqueId to that value.  The local variable is then used to set the property on the logger that does the actual logging.
 
