@@ -6,7 +6,7 @@ date: 2021-02-01 15:30:00 +02:00
 categories: [Logging]
 permalink: /post/argo-data-logging-solution-using-postsharp-and-nlog.html
 author: "Randall Woodman"
-image: /assets/images/blog/2021-01-25-caravela-announcement/Project Caravela 1.png
+image: /assets/images/blog/2021-02-03-argodata/Argodata2.png
 published: false
 ---
 This entry will describe how Argo Data used PostSharp diagnostics to provide logging for many of Argo’s projects and how Argo customized the logging effort to create added value for logging entries in terms of traceability across multiple services.  The audience for this entry is architects and developers. 
@@ -133,3 +133,11 @@ Using conditional compile directives, the debug build can render everything whil
 ## Conclusion
 
 Argo’s use of PostSharp has proven to be a smart choice.  Since that initial POC project, PostSharp has been integrated into several Argo projects.  The logs that are being generated have proven useful in determining the state of a service and in troubleshooting problems.
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
+<h3 style="text-align: center; margin-bottom: 10px;">About the author, Randall Woodman</h3>
+<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2021-02-03-argodata/Randall-Woodman.jpg" alt="Randall Woodman">
+<p style="margin-bottom: 10px;">Randall Woodman is a software developer working at <a href="https://argodata.com/" target="_blank">Argo Data</a> in Richardson, TX.  He is a US Navy Veteran who got his BS degree in Computer Science after leaving the military.  He has been developing professionally since 1994 with several companies in the Dallas, TX area.  Randall is also an avid gamer with his current favorite games being Forge of Empires and World of Tanks Blitz.| <a href="https://www.linkedin.com/in/randallwoodman/" target="_blank">LinkedIn</a></p>
+</div>
+</div>
