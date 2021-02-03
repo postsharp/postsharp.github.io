@@ -140,7 +140,7 @@ Argo’s use of PostSharp has proven to be a smart choice.  Since that initial P
 <p>&nbsp;</p>
 <div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
 <h3 style="text-align: center; margin-bottom: 10px;">About the author, Randall Woodman</h3>
-<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2021-02-03-argodata/Randall-Woodman1.jpg" alt="Randall Woodman">
+<div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2021-02-03-argodata/Randall-Woodman.jpg" alt="Randall Woodman">
 <p style="margin-bottom: 10px;">Randall Woodman is a software developer working at <a href="https://argodata.com/" target="_blank">Argo Data</a> in Richardson, TX.  He is a US Navy Veteran who got his BS degree in Computer Science after leaving the military.  He has been developing professionally since 1994 with several companies in the Dallas, TX area.  Randall is also an avid gamer with his current favorite games being Forge of Empires and World of Tanks Blitz. | <a href="https://www.linkedin.com/in/randallwoodman/" target="_blank">LinkedIn</a></p>
 </div>
 </div>
