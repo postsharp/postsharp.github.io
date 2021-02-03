@@ -15,7 +15,7 @@ This entry will describe how Argo Data used PostSharp diagnostics to provide log
 
 At Argo, our solution is composed of several different micro services that work together to produce the end results.  A service can call another service which can call another service, and so on, to provide the final payload to the caller.  This means that there are many layers of calls with multiple log files and possibly on multiple servers.  Tracking a single call through several services can be a daunting task.
 
-The source code is available at github on this [link](https://github.com/wrwoodman/ps-LoggingExample). 
+The source code is available on GitHub via this [link](https://github.com/wrwoodman/ps-LoggingExample). 
 
 ### Tracking across Layers
 
@@ -138,6 +138,6 @@ Argo’s use of PostSharp has proven to be a smart choice.  Since that initial P
 <div style="margin-right: auto; margin-left: auto; background-color: #edecec; padding: 10px;">
 <h3 style="text-align: center; margin-bottom: 10px;">About the author, Randall Woodman</h3>
 <div><img style="float: left; margin-right: 10px; margin-top: 0px; margin-left: 10px;" src="/assets/images/blog/2021-02-03-argodata/Randall-Woodman.jpg" alt="Randall Woodman">
-<p style="margin-bottom: 10px;">Randall Woodman is a software developer working at <a href="https://argodata.com/" target="_blank">Argo Data</a> in Richardson, TX.  He is a US Navy Veteran who got his BS degree in Computer Science after leaving the military.  He has been developing professionally since 1994 with several companies in the Dallas, TX area.  Randall is also an avid gamer with his current favorite games being Forge of Empires and World of Tanks Blitz.| <a href="https://www.linkedin.com/in/randallwoodman/" target="_blank">LinkedIn</a></p>
+<p style="margin-bottom: 10px;">Randall Woodman is a software developer working at <a href="https://argodata.com/" target="_blank">Argo Data</a> in Richardson, TX.  He is a US Navy Veteran who got his BS degree in Computer Science after leaving the military.  He has been developing professionally since 1994 with several companies in the Dallas, TX area.  Randall is also an avid gamer with his current favorite games being Forge of Empires and World of Tanks Blitz. | <a href="https://www.linkedin.com/in/randallwoodman/" target="_blank">LinkedIn</a></p>
 </div>
 </div>
