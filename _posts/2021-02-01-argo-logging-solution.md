@@ -7,6 +7,7 @@ categories: ["Logging", "Guest Article"]
 permalink: /post/argo-data-logging-solution-using-postsharp-and-nlog.html
 author: "Randall Woodman"
 image: /assets/images/blog/2021-02-03-argodata/Argodata2.png
+tag: featured
 ---
 This entry will describe how <a href="https://argodata.com/" target="_blank">Argo Data</a> used <a href="https://www.postsharp.net/logging" target="_blank">PostSharp Logging</a> to provide logging for many of Argo’s projects and how Argo customized the logging effort to create added value for logging entries in terms of traceability across multiple services.  The audience for this entry is architects and developers. 
 
